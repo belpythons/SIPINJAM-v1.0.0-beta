@@ -11,7 +11,11 @@ import { EquipmentCard } from "@/components/user/equipment-card"
 import { ScheduleCalendar } from "@/components/admin/schedule-calendar"
 import { toast } from "sonner"
 import type { Equipment, Booking } from "@/lib/types"
+<<<<<<< HEAD
 import { mockEquipment, mockBookings } from "@/lib/mock-data"
+=======
+import { fetchEquipment, handleSaveEquipment as handleSaveEquipmentAction, handleDeleteEquipment } from "@/app/actions/assets"
+>>>>>>> 95064e54 (init: setup project and add authorization checks)
 
 export default function EquipmentManagementPage() {
   const [equipment, setEquipment] = useState<Equipment[]>([])
@@ -23,6 +27,7 @@ export default function EquipmentManagementPage() {
   const [selectedEquipment, setSelectedEquipment] = useState<Equipment | undefined>()
   const [viewSchedule, setViewSchedule] = useState<Equipment | null>(null)
 
+<<<<<<< HEAD
   useEffect(() => {
     const savedEquipment = localStorage.getItem("sipinjam_equipment")
     const savedBookings = localStorage.getItem("sipinjam_bookings")
@@ -68,6 +73,53 @@ export default function EquipmentManagementPage() {
 
     setEquipment(updatedEquipment)
     localStorage.setItem("sipinjam_equipment", JSON.stringify(updatedEquipment))
+=======
+  const loadEquipment = async () => {
+    const response = await fetchEquipment()
+    if (response.success) {
+      setEquipment(response.data)
+    } else {
+      toast.error(response.error || "Gagal memuat daftar barang")
+    }
+  }
+
+  useEffect(() => {
+    loadEquipment()
+  }, [])
+
+  const handleSaveEquipment = async (equipmentData: Partial<Equipment>) => {
+    const formData = new FormData()
+    if (equipmentData.id) formData.append("id", equipmentData.id)
+    formData.append("name", equipmentData.name || "")
+    formData.append("category", equipmentData.category || "")
+    formData.append("quantity", (equipmentData.quantity || 0).toString())
+    formData.append("available", (equipmentData.available || 0).toString())
+    formData.append("description", equipmentData.description || "")
+    formData.append("imageUrl", equipmentData.imageUrl || "")
+
+    try {
+      const result = await handleSaveEquipmentAction(formData)
+      if (result.success) {
+        toast.success(equipmentData.id ? "Barang berhasil diperbarui" : "Barang baru berhasil ditambahkan")
+        loadEquipment()
+      }
+    } catch (error) {
+      toast.error("Gagal menyimpan barang")
+    }
+  }
+
+  const handleDelete = async (item: Equipment) => {
+    if (!confirm(`Apakah Anda yakin ingin menghapus barang ${item.name}?`)) return
+    try {
+      const result = await handleDeleteEquipment(item.id)
+      if (result.success) {
+        toast.success("Barang berhasil dihapus")
+        loadEquipment()
+      }
+    } catch (error) {
+      toast.error("Gagal menghapus barang")
+    }
+>>>>>>> 95064e54 (init: setup project and add authorization checks)
   }
 
   const handleEditEquipment = (item: Equipment) => {
@@ -215,6 +267,12 @@ export default function EquipmentManagementPage() {
               <Button variant="outline" className="flex-1 bg-transparent" onClick={() => setViewSchedule(item)}>
                 Lihat Jadwal
               </Button>
+<<<<<<< HEAD
+=======
+              <Button variant="outline" className="flex-1 bg-transparent text-red-600 hover:text-red-700" onClick={() => handleDelete(item)}>
+                Hapus
+              </Button>
+>>>>>>> 95064e54 (init: setup project and add authorization checks)
             </div>
           </div>
         ))}

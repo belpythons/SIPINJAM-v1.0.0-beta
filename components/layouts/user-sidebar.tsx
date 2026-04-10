@@ -7,7 +7,11 @@ import { useState, useEffect } from "react"
 import { cn } from "@/lib/utils"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import { Button } from "@/components/ui/button"
+<<<<<<< HEAD
 import { getUserSession, clearUserSession } from "@/lib/auth"
+=======
+import { logoutAction, getCurrentUserAction } from "@/app/actions/auth"
+>>>>>>> 95064e54 (init: setup project and add authorization checks)
 import { useToast } from "@/hooks/use-toast"
 import { useSidebarStore } from "@/lib/sidebar-store"
 import {
@@ -37,6 +41,7 @@ export function UserSidebar() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
   const [userName, setUserName] = useState("")
   const [userEmail, setUserEmail] = useState("")
+<<<<<<< HEAD
   const { isCollapsed, toggleSidebar } = useSidebarStore()
 
   useEffect(() => {
@@ -56,6 +61,31 @@ export function UserSidebar() {
     router.push("/login")
   }
 
+=======
+  const [mounted, setMounted] = useState(false)
+  const { isCollapsed, toggleSidebar } = useSidebarStore()
+
+  useEffect(() => {
+    setMounted(true)
+    const fetchUser = async () => {
+      const user = await getCurrentUserAction()
+      if (user) {
+        setUserName(user.name)
+        setUserEmail(user.email)
+      }
+    }
+    fetchUser()
+  }, [])
+
+  const handleLogout = async () => {
+    await logoutAction()
+    router.push("/login")
+    router.refresh()
+  }
+
+  if (!mounted) return null
+
+>>>>>>> 95064e54 (init: setup project and add authorization checks)
   const getInitials = (name: string) => {
     return name
       .split(" ")

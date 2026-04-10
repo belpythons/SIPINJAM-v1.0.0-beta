@@ -38,9 +38,17 @@ export default function RootLayout({
   children: React.ReactNode
 }>) {
   return (
+<<<<<<< HEAD
     <html lang="en">
       <body className={`font-sans antialiased`}>
         <ThemeProvider>{children}</ThemeProvider>
+=======
+    <html lang="en" suppressHydrationWarning>
+      <body className="font-sans antialiased">
+        <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
+          {children}
+        </ThemeProvider>
+>>>>>>> 95064e54 (init: setup project and add authorization checks)
         <Toaster position="top-right" richColors />
         <Analytics />
       </body>

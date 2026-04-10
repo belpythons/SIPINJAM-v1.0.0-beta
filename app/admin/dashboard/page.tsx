@@ -4,7 +4,12 @@ import { useEffect, useState } from "react"
 import { motion } from "framer-motion"
 import { Card } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
+<<<<<<< HEAD
 import { getBookings, getUsers, getRooms, getEquipment } from "@/lib/data-manager"
+=======
+import { getDashboardStats } from "@/app/actions/assets"
+import { getCurrentUserAction } from "@/app/actions/auth"
+>>>>>>> 95064e54 (init: setup project and add authorization checks)
 import { useRouter } from "next/navigation"
 import { Users, Calendar, Package, DoorOpen, TrendingUp, ArrowRight, Clock, CheckCircle2, Sparkles } from "lucide-react"
 import { format } from "date-fns"
@@ -22,6 +27,7 @@ import {
   Cell,
 } from "recharts"
 
+<<<<<<< HEAD
 const bookingTrendData = [
   { month: "Jan", bookings: 45 },
   { month: "Feb", bookings: 52 },
@@ -31,6 +37,8 @@ const bookingTrendData = [
   { month: "Jun", bookings: 67 },
 ]
 
+=======
+>>>>>>> 95064e54 (init: setup project and add authorization checks)
 const COLORS = ["#f97316", "#fb923c", "#fdba74", "#fed7aa"]
 
 export default function AdminDashboard() {
@@ -46,15 +54,29 @@ export default function AdminDashboard() {
     totalEquipment: 0,
     availableRooms: 0,
     availableEquipment: 0,
+<<<<<<< HEAD
+=======
+    trendData: [] as { month: string; bookings: number }[],
+>>>>>>> 95064e54 (init: setup project and add authorization checks)
   })
   const [greeting, setGreeting] = useState("")
   const [statusData, setStatusData] = useState<{ name: string; value: number }[]>([])
 
   useEffect(() => {
+<<<<<<< HEAD
     const user = JSON.parse(localStorage.getItem("sipinjam_auth") || "{}")
     if (user.name) {
       setUserName(user.name)
     }
+=======
+    const fetchUser = async () => {
+      const user = await getCurrentUserAction()
+      if (user?.name) {
+        setUserName(user.name)
+      }
+    }
+    fetchUser()
+>>>>>>> 95064e54 (init: setup project and add authorization checks)
 
     const hour = new Date().getHours()
     if (hour < 12) setGreeting("Selamat Pagi")
@@ -62,6 +84,7 @@ export default function AdminDashboard() {
     else if (hour < 18) setGreeting("Selamat Sore")
     else setGreeting("Selamat Malam")
 
+<<<<<<< HEAD
     const bookings = getBookings()
     const users = getUsers()
     const rooms = getRooms()
@@ -91,6 +114,36 @@ export default function AdminDashboard() {
     ])
   }, [])
 
+=======
+    const fetchStats = async () => {
+      const dashboardStats = await getDashboardStats()
+
+      setStats({
+        totalUsers: dashboardStats.totalUsers,
+        totalBookings: dashboardStats.totalBookings,
+        pendingBookings: dashboardStats.pendingBookings,
+        approvedBookings: dashboardStats.approvedBookings,
+        rejectedBookings: dashboardStats.rejectedBookings,
+        totalRooms: dashboardStats.totalRooms,
+        totalEquipment: dashboardStats.totalEquipment,
+        availableRooms: dashboardStats.availableRooms,
+        availableEquipment: dashboardStats.availableEquipment,
+        trendData: dashboardStats.trendData,
+      })
+
+      setStatusData([
+        { name: "Pending", value: dashboardStats.pendingBookings },
+        { name: "Disetujui", value: dashboardStats.approvedBookings },
+        { name: "Ditolak", value: dashboardStats.rejectedBookings },
+        { name: "Selesai", value: dashboardStats.completedBookings },
+      ])
+    }
+
+    fetchStats()
+  }, [])
+
+
+>>>>>>> 95064e54 (init: setup project and add authorization checks)
   const containerVariants = {
     hidden: { opacity: 0 },
     visible: {
@@ -217,7 +270,11 @@ export default function AdminDashboard() {
               <TrendingUp className="h-5 w-5 text-orange-600" />
             </div>
             <ResponsiveContainer width="100%" height={300}>
+<<<<<<< HEAD
               <AreaChart data={bookingTrendData}>
+=======
+              <AreaChart data={stats.trendData}>
+>>>>>>> 95064e54 (init: setup project and add authorization checks)
                 <defs>
                   <linearGradient id="colorBookingsAdmin" x1="0" y1="0" x2="0" y2="1">
                     <stop offset="5%" stopColor="#f97316" stopOpacity={0.3} />

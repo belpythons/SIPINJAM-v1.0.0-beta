@@ -7,6 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { GridListToggle } from "@/components/ui/grid-list-toggle"
 import { EquipmentCard } from "@/components/user/equipment-card"
 import { NewBookingModal } from "@/components/user/new-booking-modal"
+<<<<<<< HEAD
 import {
   getEquipment,
   getBookings,
@@ -14,6 +15,10 @@ import {
   initializeLocalStorage,
   updateStockAvailability,
 } from "@/lib/data-manager"
+=======
+import { fetchEquipment, createBooking } from "@/app/actions/assets"
+import { getCurrentUserAction } from "@/app/actions/auth"
+>>>>>>> 95064e54 (init: setup project and add authorization checks)
 import type { BookingFormData, Equipment } from "@/lib/types"
 import { toast } from "sonner"
 
@@ -27,6 +32,7 @@ export default function EquipmentPage() {
   const [selectedEquipmentId, setSelectedEquipmentId] = useState<string | null>(null)
 
   useEffect(() => {
+<<<<<<< HEAD
     initializeLocalStorage()
     loadEquipment()
   }, [bookingModalOpen])
@@ -35,6 +41,18 @@ export default function EquipmentPage() {
     updateStockAvailability()
     const loadedEquipment = getEquipment()
     setEquipment(loadedEquipment)
+=======
+    loadEquipment()
+  }, [bookingModalOpen])
+
+  const loadEquipment = async () => {
+    const response = await fetchEquipment()
+    if (response.success) {
+      setEquipment(response.data)
+    } else {
+      toast.error(response.error || "Gagal memuat daftar barang")
+    }
+>>>>>>> 95064e54 (init: setup project and add authorization checks)
   }
 
   const categories = Array.from(new Set(equipment.map((e) => e.category)))
@@ -51,13 +69,20 @@ export default function EquipmentPage() {
     setBookingModalOpen(true)
   }
 
+<<<<<<< HEAD
   const handleBookingSubmit = (data: BookingFormData) => {
     const authData = localStorage.getItem("sipinjam_auth")
     if (!authData) {
+=======
+  const handleBookingSubmit = async (data: BookingFormData) => {
+    const user = await getCurrentUserAction()
+    if (!user) {
+>>>>>>> 95064e54 (init: setup project and add authorization checks)
       toast.error("Sesi tidak valid, silakan login kembali")
       return
     }
 
+<<<<<<< HEAD
     const user = JSON.parse(authData)
     const existingBookings = getBookings()
 
@@ -84,6 +109,23 @@ export default function EquipmentPage() {
     })
     setBookingModalOpen(false)
     setSelectedEquipmentId(null)
+=======
+    const response = await createBooking({
+      ...data,
+      userId: user.id,
+      userName: user.name,
+    })
+
+    if (response.success) {
+      toast.success("Peminjaman berhasil diajukan!", {
+        description: "Admin akan meninjau permintaan Anda dalam 2x24 jam",
+      })
+      setBookingModalOpen(false)
+      setSelectedEquipmentId(null)
+    } else {
+      toast.error(response.error || "Gagal mengajukan peminjaman")
+    }
+>>>>>>> 95064e54 (init: setup project and add authorization checks)
   }
 
   return (

@@ -15,7 +15,11 @@ import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { Calendar } from "@/components/ui/calendar"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
+<<<<<<< HEAD
 import { getRooms, getEquipment } from "@/lib/data-manager"
+=======
+import { fetchRooms, fetchEquipment } from "@/app/actions/assets"
+>>>>>>> 95064e54 (init: setup project and add authorization checks)
 import type { BookingFormData, Room, Equipment } from "@/lib/types"
 import { cn } from "@/lib/utils"
 
@@ -87,10 +91,26 @@ export function NewBookingModal({
 
   useEffect(() => {
     if (open) {
+<<<<<<< HEAD
       const loadedRooms = getRooms()
       const loadedEquipment = getEquipment()
       setRooms(loadedRooms)
       setEquipment(loadedEquipment)
+=======
+      const loadData = async () => {
+        const roomsRes = await fetchRooms()
+        const equipmentRes = await fetchEquipment()
+        
+        if (roomsRes.success) {
+          setRooms(roomsRes.data)
+        }
+        
+        if (equipmentRes.success) {
+          setEquipment(equipmentRes.data)
+        }
+      }
+      loadData()
+>>>>>>> 95064e54 (init: setup project and add authorization checks)
 
       if (preselectedType) {
         form.setValue("type", preselectedType)
@@ -332,7 +352,11 @@ export function NewBookingModal({
                         <FormLabel>Waktu Mulai</FormLabel>
                         <Input
                           type="time"
+<<<<<<< HEAD
                           value={field.value}
+=======
+                          value={field.value ?? ""}
+>>>>>>> 95064e54 (init: setup project and add authorization checks)
                           onChange={field.onChange}
                           onBlur={field.onBlur}
                           name={field.name}
@@ -394,7 +418,11 @@ export function NewBookingModal({
                         <FormLabel>Waktu Selesai</FormLabel>
                         <Input
                           type="time"
+<<<<<<< HEAD
                           value={field.value}
+=======
+                          value={field.value ?? ""}
+>>>>>>> 95064e54 (init: setup project and add authorization checks)
                           onChange={field.onChange}
                           onBlur={field.onBlur}
                           name={field.name}

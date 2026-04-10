@@ -188,7 +188,11 @@ export function AccountSettings({ user, onUpdate }: AccountSettingsProps) {
             </div>
 
             <div className="space-y-2">
+<<<<<<< HEAD
               <Label htmlId="newPassword">Password Baru</Label>
+=======
+              <Label htmlFor="newPassword">Password Baru</Label>
+>>>>>>> 95064e54 (init: setup project and add authorization checks)
               <div className="relative">
                 <Input
                   id="newPassword"

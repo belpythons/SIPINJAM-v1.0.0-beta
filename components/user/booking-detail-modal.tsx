@@ -36,6 +36,11 @@ function safeFormatDate(date: Date | string | undefined, formatStr: string): str
 export function BookingDetailModal({ open, onOpenChange, booking }: BookingDetailModalProps) {
   if (!booking) return null
 
+<<<<<<< HEAD
+=======
+  const status = (booking.status?.toLowerCase() || "pending") as Booking["status"]
+
+>>>>>>> 95064e54 (init: setup project and add authorization checks)
   const calculateDuration = () => {
     const start = typeof booking.startDate === "string" ? new Date(booking.startDate) : booking.startDate
     const end = typeof booking.endDate === "string" ? new Date(booking.endDate) : booking.endDate
@@ -52,7 +57,11 @@ export function BookingDetailModal({ open, onOpenChange, booking }: BookingDetai
   }
 
   const getStatusIcon = () => {
+<<<<<<< HEAD
     switch (booking.status) {
+=======
+    switch (status) {
+>>>>>>> 95064e54 (init: setup project and add authorization checks)
       case "approved":
         return <CheckCircle className="h-5 w-5 text-green-600" />
       case "rejected":
@@ -68,7 +77,11 @@ export function BookingDetailModal({ open, onOpenChange, booking }: BookingDetai
     }
   }
 
+<<<<<<< HEAD
   const getStatusBadge = (status: Booking["status"]) => {
+=======
+  const getStatusBadge = (currentStatus: Booking["status"]) => {
+>>>>>>> 95064e54 (init: setup project and add authorization checks)
     const variants: Record<
       Booking["status"],
       { variant: "default" | "secondary" | "destructive" | "outline"; label: string; color: string }
@@ -80,11 +93,19 @@ export function BookingDetailModal({ open, onOpenChange, booking }: BookingDetai
       completed: { variant: "outline", label: "Selesai", color: "bg-gray-100 text-gray-800" },
       cancelled: { variant: "outline", label: "Dibatalkan", color: "bg-gray-100 text-gray-800" },
     }
+<<<<<<< HEAD
     return variants[status]
   }
 
   const getStatusColor = () => {
     switch (booking.status) {
+=======
+    return variants[currentStatus] || variants.pending
+  }
+
+  const getStatusColor = () => {
+    switch (status) {
+>>>>>>> 95064e54 (init: setup project and add authorization checks)
       case "approved":
         return "border-green-200 bg-green-50 dark:border-green-800 dark:bg-green-950"
       case "rejected":
@@ -118,7 +139,13 @@ export function BookingDetailModal({ open, onOpenChange, booking }: BookingDetai
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm font-medium text-muted-foreground">Status Peminjaman</p>
+<<<<<<< HEAD
                   <p className="mt-1 text-2xl font-bold">{getStatusBadge(booking.status).label}</p>
+=======
+                  <p className="mt-1 text-2xl font-bold">
+                    {getStatusBadge(status).label}
+                  </p>
+>>>>>>> 95064e54 (init: setup project and add authorization checks)
                 </div>
                 <div className="flex h-16 w-16 items-center justify-center rounded-full bg-background">
                   {getStatusIcon()}
@@ -234,7 +261,11 @@ export function BookingDetailModal({ open, onOpenChange, booking }: BookingDetai
             </CardContent>
           </Card>
 
+<<<<<<< HEAD
           {booking.status === "approved" && booking.approvedAt && (
+=======
+          {status === "approved" && booking.approvedAt && (
+>>>>>>> 95064e54 (init: setup project and add authorization checks)
             <Card className="border-2 border-green-200 bg-green-50 dark:border-green-800 dark:bg-green-950">
               <CardContent className="pt-6">
                 <div className="flex items-start gap-4">
@@ -252,7 +283,11 @@ export function BookingDetailModal({ open, onOpenChange, booking }: BookingDetai
             </Card>
           )}
 
+<<<<<<< HEAD
           {booking.status === "rejected" && booking.rejectionReason && (
+=======
+          {status === "rejected" && booking.rejectionReason && (
+>>>>>>> 95064e54 (init: setup project and add authorization checks)
             <Card className="border-2 border-red-200 bg-red-50 dark:border-red-800 dark:bg-red-950">
               <CardContent className="pt-6">
                 <div className="flex items-start gap-4">

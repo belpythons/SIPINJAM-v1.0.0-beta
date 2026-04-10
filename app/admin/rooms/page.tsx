@@ -11,7 +11,11 @@ import { RoomCard } from "@/components/user/room-card"
 import { ScheduleCalendar } from "@/components/admin/schedule-calendar"
 import { toast } from "sonner"
 import type { Room, Booking } from "@/lib/types"
+<<<<<<< HEAD
 import { mockRooms, mockBookings } from "@/lib/mock-data"
+=======
+import { fetchRooms, handleSaveRoom as handleSaveRoomAction, handleDeleteRoom } from "@/app/actions/assets"
+>>>>>>> 95064e54 (init: setup project and add authorization checks)
 
 export default function RoomsManagementPage() {
   const [rooms, setRooms] = useState<Room[]>([])
@@ -23,6 +27,7 @@ export default function RoomsManagementPage() {
   const [selectedRoom, setSelectedRoom] = useState<Room | undefined>()
   const [viewSchedule, setViewSchedule] = useState<Room | null>(null)
 
+<<<<<<< HEAD
   useEffect(() => {
     const savedRooms = localStorage.getItem("sipinjam_rooms")
     const savedBookings = localStorage.getItem("sipinjam_bookings")
@@ -66,6 +71,53 @@ export default function RoomsManagementPage() {
 
     setRooms(updatedRooms)
     localStorage.setItem("sipinjam_rooms", JSON.stringify(updatedRooms))
+=======
+  const loadRooms = async () => {
+    const response = await fetchRooms()
+    if (response.success) {
+      setRooms(response.data)
+    } else {
+      toast.error(response.error || "Gagal memuat daftar ruangan")
+    }
+  }
+
+  useEffect(() => {
+    loadRooms()
+  }, [])
+
+  const handleSaveRoom = async (roomData: Partial<Room>) => {
+    const formData = new FormData()
+    if (roomData.id) formData.append("id", roomData.id)
+    formData.append("name", roomData.name || "")
+    formData.append("capacity", (roomData.capacity || 0).toString())
+    formData.append("description", roomData.facilities?.join(", ") || "")
+    formData.append("building", roomData.building || "")
+    formData.append("floor", (roomData.floor || 0).toString())
+    formData.append("imageUrl", roomData.imageUrl || "")
+
+    try {
+      const result = await handleSaveRoomAction(formData)
+      if (result.success) {
+        toast.success(roomData.id ? "Ruangan berhasil diperbarui" : "Ruangan baru berhasil ditambahkan")
+        loadRooms()
+      }
+    } catch (error) {
+      toast.error("Gagal menyimpan ruangan")
+    }
+  }
+
+  const handleDelete = async (room: Room) => {
+    if (!confirm(`Apakah Anda yakin ingin menghapus ruangan ${room.name}?`)) return
+    try {
+      const result = await handleDeleteRoom(room.id)
+      if (result.success) {
+        toast.success("Ruangan berhasil dihapus")
+        loadRooms()
+      }
+    } catch (error) {
+      toast.error("Gagal menghapus ruangan")
+    }
+>>>>>>> 95064e54 (init: setup project and add authorization checks)
   }
 
   const handleEditRoom = (room: Room) => {
@@ -214,6 +266,12 @@ export default function RoomsManagementPage() {
               <Button variant="outline" className="flex-1 bg-transparent" onClick={() => setViewSchedule(room)}>
                 Lihat Jadwal
               </Button>
+<<<<<<< HEAD
+=======
+              <Button variant="outline" className="flex-1 bg-transparent text-red-600 hover:text-red-700" onClick={() => handleDelete(room)}>
+                Hapus
+              </Button>
+>>>>>>> 95064e54 (init: setup project and add authorization checks)
             </div>
           </div>
         ))}

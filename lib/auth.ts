@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 import { mockUsers, MOCK_PASSWORD } from "./mock-data"
 import type { User, LoginCredentials } from "./types"
 
@@ -25,6 +26,9 @@ export async function authenticateUser(
 
   return { success: true, user }
 }
+=======
+import type { User } from "./types"
+>>>>>>> 95064e54 (init: setup project and add authorization checks)
 
 // Store user session in localStorage
 export function setUserSession(user: User): void {
@@ -50,6 +54,7 @@ export function clearUserSession(): void {
     localStorage.removeItem("sipinjam_auth")
   }
 }
+<<<<<<< HEAD
 
 // Simulate Google OAuth
 export async function authenticateWithGoogle(
@@ -66,3 +71,5 @@ export async function authenticateWithGoogle(
 
   return { success: false, error: "Google login gagal" }
 }
+=======
+>>>>>>> 95064e54 (init: setup project and add authorization checks)

@@ -1,8 +1,19 @@
 "use client"
 
 import { useState, useEffect } from "react"
+<<<<<<< HEAD
 import type { User, UserDeactivation } from "@/lib/types"
 import { mockUsers } from "@/lib/mock-data"
+=======
+import type { User } from "@/lib/types"
+import { 
+  fetchAllUsers, 
+  createUser, 
+  updateUser, 
+  toggleUserStatus, 
+  deleteUser 
+} from "@/app/actions/users"
+>>>>>>> 95064e54 (init: setup project and add authorization checks)
 import { UserTable } from "@/components/admin/user-table"
 import { UserFormModal } from "@/components/admin/user-form-modal"
 import { DeactivateUserModal } from "@/components/admin/deactivate-user-modal"
@@ -16,6 +27,7 @@ export default function UsersPage() {
   const [isFormOpen, setIsFormOpen] = useState(false)
   const [isDeactivateOpen, setIsDeactivateOpen] = useState(false)
   const [selectedUser, setSelectedUser] = useState<User | null>(null)
+<<<<<<< HEAD
 
   useEffect(() => {
     // Load users from localStorage or use mock data
@@ -39,6 +51,26 @@ export default function UsersPage() {
     localStorage.setItem("sipinjam_users", JSON.stringify(updatedUsers))
   }
 
+=======
+  const [loading, setLoading] = useState(true)
+
+  const loadUsers = async () => {
+    try {
+      setLoading(true)
+      const data = await fetchAllUsers()
+      setUsers(data as any)
+    } catch (error) {
+      toast.error("Gagal memuat data user")
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  useEffect(() => {
+    loadUsers()
+  }, [])
+
+>>>>>>> 95064e54 (init: setup project and add authorization checks)
   const handleAddNew = () => {
     setSelectedUser(null)
     setIsFormOpen(true)
@@ -49,6 +81,7 @@ export default function UsersPage() {
     setIsFormOpen(true)
   }
 
+<<<<<<< HEAD
   const handleSave = (data: Partial<User>) => {
     if (selectedUser) {
       // Edit existing user
@@ -65,6 +98,29 @@ export default function UsersPage() {
         createdAt: new Date(),
       }
       saveUsers([...users, newUser])
+=======
+  const handleSave = async (data: any) => {
+    try {
+      if (selectedUser) {
+        const res = await updateUser(selectedUser.id, data)
+        if (res.success) {
+          toast.success("User berhasil diperbarui")
+          loadUsers()
+        } else {
+          toast.error(res.error || "Gagal memperbarui user")
+        }
+      } else {
+        const res = await createUser(data)
+        if (res.success) {
+          toast.success("User berhasil ditambahkan")
+          loadUsers()
+        } else {
+          toast.error(res.error || "Gagal menambahkan user")
+        }
+      }
+    } catch (error) {
+      toast.error("Terjadi kesalahan sistem")
+>>>>>>> 95064e54 (init: setup project and add authorization checks)
     }
   }
 
@@ -73,6 +129,7 @@ export default function UsersPage() {
     setIsDeactivateOpen(true)
   }
 
+<<<<<<< HEAD
   const handleDeactivateConfirm = (reason: string, duration?: number) => {
     if (!selectedUser) return
 
@@ -104,6 +161,52 @@ export default function UsersPage() {
   const handleDelete = (user: User) => {
     // Not implemented - typically would show confirmation dialog
     toast.info("Fitur hapus user belum diimplementasikan")
+=======
+  const handleDeactivateConfirm = async (reason: string, duration?: number) => {
+    if (!selectedUser) return
+
+    try {
+      const res = await toggleUserStatus(selectedUser.id, false, reason, duration)
+      if (res.success) {
+        toast.success("User berhasil dinonaktifkan")
+        loadUsers()
+      } else {
+        toast.error(res.error || "Gagal menonaktifkan user")
+      }
+    } catch (error) {
+      toast.error("Terjadi kesalahan sistem")
+    }
+  }
+
+  const handleActivate = async (user: User) => {
+    try {
+      const res = await toggleUserStatus(user.id, true)
+      if (res.success) {
+        toast.success("User berhasil diaktifkan")
+        loadUsers()
+      } else {
+        toast.error(res.error || "Gagal mengaktifkan user")
+      }
+    } catch (error) {
+      toast.error("Terjadi kesalahan sistem")
+    }
+  }
+
+  const handleDelete = async (user: User) => {
+    if (!confirm(`Apakah Anda yakin ingin menghapus user ${user.name}?`)) return
+
+    try {
+      const res = await deleteUser(user.id)
+      if (res.success) {
+        toast.success("User berhasil dihapus")
+        loadUsers()
+      } else {
+        toast.error(res.error || "Gagal menghapus user")
+      }
+    } catch (error) {
+      toast.error("Terjadi kesalahan sistem")
+    }
+>>>>>>> 95064e54 (init: setup project and add authorization checks)
   }
 
   const stats = {

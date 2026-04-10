@@ -5,7 +5,12 @@ import { motion } from "framer-motion"
 import { Card } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { NewBookingModal } from "@/components/user/new-booking-modal"
+<<<<<<< HEAD
 import { createBooking, getBookings } from "@/lib/data-manager"
+=======
+import { getUserDashboardStats, createBooking } from "@/app/actions/assets"
+import { getCurrentUserAction } from "@/app/actions/auth"
+>>>>>>> 95064e54 (init: setup project and add authorization checks)
 import type { BookingFormData } from "@/lib/types"
 import { toast } from "sonner"
 import { useRouter } from "next/navigation"
@@ -24,6 +29,7 @@ import { format } from "date-fns"
 import { id } from "date-fns/locale"
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts"
 
+<<<<<<< HEAD
 // Mock data for charts
 const bookingTrendData = [
   { month: "Jan", bookings: 12 },
@@ -34,6 +40,8 @@ const bookingTrendData = [
   { month: "Jun", bookings: 30 },
 ]
 
+=======
+>>>>>>> 95064e54 (init: setup project and add authorization checks)
 export default function UserDashboard() {
   const router = useRouter()
   const [userName, setUserName] = useState("")
@@ -46,6 +54,7 @@ export default function UserDashboard() {
     completedBookings: 0,
     pendingBookings: 0,
   })
+<<<<<<< HEAD
   const [greeting, setGreeting] = useState("")
 
   useEffect(() => {
@@ -70,6 +79,45 @@ export default function UserDashboard() {
       pendingBookings: userBookings.filter((b) => b.status === "pending").length,
     })
   }, [])
+=======
+  const [trendData, setTrendData] = useState<any[]>([])
+  const [greeting, setGreeting] = useState("")
+
+  useEffect(() => {
+    const checkUser = async () => {
+      const user = await getCurrentUserAction()
+      if (!user) {
+        router.push("/login")
+        return
+      }
+      
+      if (user.name) {
+        setUserName(user.name)
+      }
+
+      const hour = new Date().getHours()
+      if (hour < 12) setGreeting("Selamat Pagi")
+      else if (hour < 15) setGreeting("Selamat Siang")
+      else if (hour < 18) setGreeting("Selamat Sore")
+      else setGreeting("Selamat Malam")
+
+      if (user.id) {
+        const response = await getUserDashboardStats(user.id)
+        if (response.success && response.data) {
+          setStats({
+            totalBookings: response.data.total,
+            activeBookings: response.data.active,
+            completedBookings: response.data.completed,
+            pendingBookings: response.data.pending,
+          })
+          setTrendData(response.data.trendData)
+        }
+      }
+    }
+    
+    checkUser()
+  }, [router])
+>>>>>>> 95064e54 (init: setup project and add authorization checks)
 
   const handleOpenBooking = (type?: "room" | "equipment", itemId?: string) => {
     if (type && itemId) {
@@ -79,6 +127,7 @@ export default function UserDashboard() {
     setIsBookingModalOpen(true)
   }
 
+<<<<<<< HEAD
   const handleBookingSubmit = (data: BookingFormData) => {
     try {
       const currentUser = JSON.parse(localStorage.getItem("sipinjam_auth") || "{}")
@@ -95,13 +144,48 @@ export default function UserDashboard() {
         userName: currentUser.name,
       })
 
+=======
+  const handleBookingSubmit = async (data: BookingFormData) => {
+    const currentUser = await getCurrentUserAction()
+
+    if (!currentUser || !currentUser.id) {
+      toast.error("Silakan login terlebih dahulu")
+      router.push("/login")
+      return
+    }
+
+    const response = await createBooking({
+      ...data,
+      userId: currentUser.id,
+      userName: currentUser.name,
+    })
+
+    if (response.success) {
+>>>>>>> 95064e54 (init: setup project and add authorization checks)
       toast.success("Peminjaman berhasil diajukan!")
       setIsBookingModalOpen(false)
       setSelectedType(undefined)
       setSelectedItemId(null)
+<<<<<<< HEAD
       router.push("/user/bookings")
     } catch (error) {
       toast.error("Gagal mengajukan peminjaman")
+=======
+      
+      // Refresh stats
+      const dashboardStats = await getUserDashboardStats(currentUser.id)
+      if (dashboardStats.success && dashboardStats.data) {
+        setStats({
+          totalBookings: dashboardStats.data.total,
+          activeBookings: dashboardStats.data.active,
+          completedBookings: dashboardStats.data.completed,
+          pendingBookings: dashboardStats.data.pending,
+        })
+        setTrendData(dashboardStats.data.trendData)
+      }
+    } else {
+      toast.error(response.error || "Gagal mengajukan peminjaman")
+>>>>>>> 95064e54 (init: setup project and add authorization checks)
     }
   }
 
@@ -231,7 +315,11 @@ export default function UserDashboard() {
               <TrendingUp className="h-5 w-5 text-blue-600" />
             </div>
             <ResponsiveContainer width="100%" height={300}>
+<<<<<<< HEAD
               <AreaChart data={bookingTrendData}>
+=======
+              <AreaChart data={trendData}>
+>>>>>>> 95064e54 (init: setup project and add authorization checks)
                 <defs>
                   <linearGradient id="colorBookings" x1="0" y1="0" x2="0" y2="1">
                     <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.3} />

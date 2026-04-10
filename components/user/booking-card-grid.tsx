@@ -81,7 +81,12 @@ export function BookingCardGrid({ bookings, onViewDetail, onDownloadPDF }: Booki
       className="grid gap-4 sm:gap-6 grid-cols-1 sm:grid-cols-2 xl:grid-cols-3"
     >
       {bookings.map((booking) => {
+<<<<<<< HEAD
         const status = statusConfig[booking.status]
+=======
+        const normalizedStatus = (booking.status?.toLowerCase() || "pending") as keyof typeof statusConfig
+        const status = statusConfig[normalizedStatus] || statusConfig.pending
+>>>>>>> 95064e54 (init: setup project and add authorization checks)
         const StatusIcon = status.icon
 
         return (
@@ -111,7 +116,11 @@ export function BookingCardGrid({ bookings, onViewDetail, onDownloadPDF }: Booki
                     {status.label}
                   </Badge>
                 </div>
+<<<<<<< HEAD
                 <h3 className="mt-2 text-lg sm:text-xl font-bold line-clamp-1">{booking.itemName}</h3>
+=======
+                <h3 className="mt-2 text-lg sm:text-xl font-bold line-clamp-1">{booking.itemName || "Item"}</h3>
+>>>>>>> 95064e54 (init: setup project and add authorization checks)
               </div>
 
               {/* Content */}

@@ -30,16 +30,31 @@ export function BookingTable({ bookings, onViewDetail, onDownloadPDF }: BookingT
 
   // Filter bookings
   const filteredBookings = bookings.filter((booking) => {
+<<<<<<< HEAD
     const matchesSearch =
       booking.itemName.toLowerCase().includes(searchQuery.toLowerCase()) ||
       booking.purpose.toLowerCase().includes(searchQuery.toLowerCase())
     const matchesStatus = statusFilter === "all" || booking.status === statusFilter
+=======
+    const itemName = booking.itemName || ""
+    const status = booking.status || ""
+    const purpose = booking.purpose || ""
+
+    const matchesSearch =
+      itemName.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      purpose.toLowerCase().includes(searchQuery.toLowerCase())
+    const matchesStatus = statusFilter === "all" || status.toLowerCase() === statusFilter.toLowerCase()
+>>>>>>> 95064e54 (init: setup project and add authorization checks)
     const matchesType = typeFilter === "all" || booking.type === typeFilter
 
     return matchesSearch && matchesStatus && matchesType
   })
 
   const getStatusBadge = (status: Booking["status"]) => {
+<<<<<<< HEAD
+=======
+    const normalizedStatus = (status?.toLowerCase() || "pending") as Booking["status"]
+>>>>>>> 95064e54 (init: setup project and add authorization checks)
     const variants: Record<
       Booking["status"],
       { variant: "default" | "secondary" | "destructive" | "outline"; label: string }
@@ -51,7 +66,11 @@ export function BookingTable({ bookings, onViewDetail, onDownloadPDF }: BookingT
       completed: { variant: "outline", label: "Selesai" },
       cancelled: { variant: "outline", label: "Dibatalkan" },
     }
+<<<<<<< HEAD
     return variants[status]
+=======
+    return variants[normalizedStatus] || variants.pending
+>>>>>>> 95064e54 (init: setup project and add authorization checks)
   }
 
   return (

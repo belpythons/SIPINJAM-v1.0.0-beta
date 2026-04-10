@@ -7,7 +7,12 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { GridListToggle } from "@/components/ui/grid-list-toggle"
 import { RoomCard } from "@/components/user/room-card"
 import { NewBookingModal } from "@/components/user/new-booking-modal"
+<<<<<<< HEAD
 import { getRooms, getBookings, saveBookings, initializeLocalStorage } from "@/lib/data-manager"
+=======
+import { fetchRooms, createBooking } from "@/app/actions/assets"
+import { getCurrentUserAction } from "@/app/actions/auth"
+>>>>>>> 95064e54 (init: setup project and add authorization checks)
 import type { BookingFormData, Room } from "@/lib/types"
 import { toast } from "sonner"
 
@@ -20,6 +25,7 @@ export default function RoomsPage() {
   const [bookingModalOpen, setBookingModalOpen] = useState(false)
   const [selectedRoomId, setSelectedRoomId] = useState<string | null>(null)
 
+<<<<<<< HEAD
   useEffect(() => {
     initializeLocalStorage()
     loadRooms()
@@ -30,6 +36,21 @@ export default function RoomsPage() {
     setRooms(loadedRooms)
   }
 
+=======
+  const loadRooms = async () => {
+    const response = await fetchRooms()
+    if (response.success) {
+      setRooms(response.data)
+    } else {
+      toast.error(response.error || "Gagal memuat daftar ruangan")
+    }
+  }
+
+  useEffect(() => {
+    loadRooms()
+  }, [bookingModalOpen])
+
+>>>>>>> 95064e54 (init: setup project and add authorization checks)
   const buildings = Array.from(new Set(rooms.map((r) => r.building)))
 
   const filteredRooms = rooms.filter((room) => {
@@ -44,13 +65,20 @@ export default function RoomsPage() {
     setBookingModalOpen(true)
   }
 
+<<<<<<< HEAD
   const handleBookingSubmit = (data: BookingFormData) => {
     const authData = localStorage.getItem("sipinjam_auth")
     if (!authData) {
+=======
+  const handleBookingSubmit = async (data: BookingFormData) => {
+    const user = await getCurrentUserAction()
+    if (!user) {
+>>>>>>> 95064e54 (init: setup project and add authorization checks)
       toast.error("Sesi tidak valid, silakan login kembali")
       return
     }
 
+<<<<<<< HEAD
     const user = JSON.parse(authData)
     const existingBookings = getBookings()
 
@@ -77,6 +105,23 @@ export default function RoomsPage() {
     })
     setBookingModalOpen(false)
     setSelectedRoomId(null)
+=======
+    const response = await createBooking({
+      ...data,
+      userId: user.id,
+      userName: user.name,
+    })
+
+    if (response.success) {
+      toast.success("Peminjaman berhasil diajukan!", {
+        description: "Admin akan meninjau permintaan Anda dalam 2x24 jam",
+      })
+      setBookingModalOpen(false)
+      setSelectedRoomId(null)
+    } else {
+      toast.error(response.error || "Gagal mengajukan peminjaman")
+    }
+>>>>>>> 95064e54 (init: setup project and add authorization checks)
   }
 
   return (

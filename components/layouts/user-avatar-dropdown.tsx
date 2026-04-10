@@ -12,6 +12,10 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import { useTheme } from "@/components/providers/theme-provider"
+<<<<<<< HEAD
+=======
+import { logoutAction } from "@/app/actions/auth"
+>>>>>>> 95064e54 (init: setup project and add authorization checks)
 
 interface UserAvatarDropdownProps {
   user: {
@@ -25,9 +29,16 @@ export function UserAvatarDropdown({ user }: UserAvatarDropdownProps) {
   const router = useRouter()
   const { theme, toggleTheme } = useTheme()
 
+<<<<<<< HEAD
   const handleLogout = () => {
     localStorage.removeItem("sipinjam_auth")
     router.push("/login")
+=======
+  const handleLogout = async () => {
+    await logoutAction()
+    router.push("/login")
+    router.refresh()
+>>>>>>> 95064e54 (init: setup project and add authorization checks)
   }
 
   const handleSettings = () => {

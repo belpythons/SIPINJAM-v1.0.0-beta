@@ -10,12 +10,23 @@ import { BookingTable } from "@/components/user/booking-table"
 import { NewBookingModal } from "@/components/user/new-booking-modal"
 import { BookingDetailModal } from "@/components/user/booking-detail-modal"
 import { generateBookingPDF } from "@/lib/pdf-generator"
+<<<<<<< HEAD
 import { getRooms, getEquipment, getBookings, saveBookings } from "@/lib/data-manager"
 import { toast } from "sonner"
+=======
+import { fetchUserBookings, createBooking, fetchRooms, fetchEquipment } from "@/app/actions/assets"
+import { getCurrentUserAction } from "@/app/actions/auth"
+import { toast } from "sonner"
+import { useRouter } from "next/navigation"
+>>>>>>> 95064e54 (init: setup project and add authorization checks)
 import type { Booking, BookingFormData } from "@/lib/types"
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
 
 export default function BookingsPage() {
+<<<<<<< HEAD
+=======
+  const router = useRouter()
+>>>>>>> 95064e54 (init: setup project and add authorization checks)
   const [bookings, setBookings] = useState<Booking[]>([])
   const [isNewBookingOpen, setIsNewBookingOpen] = useState(false)
   const [selectedBooking, setSelectedBooking] = useState<Booking | null>(null)
@@ -23,6 +34,7 @@ export default function BookingsPage() {
   const [viewMode, setViewMode] = useState<"grid" | "table">("grid")
 
   useEffect(() => {
+<<<<<<< HEAD
     const loadedBookings = getBookings()
     setBookings(loadedBookings)
   }, [])
@@ -81,6 +93,42 @@ export default function BookingsPage() {
     toast.success("Peminjaman berhasil diajukan!", {
       description: "Menunggu persetujuan dari admin",
     })
+=======
+    const loadData = async () => {
+      const user = await getCurrentUserAction()
+      if (user) {
+        const data = await fetchUserBookings(user.id)
+        setBookings(data as any)
+      } else {
+        router.push("/login")
+      }
+    }
+    loadData()
+  }, [router])
+
+  const handleNewBooking = async (data: BookingFormData) => {
+    const user = await getCurrentUserAction()
+    if (!user) {
+      toast.error("Sesi tidak valid, silakan login kembali")
+      router.push("/login")
+      return
+    }
+
+    const response = await createBooking({
+      ...data,
+      userId: user.id,
+      userName: user.name,
+    })
+
+    if (response.success) {
+      const updatedBookings = await fetchUserBookings(user.id)
+      setBookings(updatedBookings as any)
+      setIsNewBookingOpen(false)
+      toast.success("Peminjaman berhasil diajukan!")
+    } else {
+      toast.error(response.error || "Gagal mengajukan peminjaman")
+    }
+>>>>>>> 95064e54 (init: setup project and add authorization checks)
   }
 
   const handleViewDetail = (booking: Booking) => {
@@ -88,6 +136,7 @@ export default function BookingsPage() {
     setIsDetailOpen(true)
   }
 
+<<<<<<< HEAD
   const handleDownloadPDF = (booking: Booking) => {
     const items = booking.type === "room" ? getRooms() : getEquipment()
     const item = items.find((i) => i.id === booking.itemId)
@@ -97,6 +146,26 @@ export default function BookingsPage() {
       toast.success("PDF berhasil diunduh!")
     } else {
       toast.error("Item tidak ditemukan")
+=======
+  const handleDownloadPDF = async (booking: Booking) => {
+    try {
+      const response = booking.type === "room" ? await fetchRooms() : await fetchEquipment()
+      if (!response.success) {
+        toast.error(response.error || "Gagal mengambil data item")
+        return
+      }
+
+      const item = response.data.find((i: any) => i.id === booking.itemId)
+
+      if (item) {
+        generateBookingPDF({ booking, item: item as any })
+        toast.success("PDF berhasil diunduh!")
+      } else {
+        toast.error("Item tidak ditemukan")
+      }
+    } catch (error) {
+      toast.error("Gagal mengunduh PDF")
+>>>>>>> 95064e54 (init: setup project and add authorization checks)
     }
   }
 

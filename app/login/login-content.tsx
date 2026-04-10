@@ -1,14 +1,12 @@
-<<<<<<< HEAD
 "use client"
 
 import { useState } from "react"
 import { LoginForm } from "@/components/auth/login-form"
 import { BookCheck } from "lucide-react"
 import type { UserRole } from "@/lib/types"
-// Added Image import from Next.js for optimized logo rendering
 import Image from "next/image"
 
-export default function LoginPage() {
+export function LoginContent() {
   const [selectedRole, setSelectedRole] = useState<UserRole>("user")
 
   return (
@@ -80,7 +78,7 @@ export default function LoginPage() {
             </ul>
           </div>
 
-          <div className="text-sm text-white/60">© 2025 SIPINJAM. Universitas Indonesia.</div>
+          <div className="text-sm text-white/60">© 2024 SIPINJAM. Universitas Indonesia.</div>
         </div>
       </div>
 
@@ -104,25 +102,3 @@ export default function LoginPage() {
     </div>
   )
 }
-=======
-import { Suspense } from "react"
-import { LoginForm } from "@/components/auth/login-form"
-import { BookCheck, Loader2 } from "lucide-react"
-import type { UserRole } from "@/lib/types"
-// Added Image import from Next.js for optimized logo rendering
-import Image from "next/image"
-import { LoginContent } from "./login-content"
-
-export default function LoginPage() {
-  return (
-    <Suspense fallback={
-      <div className="min-h-screen flex items-center justify-center bg-background">
-        <Loader2 className="w-10 h-10 animate-spin text-primary" />
-      </div>
-    }>
-      <LoginContent />
-    </Suspense>
-  )
-}
-
->>>>>>> 95064e54 (init: setup project and add authorization checks)

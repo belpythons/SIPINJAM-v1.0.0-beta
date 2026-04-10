@@ -1,6 +1,7 @@
 "use client"
 
 import type React from "react"
+<<<<<<< HEAD
 
 import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
@@ -10,12 +11,22 @@ import { Footer } from "@/components/layouts/footer"
 import { ThemeProvider } from "@/components/providers/theme-provider"
 import type { User } from "@/lib/types"
 import { useSidebarStore } from "@/lib/sidebar-store"
+=======
+import { useEffect, useState } from "react"
+import { UserSidebar } from "@/components/layouts/user-sidebar"
+import { UserAvatarDropdown } from "@/components/layouts/user-avatar-dropdown"
+import { Footer } from "@/components/layouts/footer"
+import type { User } from "@/lib/types"
+import { useSidebarStore } from "@/lib/sidebar-store"
+import { getCurrentUserAction } from "@/app/actions/auth"
+>>>>>>> 95064e54 (init: setup project and add authorization checks)
 
 export default function UserLayout({
   children,
 }: {
   children: React.ReactNode
 }) {
+<<<<<<< HEAD
   const router = useRouter()
   const [user, setUser] = useState<User | null>(null)
   const [isLoading, setIsLoading] = useState(true)
@@ -75,5 +86,41 @@ export default function UserLayout({
         </div>
       </div>
     </ThemeProvider>
+=======
+  const [user, setUser] = useState<User | null>(null)
+  const { isCollapsed } = useSidebarStore()
+
+  useEffect(() => {
+    const fetchUser = async () => {
+      const currentUser = await getCurrentUserAction()
+      if (currentUser && currentUser.role === "user") {
+        setUser(currentUser)
+      }
+    }
+    fetchUser()
+  }, [])
+
+  return (
+    <div className="flex h-screen overflow-hidden">
+      <UserSidebar />
+
+      <div className={`flex flex-1 flex-col transition-all duration-300 ${isCollapsed ? "lg:ml-20" : "lg:ml-64"}`}>
+        {/* Header */}
+        <header className="sticky top-0 z-30 flex h-16 items-center justify-between border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 px-4 lg:px-6">
+          <div className="ml-12 lg:ml-0">
+            <h2 className="text-xl font-semibold">User Portal</h2>
+          </div>
+          {user && <UserAvatarDropdown user={user} />}
+        </header>
+
+        {/* Main content */}
+        <main className="flex-1 overflow-y-auto bg-gray-50 relative">
+          {children}
+        </main>
+
+        <Footer />
+      </div>
+    </div>
+>>>>>>> 95064e54 (init: setup project and add authorization checks)
   )
 }

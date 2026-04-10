@@ -11,7 +11,11 @@ import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Eye, EyeOff, Loader2 } from "lucide-react"
 import type { UserRole } from "@/lib/types"
+<<<<<<< HEAD
 import { authenticateUser, setUserSession, authenticateWithGoogle } from "@/lib/auth"
+=======
+import { authenticateUserAction, authenticateWithGoogleAction } from "@/app/actions/auth"
+>>>>>>> 95064e54 (init: setup project and add authorization checks)
 import { useToast } from "@/hooks/use-toast"
 import { ForgotPasswordModal } from "./forgot-password-modal"
 
@@ -81,7 +85,11 @@ export function LoginForm({ selectedRole, onRoleChange }: LoginFormProps) {
     setIsLoading(true)
 
     try {
+<<<<<<< HEAD
       const result = await authenticateUser({
+=======
+      const result = await authenticateUserAction({
+>>>>>>> 95064e54 (init: setup project and add authorization checks)
         email: formData.email,
         password: formData.password,
         role: selectedRole,
@@ -96,7 +104,10 @@ export function LoginForm({ selectedRole, onRoleChange }: LoginFormProps) {
           localStorage.removeItem("rememberedEmail")
         }
 
+<<<<<<< HEAD
         setUserSession(result.user)
+=======
+>>>>>>> 95064e54 (init: setup project and add authorization checks)
         toast({
           title: "Login Berhasil",
           description: `Selamat datang, ${result.user.name}!`,
@@ -104,9 +115,15 @@ export function LoginForm({ selectedRole, onRoleChange }: LoginFormProps) {
 
         // Redirect based on role
         if (result.user.role === "admin") {
+<<<<<<< HEAD
           router.push("/admin/dashboard")
         } else {
           router.push("/user/dashboard")
+=======
+          window.location.href = "/admin/dashboard"
+        } else {
+          window.location.href = "/user/dashboard"
+>>>>>>> 95064e54 (init: setup project and add authorization checks)
         }
       } else {
         toast({
@@ -130,10 +147,15 @@ export function LoginForm({ selectedRole, onRoleChange }: LoginFormProps) {
     setIsGoogleLoading(true)
 
     try {
+<<<<<<< HEAD
       const result = await authenticateWithGoogle(selectedRole)
 
       if (result.success && result.user) {
         setUserSession(result.user)
+=======
+      const result = await authenticateWithGoogleAction(selectedRole)
+      if (result.success && result.user) {
+>>>>>>> 95064e54 (init: setup project and add authorization checks)
         toast({
           title: "Login Berhasil",
           description: `Selamat datang, ${result.user.name}!`,
@@ -141,9 +163,15 @@ export function LoginForm({ selectedRole, onRoleChange }: LoginFormProps) {
 
         // Redirect based on role
         if (result.user.role === "admin") {
+<<<<<<< HEAD
           router.push("/admin/dashboard")
         } else {
           router.push("/user/dashboard")
+=======
+          window.location.href = "/admin/dashboard"
+        } else {
+          window.location.href = "/user/dashboard"
+>>>>>>> 95064e54 (init: setup project and add authorization checks)
         }
       } else {
         toast({

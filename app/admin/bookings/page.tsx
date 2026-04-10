@@ -7,7 +7,11 @@ import { toast } from "sonner"
 import { BookingTabs } from "@/components/admin/booking-tabs"
 import { BookingDetailModal } from "@/components/user/booking-detail-modal"
 import { ApprovalModal } from "@/components/admin/approval-modal"
+<<<<<<< HEAD
 import { getBookings, saveBookings } from "@/lib/data-manager"
+=======
+import { fetchAllBookings, updateBookingStatus } from "@/app/actions/assets"
+>>>>>>> 95064e54 (init: setup project and add authorization checks)
 import type { Booking } from "@/lib/types"
 import { Card, CardContent } from "@/components/ui/card"
 
@@ -18,6 +22,7 @@ export default function AdminBookingsPage() {
   const [approvalModalOpen, setApprovalModalOpen] = useState(false)
 
   useEffect(() => {
+<<<<<<< HEAD
     const loadedBookings = getBookings()
     setBookings(loadedBookings)
   }, [])
@@ -63,6 +68,35 @@ export default function AdminBookingsPage() {
     toast.error("Peminjaman ditolak", {
       description: "Notifikasi email telah dikirim ke peminjam",
     })
+=======
+    const loadBookings = async () => {
+      const data = await fetchAllBookings()
+      setBookings(data as any)
+    }
+    loadBookings()
+  }, [])
+
+  const handleApprove = async (bookingId: string, notes?: string) => {
+    try {
+      await updateBookingStatus(bookingId, "APPROVED", notes)
+      const data = await fetchAllBookings()
+      setBookings(data as any)
+      toast.success("Peminjaman disetujui")
+    } catch (error: any) {
+      toast.error(error.message || "Gagal menyetujui peminjaman")
+    }
+  }
+
+  const handleReject = async (bookingId: string, reason: string) => {
+    try {
+      await updateBookingStatus(bookingId, "REJECTED", undefined, reason)
+      const data = await fetchAllBookings()
+      setBookings(data as any)
+      toast.error("Peminjaman ditolak")
+    } catch (error: any) {
+      toast.error(error.message || "Gagal menolak peminjaman")
+    }
+>>>>>>> 95064e54 (init: setup project and add authorization checks)
   }
 
   const handleViewDetails = (booking: Booking) => {

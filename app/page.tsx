@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 "use client"
 
 import { useEffect } from "react"
@@ -21,4 +22,10 @@ export default function Home() {
       </div>
     </div>
   )
+=======
+import { redirect } from "next/navigation"
+
+export default function Home() {
+  redirect("/login")
+>>>>>>> 95064e54 (init: setup project and add authorization checks)
 }
