@@ -33,7 +33,7 @@ class DashboardController extends Controller
             ->get();
 
         // 4. Kirim data LANGSUNG ke tampilan (view) dashboard.blade.php
-        return view('dashboard', compact(
+        return view('user.dashboard', compact(
             'user', 
             'totalPeminjaman', 
             'sedangDipinjam', 

@@ -1,7 +1,9 @@
-namespace App\Http\Controllers\User;
+<?php
+
+namespace App\Http\Controllers;
 
 use App\Http\Controllers\Controller;
-use App\Models\Booking;
+use App\Models\Peminjaman;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
@@ -10,7 +12,7 @@ class BookingController extends Controller
     public function index()
     {
         // Mengambil data peminjaman user saat ini, mirip dengan getBookings() di Next.js
-        $bookings = Booking::where('user_id', Auth::id())
+        $bookings = Peminjaman::where('user_id', Auth::id())
                             ->latest()
                             ->get();
 
