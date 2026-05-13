@@ -95,10 +95,6 @@
 
     <!-- MAIN CONTENT -->
     <main class="flex-1 flex flex-col h-screen overflow-hidden ml-64">
-        <!-- Top Header -->
-        <header class="py-4 px-8 border-b border-gray-200 bg-[#f8f9fa] flex items-center z-10">
-            <h1 class="text-[1.15rem] font-bold text-gray-900">Admin Portal</h1>
-        </header>
 
         <!-- Scrollable Content -->
         <div class="flex-1 overflow-y-auto p-8">

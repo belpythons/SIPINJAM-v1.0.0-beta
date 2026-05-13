@@ -5,7 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Kelola Peminjaman - SIPINJAM Admin</title>
     
-    <!-- Tailwind CSS & FontAwesome -->
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     
@@ -27,16 +26,13 @@
 </head>
 <body class="bg-[#f8f9fa] text-gray-800 font-sans flex h-screen overflow-hidden">
 
-   <!-- SIDEBAR -->
-    <aside class="fixed left-0 top-0 z-40 h-screen w-64 bg-brand text-white transition-all duration-300 flex flex-col hidden lg:flex shadow-xl">
+   <aside class="fixed left-0 top-0 z-40 h-screen w-64 bg-gradient-to-b from-brand-dark to-brand-light text-white transition-all duration-300 flex flex-col hidden lg:flex shadow-xl">
         <div class="flex-1 flex flex-col">
-            <!-- Logo -->
             <div class="flex h-20 items-center gap-3 px-6 mt-2 flex-shrink-0">
                 <img src="{{ asset('image/logo-sp.png') }}" alt="Logo SIPINJAM" class="w-10 h-auto drop-shadow-md">
                 <h1 class="text-2xl font-bold tracking-wide">SIPINJAM</h1>
             </div>
 
-            <!-- User Info -->
             <div class="px-6 py-2 flex items-center space-x-3 mb-6">
                 <div class="w-12 h-12 rounded-full border-[1.5px] border-white/50 flex items-center justify-center font-semibold text-lg bg-white/10">
                     AS
@@ -47,7 +43,6 @@
                 </div>
             </div>
 
-            <!-- Navigation -->
             <nav class="px-4 space-y-1.5">
                 <a href="{{ route('admin.dashboard') }}" class="flex items-center space-x-3 px-4 py-3 hover:bg-white/10 rounded-lg text-white/90 transition-colors">
                     <i class="fas fa-border-all w-5 text-center text-[18px]"></i>
@@ -59,7 +54,6 @@
                     <span class="text-[15px]">Kelola User</span>
                 </a>
 
-                <!-- Aktif -->
                 <a href="{{ route('admin.kelola_peminjaman') }}" class="flex items-center space-x-3 px-4 py-3 bg-white/20 rounded-lg text-white font-medium transition-colors">
                     <i class="far fa-calendar-alt w-5 text-center text-[18px]"></i>
                     <span class="text-[15px]">Kelola Peminjaman</span>
@@ -77,7 +71,6 @@
             </nav>
         </div>
 
-        <!-- Footer Sidebar -->
         <div class="border-t border-white/20 mt-auto">
             <a href="{{ route('logout') }}" 
                 onclick="event.preventDefault(); document.getElementById('form-logout').submit();" 
@@ -86,79 +79,71 @@
                 <span class="text-[15px]">Keluar</span>
             </a>
 
-            <!-- Form tersembunyi yang akan mengeksekusi proses logout -->
             <form id="form-logout" action="{{ route('logout') }}" method="POST" class="hidden">
                 @csrf
             </form>
         </div>
     </aside>
 
-    <!-- MAIN CONTENT -->
     <main class="flex-1 flex flex-col h-screen overflow-hidden ml-64">
-        <!-- Top Header -->
-        <header class="py-4 px-8 border-b border-gray-200 bg-[#f8f9fa] flex items-center z-10">
-            <h1 class="text-[1.15rem] font-bold text-gray-900">Admin Portal</h1>
-        </header>
 
-        <!-- Scrollable Content -->
         <div class="flex-1 overflow-y-auto p-8">
             
-            <!-- Page Title -->
             <div class="mb-8">
                 <h2 class="text-[28px] font-bold text-gray-900">Kelola Peminjaman</h2>
                 <p class="text-gray-500 mt-1 text-[15px]">Kelola persetujuan dan pantau status peminjaman ruangan dan barang</p>
             </div>
 
-            <!-- Stats Cards -->
+            @php
+                $totalPeminjaman = $peminjamans->count();
+                $menungguCount = $peminjamans->where('status', 'menunggu')->count();
+                $aktifCount = $peminjamans->whereIn('status', ['disetujui', 'sedang_dipinjam'])->count();
+            @endphp
+
             <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-                <!-- Card Menunggu Persetujuan -->
                 <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100/80 flex items-center gap-5">
                     <div class="w-14 h-14 rounded-xl bg-yellow-50 flex items-center justify-center flex-shrink-0">
                         <i class="fas fa-exclamation-circle text-yellow-500 text-xl"></i>
                     </div>
                     <div>
                         <p class="text-[13px] text-gray-500 font-medium mb-0.5">Menunggu Persetujuan</p>
-                        <p class="text-[28px] font-bold text-gray-900 leading-none">3</p>
+                        <p class="text-[28px] font-bold text-gray-900 leading-none">{{ $menungguCount }}</p>
                     </div>
                 </div>
 
-                <!-- Card Aktif -->
                 <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100/80 flex items-center gap-5">
                     <div class="w-14 h-14 rounded-xl bg-green-50 flex items-center justify-center flex-shrink-0">
                         <i class="far fa-calendar-check text-green-500 text-xl"></i>
                     </div>
                     <div>
                         <p class="text-[13px] text-gray-500 font-medium mb-0.5">Aktif</p>
-                        <p class="text-[28px] font-bold text-gray-900 leading-none">1</p>
+                        <p class="text-[28px] font-bold text-gray-900 leading-none">{{ $aktifCount }}</p>
                     </div>
                 </div>
 
-                <!-- Card Total Peminjaman -->
                 <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100/80 flex items-center gap-5">
                     <div class="w-14 h-14 rounded-xl bg-gray-50 flex items-center justify-center flex-shrink-0">
                         <i class="far fa-file-alt text-gray-400 text-xl"></i>
                     </div>
                     <div>
                         <p class="text-[13px] text-gray-500 font-medium mb-0.5">Total Peminjaman</p>
-                        <p class="text-[28px] font-bold text-gray-900 leading-none">6</p>
+                        <p class="text-[28px] font-bold text-gray-900 leading-none">{{ $totalPeminjaman }}</p>
                     </div>
                 </div>
             </div>
 
-            <!-- Filter Tabs -->
             <div class="flex bg-white rounded-xl shadow-sm border border-gray-100/80 p-1.5 mb-6 w-full">
                 <button id="btn-menunggu" onclick="filterTab('menunggu', this)" class="tab-btn flex-1 flex justify-center items-center gap-2 py-2.5 text-[14px] font-semibold text-gray-900 bg-white rounded-lg shadow-sm border border-gray-100 transition-all">
-                    Menunggu Persetujuan <span class="bg-[#e11d48] text-white text-[11px] w-[22px] h-[22px] flex items-center justify-center rounded-full">3</span>
+                    Menunggu Persetujuan <span class="bg-[#e11d48] text-white text-[11px] w-[22px] h-[22px] flex items-center justify-center rounded-full">{{ $menungguCount }}</span>
                 </button>
                 <button id="btn-aktif" onclick="filterTab('aktif', this)" class="tab-btn flex-1 flex justify-center items-center gap-2 py-2.5 text-[14px] font-medium text-gray-500 hover:text-gray-800 border border-transparent transition-all">
-                    Aktif <span class="bg-blue-500 text-white text-[11px] w-[22px] h-[22px] flex items-center justify-center rounded-full">1</span>
+                    Aktif <span class="bg-blue-500 text-white text-[11px] w-[22px] h-[22px] flex items-center justify-center rounded-full">{{ $aktifCount }}</span>
                 </button>
                 <button id="btn-riwayat" onclick="filterTab('riwayat', this)" class="tab-btn flex-1 flex justify-center items-center gap-2 py-2.5 text-[14px] font-medium text-gray-500 hover:text-gray-800 border border-transparent transition-all">
                     Riwayat
                 </button>
             </div>
 
-            <!-- Search Bar -->
             <div class="relative mb-6">
                 <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
                     <i class="fas fa-search text-gray-400 font-light"></i>
@@ -166,7 +151,6 @@
                 <input type="text" id="searchInput" onkeyup="filterTable()" class="block w-full pl-11 pr-4 py-3 border border-gray-200 rounded-xl text-sm bg-white placeholder-gray-400 focus:outline-none focus:ring-1 focus:ring-brand focus:border-brand transition-all shadow-sm" placeholder="Cari berdasarkan nama, item, atau tujuan...">
             </div>
 
-            <!-- Table Section -->
             <div class="bg-white rounded-2xl shadow-sm border border-gray-100/80 overflow-hidden mb-6">
                 <div class="overflow-x-auto">
                     <table class="w-full text-left border-collapse">
@@ -261,7 +245,6 @@
                 </div>
             </div>
 
-            <!-- Page Footer -->
             <footer class="mt-auto pt-6 pb-2 flex justify-between items-center text-[13px] text-gray-500">
                 <p>&copy; 2026 SIPINJAM - Sistem Informasi Peminjaman Ruangan dan Barang</p>
                 <p>Built with Next.js</p>
@@ -491,7 +474,5 @@
             </div>
         </div>
     </div>
-</body>
-</html>
 </body>
 </html>

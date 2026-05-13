@@ -1,9 +1,6 @@
 <!DOCTYPE html>
 <html lang="id">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Admin Portal - SIPINJAM</title>
     
     <!-- Bootstrap 5 CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
@@ -175,12 +172,6 @@
 
     <!-- Main Content -->
     <main class="main-wrapper d-flex flex-column">
-        <!-- Header Top -->
-        <header class="py-3 px-4 bg-white bg-opacity-75 border-bottom d-flex align-items-center justify-content-between" style="backdrop-filter: blur(8px);">
-            <h5 class="m-0 fw-bold text-dark">Admin Portal</h5>
-            <!-- Placeholder for mobile toggle if needed -->
-            <button class="btn btn-light d-lg-none"><i class="fas fa-bars"></i></button>
-        </header>
 
         <!-- Scrollable Content -->
         <div class="scrollable-content p-4 p-md-5 w-100 flex-grow-1">
