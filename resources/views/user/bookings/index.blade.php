@@ -99,6 +99,28 @@
             <button class="lg:hidden p-2 rounded-md hover:bg-gray-100"><i data-lucide="menu" class="h-6 w-6"></i></button>
         </header>
 
+        {{-- TAMPILAN PESAN SUKSES & ERROR --}}
+        @if(session('success'))
+            <div class="m-4 lg:mx-8 bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded-xl relative flex items-center gap-3 animate-fade-in shadow-sm">
+                <i data-lucide="check-circle" class="w-5 h-5 text-green-500"></i>
+                <span class="block sm:inline font-medium text-sm">{{ session('success') }}</span>
+            </div>
+        @endif
+
+        @if ($errors->any())
+            <div class="m-4 lg:mx-8 bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-xl animate-fade-in shadow-sm">
+                <div class="flex items-center gap-2 font-semibold text-sm mb-2">
+                    <i data-lucide="alert-circle" class="w-5 h-5"></i> Gagal menyimpan peminjaman:
+                </div>
+                <ul class="list-disc list-inside text-sm space-y-1 ml-2">
+                    @foreach ($errors->all() as $error)
+                        <li>{{ $error }}</li>
+                    @endforeach
+                </ul>
+            </div>
+        @endif
+        {{-- AKHIR TAMPILAN PESAN --}}
+
         <div class="p-4 sm:p-6 lg:p-8 space-y-6 animate-fade-in">
             <div class="flex items-start justify-between animate-slide-up">
                 <div>
@@ -180,29 +202,60 @@
                                     default           => 'circle',
                                 };
                             @endphp
-                            <div class="rounded-xl border border-gray-200 overflow-hidden hover:shadow-md transition-shadow">
-                                <div class="bg-blue-600 px-4 py-3 flex items-center justify-between">
+                            <div class="rounded-xl border border-gray-200 overflow-hidden hover:shadow-md transition-shadow flex flex-col bg-white">
+                                <div class="{{ in_array($item->status, ['disetujui', 'sedang_dipinjam', 'selesai']) ? 'bg-green-500' : 'bg-blue-600' }} px-4 py-3 flex items-center justify-between">
                                     <div class="flex items-center gap-2 text-white/90 text-sm font-medium">
-                                        <i data-lucide="calendar" class="h-4 w-4"></i> Peminjaman
+                                        <i data-lucide="{{ $item->tipe_peminjaman == 'ruangan' ? 'door-open' : 'package' }}" class="h-4 w-4"></i> 
+                                        {{ ucfirst($item->tipe_peminjaman ?? 'Ruangan') }}
                                     </div>
-                                    <span class="text-xs font-medium px-2.5 py-1 rounded-full {{ $badgeColor }}">
+                                    <span class="text-xs font-medium px-2.5 py-1 rounded-full {{ $badgeColor }} bg-white">
                                         <i data-lucide="{{ $statusIcon }}" class="h-3 w-3 inline-block mr-1"></i> {{ $statusLabel }}
                                     </span>
                                 </div>
-                                <div class="bg-blue-600 px-4 pb-4">
-                                    <h4 class="text-base font-bold text-white">
-                                        {{ \Carbon\Carbon::parse($item->tanggal_mulai)->format('d M Y') }} – {{ \Carbon\Carbon::parse($item->tanggal_selesai)->format('d M Y') }}
+                                
+                                <div class="{{ in_array($item->status, ['disetujui', 'sedang_dipinjam', 'selesai']) ? 'bg-green-500' : 'bg-blue-600' }} px-4 pb-4">
+                                    <h4 class="text-lg font-bold text-white truncate">
+                                        {{ $item->nama_item ?? 'Item Peminjaman' }}
                                     </h4>
                                 </div>
-                                <div class="p-4 bg-white space-y-2">
+                                
+                                <div class="p-4 bg-white space-y-3 flex-1">
                                     <div class="flex items-start gap-2 text-sm text-gray-600">
-                                        <i data-lucide="file-text" class="h-4 w-4 text-gray-400 flex-shrink-0 mt-0.5"></i>
-                                        <div><p class="text-xs text-gray-400">Keterangan</p><p class="font-medium">{{ $item->keterangan ?? '-' }}</p></div>
+                                        <i data-lucide="calendar" class="h-4 w-4 text-gray-400 flex-shrink-0 mt-0.5"></i>
+                                        <div>
+                                            <p class="text-xs text-gray-400">Tanggal</p>
+                                            <p class="font-medium text-gray-900">{{ \Carbon\Carbon::parse($item->tanggal_mulai)->format('d M Y') }}</p>
+                                        </div>
                                     </div>
-                                    <div class="flex items-center gap-2 text-sm text-gray-600">
-                                        <i data-lucide="clock" class="h-4 w-4 text-gray-400 flex-shrink-0"></i>
-                                        <div><p class="text-xs text-gray-400">Diajukan</p><p class="font-medium">{{ $item->created_at->diffForHumans() }}</p></div>
+                                    <div class="flex items-start gap-2 text-sm text-gray-600">
+                                        <i data-lucide="clock" class="h-4 w-4 text-gray-400 flex-shrink-0 mt-0.5"></i>
+                                        <div>
+                                            <p class="text-xs text-gray-400">Durasi</p>
+                                            <p class="font-medium text-gray-900">
+                                                {{ $item->jam_mulai ? \Carbon\Carbon::parse($item->jam_mulai)->format('H:i') : '-' }} - 
+                                                {{ $item->jam_selesai ? \Carbon\Carbon::parse($item->jam_selesai)->format('H:i') : '-' }} 
+                                            </p>
+                                        </div>
                                     </div>
+                                    
+                                    <hr class="border-gray-100 my-2">
+                                    <p class="text-sm text-gray-500 truncate">{{ $item->keterangan ?? '-' }}</p>
+                                </div>
+
+                                <div class="p-4 border-t border-gray-100 bg-gray-50/50 flex gap-3">
+                                    <button onclick="openDetailModal({{ json_encode($item) }})" class="flex-1 flex items-center justify-center gap-2 px-3 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors shadow-sm">
+                                        <i data-lucide="eye" class="w-4 h-4"></i> Detail
+                                    </button>
+
+                                    @if(in_array($item->status, ['disetujui', 'sedang_dipinjam', 'selesai']))
+                                        <a href="{{ route('bookings.pdf', $item->id) }}" target="_blank" class="flex-1 flex items-center justify-center gap-2 px-3 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors shadow-sm">
+                                            <i data-lucide="download" class="w-4 h-4"></i> PDF
+                                        </a>
+                                    @else
+                                        <button disabled class="flex-1 flex items-center justify-center gap-2 px-3 py-2 text-sm font-medium text-gray-400 bg-gray-100 border border-gray-200 rounded-lg cursor-not-allowed">
+                                            <i data-lucide="download" class="w-4 h-4"></i> PDF
+                                        </button>
+                                    @endif
                                 </div>
                             </div>
                         @empty
@@ -416,7 +469,133 @@
     </div>
 </div>
 
+{{-- MODAL DETAIL PEMINJAMAN --}}
+<div id="detailModal" class="fixed inset-0 z-50 flex items-center justify-center hidden bg-black/40 backdrop-blur-sm transition-opacity duration-300">
+    <div class="bg-white rounded-2xl shadow-xl w-full max-w-md mx-4 overflow-hidden flex flex-col max-h-[90vh]">
+        
+        <div class="p-5 border-b border-gray-100 flex items-center justify-between bg-white relative z-10">
+            <div class="flex items-center gap-2">
+                <i data-lucide="alert-circle" class="w-5 h-5 text-yellow-500" id="detail_icon_status"></i>
+                <h2 class="text-lg font-bold text-gray-900">Detail Peminjaman</h2>
+            </div>
+            <button type="button" onclick="toggleModal('detailModal')" class="text-gray-400 hover:text-gray-600 transition-colors">
+                <i data-lucide="x" class="w-5 h-5"></i>
+            </button>
+        </div>
+
+        <div class="p-5 overflow-y-auto bg-gray-50/50 space-y-4">
+            <p class="text-xs text-gray-400 mb-2"># ID: booking-<span id="detail_id"></span></p>
+
+            <div class="bg-yellow-50 border border-yellow-200 rounded-xl p-4 flex items-center justify-between" id="detail_status_card">
+                <div>
+                    <p class="text-xs font-medium text-yellow-800 mb-1">Status Peminjaman</p>
+                    <h3 class="text-lg font-bold text-yellow-900" id="detail_status_text">Menunggu Persetujuan</h3>
+                </div>
+                <div class="w-10 h-10 rounded-full bg-yellow-100 flex items-center justify-center text-yellow-600" id="detail_status_icon_bg">
+                    <i data-lucide="clock" class="w-5 h-5"></i>
+                </div>
+            </div>
+
+            <div class="bg-white border border-gray-200 rounded-xl p-4 shadow-sm">
+                <div class="flex items-center gap-2 mb-4 text-blue-600 font-semibold">
+                    <i data-lucide="door-open" class="w-5 h-5" id="detail_tipe_icon"></i>
+                    <span id="detail_tipe_title">Informasi Ruangan</span>
+                </div>
+                <div class="space-y-3">
+                    <div class="flex justify-between items-center bg-gray-50 px-3 py-2 rounded-lg">
+                        <span class="text-xs text-gray-500">Nama <span id="detail_label_item">Ruangan</span></span>
+                        <span class="text-sm font-semibold text-gray-900" id="detail_nama_item">Ruang Seminar</span>
+                    </div>
+                    <div class="flex justify-between items-center bg-gray-50 px-3 py-2 rounded-lg">
+                        <span class="text-xs text-gray-500">Tipe Peminjaman</span>
+                        <span class="text-sm font-semibold text-gray-900" id="detail_tipe_value">Ruangan</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-white border border-gray-200 rounded-xl p-4 shadow-sm">
+                <div class="flex items-center gap-2 mb-4 text-blue-600 font-semibold">
+                    <i data-lucide="clock" class="w-5 h-5"></i> Jadwal Peminjaman
+                </div>
+                <div class="grid grid-cols-2 gap-3 mb-3">
+                    <div class="border border-gray-100 rounded-lg p-3">
+                        <p class="text-xs text-gray-500 flex items-center gap-1 mb-1"><i data-lucide="calendar" class="w-3 h-3"></i> Waktu Mulai</p>
+                        <p class="text-sm font-bold text-gray-900" id="detail_tgl_mulai">29 April 2026</p>
+                        <p class="text-xs text-gray-400 mt-0.5" id="detail_jam_mulai">21:27 WIB</p>
+                    </div>
+                    <div class="border border-gray-100 rounded-lg p-3">
+                        <p class="text-xs text-gray-500 flex items-center gap-1 mb-1"><i data-lucide="calendar" class="w-3 h-3"></i> Waktu Selesai</p>
+                        <p class="text-sm font-bold text-gray-900" id="detail_tgl_selesai">29 April 2026</p>
+                        <p class="text-xs text-gray-400 mt-0.5" id="detail_jam_selesai">22:28 WIB</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-white border border-gray-200 rounded-xl p-4 shadow-sm">
+                <div class="flex items-center gap-2 mb-3 text-blue-600 font-semibold">
+                    <i data-lucide="file-text" class="w-5 h-5"></i> Tujuan Peminjaman
+                </div>
+                <div class="bg-gray-50 p-3 rounded-lg text-sm text-gray-700" id="detail_tujuan">
+                    test 456789
+                </div>
+            </div>
+            
+        </div>
+    </div>
+</div>
+
 <script>
+function openDetailModal(item) {
+    // 1. Tampilkan ID unik (bisa pakai timestamp atau ID asli)
+    document.getElementById('detail_id').innerText = item.id + Math.floor(Math.random() * 1000000000);
+
+    // 2. Set Status Warna & Teks
+    const statusCard = document.getElementById('detail_status_card');
+    const statusText = document.getElementById('detail_status_text');
+    const statusIconBg = document.getElementById('detail_status_icon_bg');
+    
+    if (item.status === 'menunggu') {
+        statusCard.className = "bg-yellow-50 border border-yellow-200 rounded-xl p-4 flex items-center justify-between";
+        statusText.className = "text-lg font-bold text-yellow-900";
+        statusText.innerText = "Menunggu Persetujuan";
+        statusIconBg.className = "w-10 h-10 rounded-full bg-yellow-100 flex items-center justify-center text-yellow-600";
+        statusIconBg.innerHTML = '<i data-lucide="clock" class="w-5 h-5"></i>';
+    } else if (item.status === 'disetujui' || item.status === 'sedang_dipinjam' || item.status === 'selesai') {
+        statusCard.className = "bg-green-50 border border-green-200 rounded-xl p-4 flex items-center justify-between";
+        statusText.className = "text-lg font-bold text-green-900";
+        statusText.innerText = "Disetujui";
+        statusIconBg.className = "w-10 h-10 rounded-full bg-green-100 flex items-center justify-center text-green-600";
+        statusIconBg.innerHTML = '<i data-lucide="check-circle" class="w-5 h-5"></i>';
+    } else {
+        statusCard.className = "bg-red-50 border border-red-200 rounded-xl p-4 flex items-center justify-between";
+        statusText.className = "text-lg font-bold text-red-900";
+        statusText.innerText = "Ditolak";
+        statusIconBg.className = "w-10 h-10 rounded-full bg-red-100 flex items-center justify-center text-red-600";
+        statusIconBg.innerHTML = '<i data-lucide="x-circle" class="w-5 h-5"></i>';
+    }
+
+    // 3. Set Tipe (Ruangan/Barang)
+    const isRuangan = item.tipe_peminjaman === 'ruangan';
+    document.getElementById('detail_tipe_title').innerText = isRuangan ? 'Informasi Ruangan' : 'Informasi Barang';
+    document.getElementById('detail_label_item').innerText = isRuangan ? 'Ruangan' : 'Barang';
+    document.getElementById('detail_tipe_value').innerText = isRuangan ? 'Ruangan' : 'Barang';
+    document.getElementById('detail_tipe_icon').setAttribute('data-lucide', isRuangan ? 'door-open' : 'package');
+    document.getElementById('detail_nama_item').innerText = item.nama_item || '-';
+
+    // 4. Set Jadwal (Gunakan format JS sederhana atau biarkan format mentah sementara)
+    document.getElementById('detail_tgl_mulai').innerText = item.tanggal_mulai || '-';
+    document.getElementById('detail_jam_mulai').innerText = (item.waktu_mulai || '-') + ' WIB';
+    document.getElementById('detail_tgl_selesai').innerText = item.tanggal_selesai || '-';
+    document.getElementById('detail_jam_selesai').innerText = (item.waktu_selesai || '-') + ' WIB';
+
+    // 5. Set Tujuan
+    document.getElementById('detail_tujuan').innerText = item.keterangan || '-';
+
+    // Refresh icon & buka modal
+    lucide.createIcons();
+    toggleModal('detailModal');
+}
+
     lucide.createIcons();
 
     function setView(type) {

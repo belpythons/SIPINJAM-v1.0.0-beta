@@ -11,62 +11,96 @@
     /* ===== LEFT PANEL ===== */
     .left-panel {
         width: 55%; min-height: 100vh;
-        display: flex; flex-direction: column; padding: 40px 52px;
+        display: flex; flex-direction: column; padding: 48px 64px;
         position: relative; overflow: hidden;
-        transition: background 0.5s ease;
+        z-index: 1;
+        /* Transisi halus saat ganti role */
+        transition: background 0.6s ease;
     }
 
-    /* Mode USER → Biru */
-    .left-panel.mode-user {
-        background: linear-gradient(145deg, #1a3799 0%, #1e40af 40%, #2563eb 100%);
+    /* Warna Dasar Panel dengan Linear Gradient yang Elegan */
+    .left-panel.mode-user  { 
+        background: linear-gradient(135deg, #0f172a 0%, #1e3a8a 100%); 
+    } 
+    .left-panel.mode-admin { 
+        background: linear-gradient(135deg, #431407 0%, #9a3412 100%); 
     }
 
-    /* Mode ADMIN → Orange */
-    .left-panel.mode-admin {
-        background: linear-gradient(145deg, #b84500 0%, #d95e00 40%, #f97316 100%);
+    /* Efek Pola Grid (Tech Vibe) */
+    .pattern-overlay {
+        position: absolute; inset: 0;
+        background-image: 
+            linear-gradient(rgba(255,255,255,0.04) 1px, transparent 1px),
+            linear-gradient(90deg, rgba(255,255,255,0.04) 1px, transparent 1px);
+        background-size: 40px 40px;
+        z-index: -2;
     }
 
-    .left-panel::before {
-        content: ''; position: absolute; top: -140px; right: -140px;
-        width: 420px; height: 420px; background: rgba(255,255,255,0.06);
-        border-radius: 50%; pointer-events: none;
+    /* Efek Floating Glass Shapes (Pengganti Bulatan) */
+    .bg-shape {
+        position: absolute;
+        border-radius: 32px;
+        background: linear-gradient(135deg, rgba(255,255,255,0.08) 0%, rgba(255,255,255,0) 100%);
+        border: 1px solid rgba(255,255,255,0.08);
+        backdrop-filter: blur(8px);
+        -webkit-backdrop-filter: blur(8px);
+        z-index: -1;
+        transition: all 0.6s ease;
     }
-    .left-panel::after {
-        content: ''; position: absolute; bottom: -100px; left: -100px;
-        width: 320px; height: 320px; background: rgba(255,255,255,0.04);
-        border-radius: 50%; pointer-events: none;
-    }
+    
+    .shape-1 { width: 450px; height: 450px; top: -10%; right: -15%; transform: rotate(-15deg); }
+    .shape-2 { width: 350px; height: 350px; bottom: -5%; left: -10%; transform: rotate(25deg); }
+    .shape-3 { width: 200px; height: 200px; top: 40%; right: 15%; transform: rotate(45deg); opacity: 0.7;}
 
-    .logo-wrap { display: flex; align-items: center; gap: 14px; position: relative; z-index: 1; }
+    /* Shadow warna dinamis untuk shapes */
+    .left-panel.mode-user .bg-shape { box-shadow: 0 20px 40px rgba(37, 99, 235, 0.15); }
+    .left-panel.mode-admin .bg-shape { box-shadow: 0 20px 40px rgba(234, 88, 12, 0.15); }
+
+    /* Elemen Header Kiri */
+    .logo-wrap { display: flex; align-items: center; gap: 16px; position: relative; z-index: 1; margin-bottom: auto; }
     .logo-icon {
-        width: 48px; height: 48px; border-radius: 12px;
+        width: 52px; height: 52px; border-radius: 12px;
         display: flex; align-items: center; justify-content: center;
-        font-weight: 800; font-size: 16px; color: #fff; flex-shrink: 0;
-        transition: background 0.5s ease;
+        flex-shrink: 0; overflow: hidden; background: transparent;
     }
+    .logo-img { width: 100%; height: 100%; object-fit: contain; }
+    .logo-text-title { color: #fff; font-weight: 800; font-size: 20px; letter-spacing: 0.03em; line-height: 1.2; }
+    .logo-text-sub   { color: rgba(255,255,255,0.7); font-size: 13px; font-weight: 500; margin-top: 2px; }
 
-    /* Logo icon warna kebalikan dari panel */
-    .left-panel.mode-user .logo-icon    { background: linear-gradient(135deg, #f97316 0%, #ea580c 100%); }
-    .left-panel.mode-admin .logo-icon   { background: rgba(255,255,255,0.25); }
-
-    .logo-text-title { color: #fff; font-weight: 800; font-size: 18px; letter-spacing: 0.03em; line-height: 1.2; }
-    .logo-text-sub   { color: rgba(255,255,255,0.6); font-size: 12px; font-weight: 500; margin-top: 2px; }
-
-    .hero-content { flex: 1; display: flex; flex-direction: column; justify-content: center; padding: 40px 0; position: relative; z-index: 1; }
+    /* Konten Tengah (Hero) */
+    .hero-content { flex: none; display: flex; flex-direction: column; justify-content: center; position: relative; z-index: 1; margin: auto 0; }
     .hero-eyebrow {
-        color: rgba(255,255,255,0.65); font-size: 12px; font-weight: 700;
-        letter-spacing: 0.1em; text-transform: uppercase; margin-bottom: 18px;
-        display: flex; align-items: center; gap: 10px;
+        color: rgba(255,255,255,0.7); font-size: 13px; font-weight: 700;
+        letter-spacing: 0.15em; text-transform: uppercase; margin-bottom: 20px;
+        display: flex; align-items: center; gap: 12px;
     }
-    .hero-eyebrow::before { content: ''; display: inline-block; width: 24px; height: 2px; background: rgba(255,255,255,0.4); border-radius: 2px; }
-    .hero-title { color: #fff; font-size: 40px; font-weight: 800; line-height: 1.18; margin-bottom: 20px; letter-spacing: -0.5px; }
-    .hero-desc  { color: rgba(255,255,255,0.75); font-size: 15px; line-height: 1.75; margin-bottom: 40px; max-width: 380px; }
+    .hero-eyebrow::before { content: ''; display: inline-block; width: 30px; height: 2px; background: rgba(255,255,255,0.5); border-radius: 2px; }
+    .hero-title { color: #fff; font-size: 46px; font-weight: 800; line-height: 1.15; margin-bottom: 24px; letter-spacing: -0.5px; }
+    .hero-desc  { color: rgba(255,255,255,0.8); font-size: 16px; line-height: 1.7; margin-bottom: 40px; max-width: 450px; }
 
-    .feature-list { display: flex; flex-direction: column; gap: 14px; }
-    .feature-item { display: flex; align-items: center; gap: 14px; }
-    .feature-check { width: 30px; height: 30px; border-radius: 50%; background: rgba(255,255,255,0.15); display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
-    .feature-label { color: rgba(255,255,255,0.88); font-size: 14px; font-weight: 500; }
-    .left-footer { color: rgba(255,255,255,0.35); font-size: 12px; position: relative; z-index: 1; }
+    /* Glassmorphism Feature Card */
+    .glass-card {
+        background: rgba(255, 255, 255, 0.06);
+        backdrop-filter: blur(16px);
+        -webkit-backdrop-filter: blur(16px);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 24px;
+        padding: 32px;
+        max-width: 480px;
+        box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+    }
+    
+    .feature-list { display: flex; flex-direction: column; gap: 18px; }
+    .feature-item { display: flex; align-items: center; gap: 16px; }
+    .feature-check { 
+        width: 32px; height: 32px; border-radius: 50%; 
+        background: rgba(255,255,255,0.15); 
+        display: flex; align-items: center; justify-content: center; flex-shrink: 0; 
+        border: 1px solid rgba(255,255,255,0.2);
+    }
+    .feature-label { color: rgba(255,255,255,0.95); font-size: 15px; font-weight: 600; }
+    
+    .left-footer { color: rgba(255,255,255,0.4); font-size: 13px; position: relative; z-index: 1; margin-top: auto; font-weight: 500;}
 
     /* ===== RIGHT PANEL ===== */
     .right-panel { width: 45%; min-height: 100vh; background: #fff; display: flex; align-items: center; justify-content: center; padding: 40px; }
@@ -78,7 +112,7 @@
     /* ===== ROLE TOGGLE ===== */
     .role-toggle { display: flex; background: #f3f4f6; border-radius: 10px; padding: 4px; gap: 4px; margin-bottom: 24px; }
     .toggle-btn {
-        flex: 1; padding: 9px 0; border-radius: 8px; font-size: 14px; font-weight: 600;
+        flex: 1; padding: 10px 0; border-radius: 8px; font-size: 14px; font-weight: 600;
         cursor: pointer; border: none; background: transparent; color: #6b7280;
         transition: all 0.25s ease; font-family: 'Plus Jakarta Sans', sans-serif;
     }
@@ -87,13 +121,13 @@
     /* Aktif USER → biru */
     .toggle-btn.active-user  { background: #2563eb; color: #fff; box-shadow: 0 2px 8px rgba(37,99,235,0.35); }
     /* Aktif ADMIN → orange */
-    .toggle-btn.active-admin { background: #f97316; color: #fff; box-shadow: 0 2px 8px rgba(249,115,22,0.35); }
+    .toggle-btn.active-admin { background: #ea580c; color: #fff; box-shadow: 0 2px 8px rgba(234,88,12,0.35); }
 
     /* ===== FORM ===== */
-    .field-group  { margin-bottom: 16px; }
-    .field-label  { display: block; font-size: 13px; font-weight: 600; color: #374151; margin-bottom: 7px; }
+    .field-group  { margin-bottom: 18px; }
+    .field-label  { display: block; font-size: 13px; font-weight: 600; color: #374151; margin-bottom: 8px; }
     .form-input {
-        width: 100%; padding: 11px 14px; border: 1.5px solid #e5e7eb; border-radius: 10px;
+        width: 100%; padding: 12px 14px; border: 1.5px solid #e5e7eb; border-radius: 10px;
         font-size: 14px; color: #111827; font-family: 'Plus Jakarta Sans', sans-serif;
         outline: none; background: #fff; transition: border-color 0.2s, box-shadow 0.2s;
     }
@@ -108,10 +142,10 @@
 
     .password-wrapper { position: relative; }
     .password-wrapper .form-input { padding-right: 44px; }
-    .eye-btn { position: absolute; right: 13px; top: 50%; transform: translateY(-50%); background: none; border: none; cursor: pointer; color: #9ca3af; display: flex; align-items: center; padding: 0; transition: color 0.15s; }
+    .eye-btn { position: absolute; right: 14px; top: 50%; transform: translateY(-50%); background: none; border: none; cursor: pointer; color: #9ca3af; display: flex; align-items: center; padding: 0; transition: color 0.15s; }
     .eye-btn:hover { color: #6b7280; }
 
-    .remember-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; }
+    .remember-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 24px; }
     .remember-label { display: flex; align-items: center; gap: 8px; cursor: pointer; }
     .remember-label input[type="checkbox"] { width: 16px; height: 16px; cursor: pointer; accent-color: var(--accent); }
     .remember-text { font-size: 13px; color: #6b7280; font-weight: 500; }
@@ -130,7 +164,7 @@
     .btn-primary:hover  { filter: brightness(0.92); transform: translateY(-1px); box-shadow: 0 4px 16px var(--accent-shadow); }
     .btn-primary:active { transform: translateY(0); }
 
-    .divider { display: flex; align-items: center; gap: 12px; color: #9ca3af; font-size: 11px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; margin: 20px 0; }
+    .divider { display: flex; align-items: center; gap: 12px; color: #9ca3af; font-size: 11px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; margin: 24px 0; }
     .divider::before, .divider::after { content: ''; flex: 1; height: 1px; background: #e5e7eb; }
 
     .btn-google {
@@ -143,6 +177,10 @@
 
     .input-error { font-size: 12px; color: #ef4444; margin-top: 5px; font-weight: 500; }
 
+    @media (max-width: 992px) {
+        .left-panel { padding: 32px 40px; }
+        .hero-title { font-size: 36px; }
+    }
     @media (max-width: 768px) {
         .left-panel { display: none; }
         .right-panel { width: 100%; padding: 32px 24px; }
@@ -151,31 +189,48 @@
 
 {{-- LEFT PANEL --}}
 <div class="left-panel mode-user" id="leftPanel">
+    {{-- Elemen Dekorasi Background Geometris --}}
+    <div class="pattern-overlay"></div>
+    <div class="bg-shape shape-1"></div>
+    <div class="bg-shape shape-2"></div>
+    <div class="bg-shape shape-3"></div>
+
+    {{-- Logo --}}
     <div class="logo-wrap">
-        <div class="logo-icon">SP</div>
+        <div class="logo-icon">
+             <img src="{{ asset('image/logo-sp.png') }}" alt="Logo SP" class="logo-img">
+        </div>
         <div>
             <div class="logo-text-title">SIPINJAM</div>
             <div class="logo-text-sub">Sistem Informasi Peminjaman</div>
         </div>
     </div>
+
+    {{-- Hero Content --}}
     <div class="hero-content">
         <div class="hero-eyebrow">Platform Peminjaman</div>
         <h1 class="hero-title">Kelola Peminjaman<br>dengan Mudah</h1>
-        <p class="hero-desc">Platform terpadu untuk peminjaman ruangan dan barang kampus. Proses cepat, transparan, dan efisien.</p>
-        <div class="feature-list">
-            @foreach(['Booking online 24/7', 'Tracking status real-time', 'Riwayat peminjaman lengkap'] as $item)
-            <div class="feature-item">
-                <div class="feature-check">
-                    <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
-                        <path d="M2.5 7L5.5 10L11.5 4" stroke="white" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
-                    </svg>
+        <p class="hero-desc">Platform terpadu untuk peminjaman ruangan dan barang kampus. Proses cepat, transparan, dan efisien untuk seluruh aktivitas akademik.</p>
+        
+        {{-- Glassmorphism Card untuk Fitur --}}
+        <div class="glass-card">
+            <div class="feature-list">
+                @foreach(['Booking Online & Real-time 24/7', 'Tracking Status Persetujuan Otomatis', 'Riwayat Peminjaman Terintegrasi'] as $item)
+                <div class="feature-item">
+                    <div class="feature-check">
+                        <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+                            <path d="M2.5 7L5.5 10L11.5 4" stroke="white" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+                        </svg>
+                    </div>
+                    <span class="feature-label">{{ $item }}</span>
                 </div>
-                <span class="feature-label">{{ $item }}</span>
+                @endforeach
             </div>
-            @endforeach
         </div>
     </div>
-    <div class="left-footer">© 2025 SIPINJAM. Sekolah Tinggi Teknologi Bontang.</div>
+
+    {{-- Footer --}}
+    <div class="left-footer">© 2026 SIPINJAM. Sekolah Tinggi Teknologi Bontang.</div>
 </div>
 
 {{-- RIGHT PANEL --}}
@@ -264,34 +319,23 @@
         const root       = document.documentElement;
 
         if (role === 'user') {
-            // Panel kiri → BIRU
             leftPanel.className = 'left-panel mode-user';
-
-            // Toggle button
             btnUser.className  = 'toggle-btn active-user';
             btnAdmin.className = 'toggle-btn';
 
-            // CSS variable → biru (tombol Masuk, focus input, forgot link)
             root.style.setProperty('--accent', '#2563eb');
             root.style.setProperty('--accent-shadow', 'rgba(37,99,235,0.12)');
 
-            // Placeholder & role
             emailInput.placeholder = 'user@sipinjam.ac.id';
             roleInput.value = 'user';
-
         } else {
-            // Panel kiri → ORANGE
             leftPanel.className = 'left-panel mode-admin';
-
-            // Toggle button
             btnAdmin.className = 'toggle-btn active-admin';
             btnUser.className  = 'toggle-btn';
 
-            // CSS variable → orange
-            root.style.setProperty('--accent', '#f97316');
-            root.style.setProperty('--accent-shadow', 'rgba(249,115,22,0.12)');
+            root.style.setProperty('--accent', '#ea580c');
+            root.style.setProperty('--accent-shadow', 'rgba(234,88,12,0.12)');
 
-            // Placeholder & role
             emailInput.placeholder = 'admin@sipinjam.ac.id';
             roleInput.value = 'admin';
         }

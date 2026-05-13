@@ -666,7 +666,7 @@
             hhHTML += `<div onclick="selectTime(event, '${type}', 'hh', '${val}')" class="time-opt hh-${type} py-1.5 px-1 mb-1 text-center cursor-pointer hover:bg-gray-100 rounded text-sm text-gray-600 transition-colors">${val}</div>`;
         }
         document.getElementById(`hh${type}`).innerHTML = hhHTML;
-
+        
         let mmHTML = '';
         for(let i=0; i<60; i++) {
             let val = i.toString().padStart(2, '0');
