@@ -1,66 +1,188 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# 📋 SIPINJAM — Sistem Informasi Peminjaman Alat & Reservasi Ruang
 
 <p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
+  <img src="https://img.shields.io/badge/Laravel-11-FF2D20?style=for-the-badge&logo=laravel&logoColor=white" alt="Laravel 11">
+  <img src="https://img.shields.io/badge/PHP-8.2+-777BB4?style=for-the-badge&logo=php&logoColor=white" alt="PHP 8.2+">
+  <img src="https://img.shields.io/badge/MySQL-8.0-4479A1?style=for-the-badge&logo=mysql&logoColor=white" alt="MySQL">
+  <img src="https://img.shields.io/badge/TailwindCSS-3.x-06B6D4?style=for-the-badge&logo=tailwindcss&logoColor=white" alt="Tailwind CSS">
 </p>
 
-## About Laravel
+---
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+## 🔎 Overview
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+**SIPINJAM** adalah aplikasi web untuk mengelola peminjaman alat inventaris dan reservasi ruangan di lingkungan kampus. Aplikasi ini dibangun dengan arsitektur yang aman dan siap production.
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+### ✨ Fitur Unggulan
 
-## Learning Laravel
+| Fitur | Deskripsi |
+|-------|-----------|
+| **Pessimistic Locking** | Menggunakan `DB::transaction()` + `lockForUpdate()` untuk mencegah *race condition* saat 2 user booking di waktu bersamaan |
+| **SLA Auto-Reject 48 Jam** | Peminjaman berstatus *pending* lebih dari 48 jam otomatis ditolak oleh scheduler. Stok barang dikembalikan secara aman |
+| **Email Queue** | Notifikasi email dikirim via queue (`ShouldQueue`) sehingga tidak memblokir proses user |
+| **Policy-Based Authorization** | User hanya bisa mengakses/membatalkan booking miliknya sendiri |
+| **Service Layer Architecture** | Seluruh business logic terpusat di `BookingService`, controller super ramping |
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework.
+---
 
-You may also try the [Laravel Bootcamp](https://bootcamp.laravel.com), where you will be guided through building a modern Laravel application from scratch.
+## 🛠️ Tech Stack
 
-If you don't feel like reading, [Laracasts](https://laracasts.com) can help. Laracasts contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+- **Backend:** Laravel 11 (PHP 8.2+)
+- **Frontend:** Blade Templates, Tailwind CSS, Alpine.js
+- **Database:** MySQL 8.0
+- **Queue:** Database Driver (siap pakai tanpa Redis)
+- **Email:** Mailtrap (development) / SMTP (production)
+- **PDF:** barryvdh/laravel-dompdf
 
-## Laravel Sponsors
+---
 
-We would like to extend our thanks to the following sponsors for funding Laravel development. If you are interested in becoming a sponsor, please visit the [Laravel Partners program](https://partners.laravel.com).
+## 🚀 Step-by-Step Installation
 
-### Premium Partners
+### 1. Clone Repository
 
-- **[Vehikl](https://vehikl.com/)**
-- **[Tighten Co.](https://tighten.co)**
-- **[WebReinvent](https://webreinvent.com/)**
-- **[Kirschbaum Development Group](https://kirschbaumdevelopment.com)**
-- **[64 Robots](https://64robots.com)**
-- **[Curotec](https://www.curotec.com/services/technologies/laravel/)**
-- **[Cyber-Duck](https://cyber-duck.co.uk)**
-- **[DevSquad](https://devsquad.com/hire-laravel-developers)**
-- **[Jump24](https://jump24.co.uk)**
-- **[Redberry](https://redberry.international/laravel/)**
-- **[Active Logic](https://activelogic.com)**
-- **[byte5](https://byte5.de)**
-- **[OP.GG](https://op.gg)**
+```bash
+git clone https://github.com/your-username/SiPinjam.git
+cd SiPinjam
+```
 
-## Contributing
+### 2. Install Dependencies
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+```bash
+composer install
+npm install && npm run build
+```
 
-## Code of Conduct
+### 3. Setup Environment
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+```bash
+cp .env.example .env
+php artisan key:generate
+```
 
-## Security Vulnerabilities
+Edit file `.env` dan sesuaikan konfigurasi database:
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+```dotenv
+DB_CONNECTION=mysql
+DB_HOST=127.0.0.1
+DB_PORT=3306
+DB_DATABASE=sipinjam
+DB_USERNAME=root
+DB_PASSWORD=
+```
 
-## License
+### 4. Konfigurasi Email (Mailtrap — Development)
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+Untuk testing email, daftar di [mailtrap.io](https://mailtrap.io) lalu isi kredensial:
+
+```dotenv
+MAIL_MAILER=smtp
+MAIL_HOST=sandbox.smtp.mailtrap.io
+MAIL_PORT=2525
+MAIL_USERNAME=your_mailtrap_username
+MAIL_PASSWORD=your_mailtrap_password
+MAIL_ENCRYPTION=tls
+MAIL_FROM_ADDRESS="noreply@sipinjam.ac.id"
+MAIL_FROM_NAME="SIPINJAM"
+```
+
+> **Fallback gratis:** Jika tidak ingin setup Mailtrap, cukup set `MAIL_MAILER=log`. Semua email akan tercatat di `storage/logs/laravel.log`.
+
+### 5. Konfigurasi Queue
+
+Pastikan queue driver menggunakan database (sudah default):
+
+```dotenv
+QUEUE_CONNECTION=database
+```
+
+### 6. Jalankan Migration & Seeder
+
+```bash
+php artisan migrate --seed
+```
+
+Ini akan membuat:
+- **1 Super Admin:** `admin@sipinjam.ac.id` / `password123`
+- **5 User Dummy:** `aisyah@sipinjam.ac.id`, `budi@sipinjam.ac.id`, dll (password: `password123`)
+- **12 Ruangan** (Kampus Utama & Kampus Djuanda)
+- **8 Barang Inventaris** (Smart TV, Mic, Kursi, dll)
+
+### 7. Jalankan Aplikasi
+
+Buka **3 terminal terpisah** dan jalankan:
+
+```bash
+# Terminal 1 — Web Server
+php artisan serve
+
+# Terminal 2 — Queue Worker (untuk proses email async)
+php artisan queue:work
+
+# Terminal 3 — Task Scheduler (untuk SLA auto-reject setiap jam)
+php artisan schedule:work
+```
+
+Aplikasi tersedia di: **http://localhost:8000**
+
+---
+
+## 📁 Struktur Direktori Penting
+
+```
+app/
+├── Console/Commands/
+│   └── AutoRejectPendingBookings.php   # SLA 48 jam auto-reject
+├── Http/
+│   ├── Controllers/
+│   │   ├── BookingController.php       # Controller ramping (delegasi ke service)
+│   │   └── Admin/AdminController.php   # Approve/Reject via service
+│   └── Requests/
+│       └── StoreBookingRequest.php     # Validasi ketat (tanggal, exists)
+├── Mail/
+│   ├── BookingCreatedNotification.php  # Email ke Admin (booking baru)
+│   └── BookingStatusUpdated.php        # Email ke User (status berubah)
+├── Models/
+│   ├── Peminjaman.php                  # Relasi ke User, Barang, Ruangan
+│   ├── Barang.php
+│   └── Ruangan.php
+├── Policies/
+│   └── BookingPolicy.php              # Otorisasi ketat per-user
+└── Services/
+    └── BookingService.php             # Business logic + pessimistic locking
+```
+
+---
+
+## ⏰ SLA Auto-Reject
+
+Peminjaman yang berstatus `menunggu` selama lebih dari **48 jam** akan otomatis ditolak oleh sistem. Proses ini:
+
+1. Dijalankan setiap jam oleh Laravel Scheduler
+2. Menggunakan pessimistic locking saat mengembalikan stok
+3. Mengirim email notifikasi penolakan ke user
+
+```bash
+# Jalankan manual untuk testing:
+php artisan booking:auto-reject
+```
+
+---
+
+## 🔒 Keamanan Concurrency
+
+Setiap operasi kritis (buat booking, approve, reject) dibungkus dalam:
+
+```php
+DB::transaction(function () {
+    $barang = Barang::lockForUpdate()->findOrFail($id);
+    // ... operasi aman dari race condition
+});
+```
+
+Ini memastikan tidak ada 2 proses yang bisa mengurangi stok barang yang sama secara bersamaan.
+
+---
+
+## 📄 Lisensi
+
+Proyek ini dikembangkan untuk keperluan internal kampus.
