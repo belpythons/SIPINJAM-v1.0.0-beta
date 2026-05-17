@@ -17,13 +17,17 @@ class BookingController extends Controller
 
     public function index(): \Illuminate\View\View
     {
-        $bookings = Peminjaman::where('user_id', Auth::id())->latest()->get();
+        // Fix N+1 — eager-load relasi barang & ruangan
+        $bookings = Peminjaman::with(['barang', 'ruangan'])
+            ->where('user_id', Auth::id())
+            ->latest()
+            ->get();
 
         $stats = [
             'total'     => $bookings->count(),
-            'pending'   => $bookings->where('status', 'menunggu')->count(),
-            'approved'  => $bookings->where('status', 'sedang_dipinjam')->count(),
-            'completed' => $bookings->where('status', 'selesai')->count(),
+            'pending'   => $bookings->where('status', Peminjaman::STATUS_PENDING)->count(),
+            'approved'  => $bookings->where('status', Peminjaman::STATUS_APPROVED)->count(),
+            'completed' => $bookings->where('status', Peminjaman::STATUS_DONE)->count(),
         ];
 
         return view('user.bookings.index', compact('bookings', 'stats'));

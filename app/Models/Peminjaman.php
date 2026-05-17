@@ -12,7 +12,37 @@ class Peminjaman extends Model
 
     protected $table = 'peminjamans';
 
-    protected $guarded = [];
+    // ── Status Constants ─────────────────────────────────
+    public const STATUS_PENDING  = 'menunggu';
+    public const STATUS_APPROVED = 'sedang_dipinjam';
+    public const STATUS_REJECTED = 'ditolak';
+    public const STATUS_DONE     = 'selesai';
+
+    /**
+     * Daftar semua status yang valid.
+     */
+    public const STATUSES = [
+        self::STATUS_PENDING,
+        self::STATUS_APPROVED,
+        self::STATUS_REJECTED,
+        self::STATUS_DONE,
+    ];
+
+    // ── Mass-Assignment Protection ───────────────────────
+    protected $fillable = [
+        'user_id',
+        'tipe',
+        'barang_id',
+        'ruangan_id',
+        'nama_item',
+        'tanggal',
+        'tanggal_mulai',
+        'tanggal_selesai',
+        'jam_mulai',
+        'jam_selesai',
+        'keterangan',
+        'status',
+    ];
 
     protected function casts(): array
     {
@@ -21,6 +51,8 @@ class Peminjaman extends Model
             'tanggal_selesai' => 'date',
         ];
     }
+
+    // ── Relationships ────────────────────────────────────
 
     public function user(): BelongsTo
     {

@@ -65,10 +65,10 @@ class BookingService
         return DB::transaction(function () use ($peminjaman) {
             // Lock baris peminjaman agar tidak diproses ganda oleh admin lain
             $peminjaman = Peminjaman::lockForUpdate()->findOrFail($peminjaman->id);
-            $peminjaman->update(['status' => 'disetujui']);
+            $peminjaman->update(['status' => Peminjaman::STATUS_APPROVED]);
 
             Mail::to($peminjaman->user->email)->queue(
-                new BookingStatusUpdated($peminjaman, 'disetujui')
+                new BookingStatusUpdated($peminjaman, Peminjaman::STATUS_APPROVED)
             );
 
             return $peminjaman;
@@ -82,7 +82,7 @@ class BookingService
     {
         return DB::transaction(function () use ($peminjaman) {
             $peminjaman = Peminjaman::lockForUpdate()->findOrFail($peminjaman->id);
-            $peminjaman->update(['status' => 'ditolak']);
+            $peminjaman->update(['status' => Peminjaman::STATUS_REJECTED]);
 
             // Kembalikan stok barang yang sudah dikurangi saat booking dibuat
             if ($peminjaman->tipe === 'barang' && $peminjaman->barang_id) {
@@ -91,7 +91,7 @@ class BookingService
             }
 
             Mail::to($peminjaman->user->email)->queue(
-                new BookingStatusUpdated($peminjaman, 'ditolak')
+                new BookingStatusUpdated($peminjaman, Peminjaman::STATUS_REJECTED)
             );
 
             return $peminjaman;
@@ -104,7 +104,7 @@ class BookingService
     private function assertNoScheduleConflict(Ruangan $ruangan, array $data): void
     {
         $conflict = Peminjaman::where('ruangan_id', $ruangan->id)
-            ->whereNotIn('status', ['ditolak', 'selesai'])
+            ->whereNotIn('status', [Peminjaman::STATUS_REJECTED, Peminjaman::STATUS_DONE])
             ->where(function ($q) use ($data) {
                 // Overlap: mulai_A < selesai_B DAN mulai_B < selesai_A
                 $q->where('tanggal_mulai', '<=', $data['tanggal_selesai'])
@@ -141,7 +141,7 @@ class BookingService
             'jam_mulai'       => $data['waktu_mulai'],
             'jam_selesai'     => $data['waktu_selesai'],
             'keterangan'      => $keterangan,
-            'status'          => 'menunggu',
+            'status'          => Peminjaman::STATUS_PENDING,
         ], $extra));
     }
 }
