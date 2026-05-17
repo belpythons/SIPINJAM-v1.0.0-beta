@@ -11,39 +11,30 @@ class RuanganSeeder extends Seeder
     {
         $ruangans = [
             // Kampus Utama
-            ['nama' => 'Perpustakaan',     'lokasi' => 'Kampus Utama - Lt 1'],
-            ['nama' => 'Lab Arsikom',      'lokasi' => 'Kampus Utama - Lt 1'],
-            ['nama' => 'Lab Multimedia',   'lokasi' => 'Kampus Utama - Lt 2'],
-            ['nama' => 'Lab Pemrograman',  'lokasi' => 'Kampus Utama - Lt 2'],
-            ['nama' => 'Ruang 3A',         'lokasi' => 'Kampus Utama - Lt 3'],
-            ['nama' => 'Ruang 3B',         'lokasi' => 'Kampus Utama - Lt 3'],
-            ['nama' => 'Ruang 3C',         'lokasi' => 'Kampus Utama - Lt 3'],
-            ['nama' => 'Ruang 4A',         'lokasi' => 'Kampus Utama - Lt 4'],
-            ['nama' => 'Ruang 4B',         'lokasi' => 'Kampus Utama - Lt 4'],
+            ['nama' => 'Laboratorium Komputer A', 'lokasi' => 'Kampus Utama - Lt 1', 'kapasitas' => 40, 'fasilitas' => 'AC, Proyektor, 40 Unit PC'],
+            ['nama' => 'Laboratorium Komputer B', 'lokasi' => 'Kampus Utama - Lt 1', 'kapasitas' => 30, 'fasilitas' => 'AC, Proyektor, 30 Unit PC'],
+            ['nama' => 'Lab Multimedia',          'lokasi' => 'Kampus Utama - Lt 2', 'kapasitas' => 25, 'fasilitas' => 'AC, Proyektor, Papan Tulis'],
+            ['nama' => 'Lab Pemrograman',          'lokasi' => 'Kampus Utama - Lt 2', 'kapasitas' => 35, 'fasilitas' => 'AC, Proyektor, 35 Unit PC'],
+            ['nama' => 'Ruang Rapat',              'lokasi' => 'Kampus Utama - Lt 3', 'kapasitas' => 20, 'fasilitas' => 'AC, Proyektor, Papan Tulis'],
+            ['nama' => 'Kelas Teori 1',            'lokasi' => 'Kampus Utama - Lt 3', 'kapasitas' => 45, 'fasilitas' => 'AC, Papan Tulis'],
+            ['nama' => 'Kelas Teori 2',            'lokasi' => 'Kampus Utama - Lt 3', 'kapasitas' => 45, 'fasilitas' => 'AC, Papan Tulis'],
+            ['nama' => 'Aula Serbaguna',           'lokasi' => 'Kampus Utama - Lt 4', 'kapasitas' => 100, 'fasilitas' => 'AC, Proyektor, Sound System, Podium'],
+            ['nama' => 'Perpustakaan',             'lokasi' => 'Kampus Utama - Lt 1', 'kapasitas' => 50, 'fasilitas' => 'AC, WiFi'],
+
             // Kampus Djuanda
-            ['nama' => 'Ruang 2A',         'lokasi' => 'Kampus Djuanda - Lt 2'],
-            ['nama' => 'Ruang 2B',         'lokasi' => 'Kampus Djuanda - Lt 2'],
-            ['nama' => 'Lab Kelistrikan',  'lokasi' => 'Kampus Djuanda - Lt 2'],
+            ['nama' => 'Lab Kelistrikan',          'lokasi' => 'Kampus Djuanda - Lt 2', 'kapasitas' => 30, 'fasilitas' => 'AC, Peralatan Praktikum'],
+            ['nama' => 'Ruang Seminar',            'lokasi' => 'Kampus Djuanda - Lt 2', 'kapasitas' => 60, 'fasilitas' => 'AC, Proyektor, Sound System'],
+            ['nama' => 'Kelas Teori 3',            'lokasi' => 'Kampus Djuanda - Lt 2', 'kapasitas' => 40, 'fasilitas' => 'AC, Papan Tulis'],
         ];
 
-        $fasilitasPool = ['AC', 'Papan Tulis', 'Proyektor'];
-
         foreach ($ruangans as $index => $r) {
-            // Pilih 1-3 fasilitas secara random
-            $jumlahFasilitas = rand(1, count($fasilitasPool));
-            $fasilitasTerpilih = implode(', ', array_slice(
-                collect($fasilitasPool)->shuffle()->all(),
-                0,
-                $jumlahFasilitas
-            ));
-
             Ruangan::updateOrCreate(
                 ['kode' => 'R-' . str_pad($index + 1, 3, '0', STR_PAD_LEFT)],
                 [
                     'nama'      => $r['nama'],
-                    'kapasitas' => rand(30, 50),
+                    'kapasitas' => $r['kapasitas'],
                     'lokasi'    => $r['lokasi'],
-                    'deskripsi' => 'Fasilitas: ' . $fasilitasTerpilih,
+                    'deskripsi' => 'Fasilitas: ' . $r['fasilitas'],
                     'status'    => 'tersedia',
                 ]
             );

@@ -10,7 +10,8 @@ class UserSeeder extends Seeder
 {
     public function run(): void
     {
-        // Super Admin statis
+        // Super Admin — satu-satunya akun awal.
+        // Semua akun user baru dibuat melalui panel Admin.
         User::updateOrCreate(
             ['email' => 'admin@sipinjam.ac.id'],
             [
@@ -19,25 +20,5 @@ class UserSeeder extends Seeder
                 'role'     => 'admin',
             ]
         );
-
-        // User dummy
-        $dummyUsers = [
-            ['name' => 'Aisyah Putri',    'email' => 'aisyah@sipinjam.ac.id'],
-            ['name' => 'Budi Santoso',     'email' => 'budi@sipinjam.ac.id'],
-            ['name' => 'Citra Dewi',       'email' => 'citra@sipinjam.ac.id'],
-            ['name' => 'Dimas Prasetyo',   'email' => 'dimas@sipinjam.ac.id'],
-            ['name' => 'Eka Rahmawati',    'email' => 'eka@sipinjam.ac.id'],
-        ];
-
-        foreach ($dummyUsers as $u) {
-            User::updateOrCreate(
-                ['email' => $u['email']],
-                [
-                    'name'     => $u['name'],
-                    'password' => Hash::make('password123'),
-                    'role'     => 'user',
-                ]
-            );
-        }
     }
 }
