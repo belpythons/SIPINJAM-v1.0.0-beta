@@ -1,6 +1,10 @@
 <!DOCTYPE html>
 <html lang="id">
 <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - SiPinjam Admin</title>
+    <link rel="icon" type="image/png" href="{{ asset('image/logo-sp.png') }}">
     
     <!-- Bootstrap 5 CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
@@ -8,6 +12,7 @@
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <!-- Chart.js -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
 
     <style>
         :root {
@@ -110,68 +115,12 @@
 </head>
 <body class="overflow-hidden">
 
-    <!-- SIDEBAR -->
-    <aside class="sidebar-wrapper position-fixed top-0 start-0 vh-100 d-none d-lg-flex flex-column text-white shadow">
-        <div class="d-flex flex-column flex-grow-1">
-            <!-- Logo -->
-            <div class="d-flex align-items-center gap-3 px-4 py-4 mt-2">
-                <img src="{{ asset('image/logo-sp.png') }}" alt="Logo SIPINJAM" class="img-fluid shadow-sm" style="width: 40px; height: auto;">
-                <h3 class="m-0 fw-bold tracking-wide fs-4">SIPINJAM</h3>
-            </div>
-
-            <!-- User Info -->
-            <div class="d-flex align-items-center gap-3 px-4 mb-4">
-                <div class="rounded-circle border border-light border-opacity-50 d-flex align-items-center justify-content-center fw-semibold fs-5 bg-white bg-opacity-10" style="width: 48px; height: 48px;">
-                    AS
-                </div>
-                <div class="lh-sm">
-                    <p class="mb-1 fw-semibold fs-6">Admin SIPINJAM</p>
-                    <p class="mb-0 text-white-50 small">admin@sipinjam.ac.id</p>
-                </div>
-            </div>
-
-            <!-- Navigation -->
-            <nav class="px-3 d-flex flex-column gap-1">
-                <a href="{{ route('admin.dashboard') }}" class="nav-link-custom active">
-                    <i class="fas fa-home nav-icon"></i>
-                    <span>Dashboard</span>
-                </a>
-                <a href="{{ route('admin.kelola_user') }}" class="nav-link-custom">
-                    <i class="fas fa-users nav-icon"></i>
-                    <span>Kelola User</span>
-                </a>
-                <a href="{{ route('admin.kelola_peminjaman') }}" class="nav-link-custom">
-                    <i class="far fa-calendar-alt nav-icon"></i>
-                    <span>Kelola Peminjaman</span>
-                </a>
-                <a href="{{ route('admin.kelola_ruangan') }}" class="nav-link-custom">
-                    <i class="fas fa-door-open nav-icon"></i>
-                    <span>Kelola Ruangan</span>
-                </a>
-                <a href="{{ route('admin.kelola_barang') }}" class="nav-link-custom">
-                    <i class="fas fa-box nav-icon"></i>
-                    <span>Kelola Barang</span>
-                </a>
-            </nav>
-        </div>
-
-        <!-- Footer Sidebar -->
-        <div class="border-top border-light border-opacity-25 mt-auto">
-            <a href="{{ route('logout') }}" class="nav-link-custom px-4 py-3 rounded-0" 
-                onclick="event.preventDefault(); document.getElementById('form-logout').submit();">
-                <i class="fas fa-sign-out-alt nav-icon"></i>
-                <span>Keluar</span>
-            </a>
-
-            <!-- Form tersembunyi yang akan mengeksekusi proses logout -->
-            <form id="form-logout" action="{{ route('logout') }}" method="POST" class="d-none">
-                @csrf
-            </form>
-        </div>
-    </aside>
+    @include('admin.partials.sidebar', ['activePage' => 'dashboard'])
 
     <!-- Main Content -->
     <main class="main-wrapper d-flex flex-column">
+
+        @include('admin.partials.navbar')
 
         <!-- Scrollable Content -->
         <div class="scrollable-content p-4 p-md-5 w-100 flex-grow-1">
