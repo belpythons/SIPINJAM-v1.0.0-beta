@@ -24,7 +24,7 @@ class BookingPolicy
             return true;
         }
 
-        return $user->id === $peminjaman->user_id && $peminjaman->status === 'menunggu';
+        return $user->id === $peminjaman->user_id && $peminjaman->status === Peminjaman::STATUS_PENDING;
     }
 
     /**
@@ -36,14 +36,22 @@ class BookingPolicy
     }
 
     /**
-     * Download PDF — hanya pemilik atau admin, dan status bukan menunggu.
+     * Download PDF — Fix IDOR: validasi ketat bahwa peminjam hanya bisa
+     * mengunduh PDF miliknya sendiri. Admin bebas mengunduh semua.
      */
     public function downloadPdf(User $user, Peminjaman $peminjaman): bool
     {
-        if ($peminjaman->status === 'menunggu') {
+        // Status menunggu tidak boleh diunduh siapapun
+        if ($peminjaman->status === Peminjaman::STATUS_PENDING) {
             return false;
         }
 
-        return $user->role === 'admin' || $user->id === $peminjaman->user_id;
+        // Admin bebas mengunduh semua PDF
+        if ($user->role === 'admin') {
+            return true;
+        }
+
+        // User biasa — WAJIB pemilik peminjaman
+        return $user->id === $peminjaman->user_id;
     }
 }

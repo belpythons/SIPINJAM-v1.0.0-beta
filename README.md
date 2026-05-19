@@ -1,4 +1,4 @@
-# 📋 SIPINJAM — Sistem Informasi Peminjaman Alat & Reservasi Ruang
+# 🎓 SIPINJAM — Corporate Ready 🚀
 
 <p align="center">
   <img src="https://img.shields.io/badge/Laravel-11-FF2D20?style=for-the-badge&logo=laravel&logoColor=white" alt="Laravel 11">
@@ -7,182 +7,178 @@
   <img src="https://img.shields.io/badge/TailwindCSS-3.x-06B6D4?style=for-the-badge&logo=tailwindcss&logoColor=white" alt="Tailwind CSS">
 </p>
 
+> **Sistem Informasi Peminjaman Alat & Reservasi Ruang** terpadu yang dirancang dengan estetika *Corporate Clean Design* dan arsitektur backend berstandar *Enterprise*.
+
 ---
 
-## 🔎 Overview
+## 🔎 Overview Project
 
-**SIPINJAM** adalah aplikasi web untuk mengelola peminjaman alat inventaris dan reservasi ruangan di lingkungan kampus. Aplikasi ini dibangun dengan arsitektur yang aman dan siap production.
+**SIPINJAM** bukan sekadar aplikasi CRUD biasa. Aplikasi ini berevolusi untuk menangani beban operasional kampus yang nyata. Menghadirkan navigasi UI/UX yang elegan, fungsionalitas kalender interaktif, pelaporan ekstensif (PDF & CSV), hingga sistem autentikasi tanpa kata sandi via Google (*Single Sign-On*).
 
 ### ✨ Fitur Unggulan
 
-| Fitur | Deskripsi |
-|-------|-----------|
-| **Pessimistic Locking** | Menggunakan `DB::transaction()` + `lockForUpdate()` untuk mencegah *race condition* saat 2 user booking di waktu bersamaan |
-| **SLA Auto-Reject 48 Jam** | Peminjaman berstatus *pending* lebih dari 48 jam otomatis ditolak oleh scheduler. Stok barang dikembalikan secara aman |
-| **Email Queue** | Notifikasi email dikirim via queue (`ShouldQueue`) sehingga tidak memblokir proses user |
-| **Policy-Based Authorization** | User hanya bisa mengakses/membatalkan booking miliknya sendiri |
-| **Service Layer Architecture** | Seluruh business logic terpusat di `BookingService`, controller super ramping |
+- 🎨 **Corporate Clean UI/UX:** Antarmuka responsif dan profesional menggunakan Tailwind CSS dengan navigasi *sticky-navbar*.
+- 🛡️ **Pessimistic Locking & Service Pattern:** Tidak ada lagi *race condition* (bentrok jadwal). Bisnis logik dikelola aman di `BookingService`.
+- 🤖 **SLA Auto-Reject 48 Jam:** Booking *pending* dibiarkan berhari-hari? Sistem akan membatalkannya secara otomatis mengamankan stok inventory!
+- 🔐 **Socialite Google Login:** Integrasi login satu kali klik. Email baru akan otomatis terdaftar sebagai role `user`.
+- 📊 **Dynamic Reports Engine:** Ekspor riwayat data peminjaman ke dalam format **PDF** dan **CSV/Excel** dengan satu klik.
 
 ---
 
-## 🛠️ Tech Stack
+## 🛠️ Tech Stack Application
 
-- **Backend:** Laravel 11 (PHP 8.2+)
-- **Frontend:** Blade Templates, Tailwind CSS, Alpine.js
-- **Database:** MySQL 8.0
-- **Queue:** Database Driver (siap pakai tanpa Redis)
-- **Email:** Mailtrap (development) / SMTP (production)
-- **PDF:** barryvdh/laravel-dompdf
+| Bagian | Teknologi / Library |
+|--------|----------------------|
+| **Backend** | Laravel 11 (PHP 8.2+), Eloquent ORM |
+| **Frontend** | Blade Templates, Tailwind CSS (Utility-First) |
+| **Database** | MySQL 8.0 / MariaDB |
+| **Auth** | Laravel Breeze + Laravel Socialite (Google OAuth) |
+| **Reporting** | `barryvdh/laravel-dompdf` (PDF), Native UTF-8 (CSV) |
+| **Queue & Scheduler** | Database Driver (No Redis needed) |
 
 ---
 
 ## 🚀 Step-by-Step Installation
 
-### 1. Clone Repository
+Mari kita bangun lingkungan pengembangan Anda dengan cepat!
 
+### 1. Clone & Build
 ```bash
-git clone https://github.com/your-username/SiPinjam.git
+# Clone repositori
+git clone [https://github.com/your-username/SiPinjam.git](https://github.com/your-username/SiPinjam.git)
 cd SiPinjam
-```
 
-### 2. Install Dependencies
-
-```bash
+# Install dependensi PHP & Node.js
 composer install
 npm install && npm run build
+
 ```
 
-### 3. Setup Environment
+### 2. Environment Setup
 
 ```bash
+# Gandakan environment file
 cp .env.example .env
+
+# Generate application key
 php artisan key:generate
+
 ```
 
-Edit file `.env` dan sesuaikan konfigurasi database:
+Buka file `.env` dan sesuaikan koneksi database Anda:
 
-```dotenv
+```env
 DB_CONNECTION=mysql
 DB_HOST=127.0.0.1
 DB_PORT=3306
 DB_DATABASE=sipinjam
 DB_USERNAME=root
-DB_PASSWORD=
+DB_PASSWORD=your_db_password
+
 ```
 
-### 4. Konfigurasi Email (Mailtrap — Development)
+---
 
-Untuk testing email, daftar di [mailtrap.io](https://mailtrap.io) lalu isi kredensial:
+### 3. Konfigurasi Kredensial Pihak Ketiga (SANGAT PENTING!)
 
-```dotenv
+Agar fitur **Email Notification** dan **Login with Google** berjalan, Anda wajib mengisi bagian ini di `.env`.
+
+#### A. Konfigurasi SMTP Email ✉️
+
+Anda bisa menggunakan **Mailtrap** (untuk testing) atau **Gmail SMTP** (untuk rilis asli).
+
+**Jika Menggunakan Gmail:**
+
+1. Aktifkan *2-Step Verification* pada akun Google Anda.
+2. Buat *App Password* (Sandi Aplikasi) di menu Keamanan Google.
+3. Masukkan ke `.env`:
+
+```env
 MAIL_MAILER=smtp
-MAIL_HOST=sandbox.smtp.mailtrap.io
-MAIL_PORT=2525
-MAIL_USERNAME=your_mailtrap_username
-MAIL_PASSWORD=your_mailtrap_password
-MAIL_ENCRYPTION=tls
-MAIL_FROM_ADDRESS="noreply@sipinjam.ac.id"
-MAIL_FROM_NAME="SIPINJAM"
+MAIL_HOST=smtp.gmail.com
+MAIL_PORT=465
+MAIL_USERNAME="email.kampus.anda@gmail.com"
+MAIL_PASSWORD="password_aplikasi_16_huruf_tanpa_spasi"
+MAIL_ENCRYPTION=smtps
+MAIL_FROM_ADDRESS="email.kampus.anda@gmail.com"
+MAIL_FROM_NAME="${APP_NAME}"
+
 ```
 
-> **Fallback gratis:** Jika tidak ingin setup Mailtrap, cukup set `MAIL_MAILER=log`. Semua email akan tercatat di `storage/logs/laravel.log`.
+#### B. Konfigurasi Google Client (OAuth 2.0) 🌐
 
-### 5. Konfigurasi Queue
+Agar tombol *Login with Google* berfungsi:
 
-Pastikan queue driver menggunakan database (sudah default):
+1. Buka [Google Cloud Console](https://console.cloud.google.com/).
+2. Buat proyek baru dan buka menu **APIs & Services > Credentials**.
+3. Buat kredensial **OAuth Client ID** (Tipe: Web Application).
+4. Tambahkan URI Pengalihan (Redirect URI): `http://localhost:8000/auth/google/callback`.
+5. Salin *Client ID* dan *Client Secret* ke `.env`:
 
-```dotenv
-QUEUE_CONNECTION=database
+```env
+GOOGLE_CLIENT_ID="paste_client_id_anda_disini.apps.googleusercontent.com"
+GOOGLE_CLIENT_SECRET="paste_secret_anda_disini"
+GOOGLE_REDIRECT_URI="http://localhost:8000/auth/google/callback"
+
 ```
 
-### 6. Jalankan Migration & Seeder
+---
+
+### 4. Finalisasi Instalasi
+
+Siapkan basis data, symlink foto, dan jalankan server!
 
 ```bash
-php artisan migrate --seed
+# Link penyimpanan publik (untuk foto ruangan/barang)
+php artisan storage:link
+
+# Migrasi dan masukkan data asli (Hanya ada 1 Akun Admin yang tercipta)
+php artisan migrate:fresh --seed
+
 ```
 
-Ini akan membuat:
-- **1 Super Admin:** `admin@sipinjam.ac.id` / `password123`
-- **5 User Dummy:** `aisyah@sipinjam.ac.id`, `budi@sipinjam.ac.id`, dll (password: `password123`)
-- **12 Ruangan** (Kampus Utama & Kampus Djuanda)
-- **8 Barang Inventaris** (Smart TV, Mic, Kursi, dll)
+💡 **Akses Default Super Admin:**
 
-### 7. Jalankan Aplikasi
+* **Email:** `admin@sipinjam.ac.id`
+* **Password:** `password123`
+*(Akun user biasa dibuat otomatis saat mereka login menggunakan Google).*
 
-Buka **3 terminal terpisah** dan jalankan:
+### 5. Jalankan Aplikasi
+
+Karena aplikasi ini menggunakan sistem antrean (Queue) untuk email dan penjadwalan otomatis, buka **3 terminal terpisah**:
 
 ```bash
-# Terminal 1 — Web Server
+# Terminal 1 — Menjalankan Server Web
 php artisan serve
 
-# Terminal 2 — Queue Worker (untuk proses email async)
+# Terminal 2 — Menjalankan Pekerja Antrean Email (Queue Worker)
 php artisan queue:work
 
-# Terminal 3 — Task Scheduler (untuk SLA auto-reject setiap jam)
+# Terminal 3 — Menjalankan Penjadwal Otomatis Pembatalan (SLA Auto-Reject)
 php artisan schedule:work
+
 ```
 
-Aplikasi tersedia di: **http://localhost:8000**
+Aplikasi kini siap diakses di: **http://localhost:8000** 🎉
 
 ---
 
-## 📁 Struktur Direktori Penting
+## 🔒 Arsitektur Keamanan (Concurrency)
 
-```
-app/
-├── Console/Commands/
-│   └── AutoRejectPendingBookings.php   # SLA 48 jam auto-reject
-├── Http/
-│   ├── Controllers/
-│   │   ├── BookingController.php       # Controller ramping (delegasi ke service)
-│   │   └── Admin/AdminController.php   # Approve/Reject via service
-│   └── Requests/
-│       └── StoreBookingRequest.php     # Validasi ketat (tanggal, exists)
-├── Mail/
-│   ├── BookingCreatedNotification.php  # Email ke Admin (booking baru)
-│   └── BookingStatusUpdated.php        # Email ke User (status berubah)
-├── Models/
-│   ├── Peminjaman.php                  # Relasi ke User, Barang, Ruangan
-│   ├── Barang.php
-│   └── Ruangan.php
-├── Policies/
-│   └── BookingPolicy.php              # Otorisasi ketat per-user
-└── Services/
-    └── BookingService.php             # Business logic + pessimistic locking
-```
-
----
-
-## ⏰ SLA Auto-Reject
-
-Peminjaman yang berstatus `menunggu` selama lebih dari **48 jam** akan otomatis ditolak oleh sistem. Proses ini:
-
-1. Dijalankan setiap jam oleh Laravel Scheduler
-2. Menggunakan pessimistic locking saat mengembalikan stok
-3. Mengirim email notifikasi penolakan ke user
-
-```bash
-# Jalankan manual untuk testing:
-php artisan booking:auto-reject
-```
-
----
-
-## 🔒 Keamanan Concurrency
-
-Setiap operasi kritis (buat booking, approve, reject) dibungkus dalam:
+Kami memastikan data inventaris Anda aman. Setiap operasi kritis dibungkus dengan metode *Pessimistic Locking*:
 
 ```php
 DB::transaction(function () {
     $barang = Barang::lockForUpdate()->findOrFail($id);
-    // ... operasi aman dari race condition
+    // Transaksi dilanjutkan...
 });
+
 ```
 
-Ini memastikan tidak ada 2 proses yang bisa mengurangi stok barang yang sama secara bersamaan.
+*Mencegah kejadian lucu di mana 1 buah proyektor sukses dipinjam oleh 2 mahasiswa di detik yang sama.*
 
 ---
 
 ## 📄 Lisensi
 
-Proyek ini dikembangkan untuk keperluan internal kampus.
+Dikembangkan dengan standar industri tinggi untuk infrastruktur manajemen kampus. Hak Cipta dilindungi.

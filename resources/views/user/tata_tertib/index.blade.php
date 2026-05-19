@@ -31,72 +31,12 @@
 
 <div class="flex h-screen overflow-hidden">
 
-    {{-- SIDEBAR --}}
-        <aside class="fixed left-0 top-0 z-40 h-screen w-64 bg-gradient-to-b from-[#3b82f6] to-[#1e3a8a] text-white transition-all duration-300 flex flex-col hidden lg:flex">
-            {{-- Logo --}}
-            <div class="flex h-16 items-center gap-3 px-6 flex-shrink-0">
-                {{-- Memanggil logo gambar SP --}}
-                <img src="{{ asset('image/logo-sp.png') }}" alt="Logo SIPINJAM" class="w-10 h-auto drop-shadow-md">
-                <h1 class="text-2xl font-bold tracking-tight">SIPINJAM</h1>
-            </div>
-
-        <div class="px-4 pb-4 flex-shrink-0">
-            <div class="flex items-center gap-3 rounded-lg px-3 py-2.5">
-                <div class="h-10 w-10 rounded-full bg-blue-500 border-2 border-white/30 flex items-center justify-center font-semibold text-white text-sm">
-                    {{ strtoupper(substr(auth()->user()->name ?? 'JD', 0, 2)) }}
-                </div>
-                <div class="flex-1 text-left">
-                    <p class="text-sm font-semibold text-white">{{ auth()->user()->name ?? 'John Doe' }}</p>
-                    <p class="text-xs text-white/70 truncate">{{ auth()->user()->email ?? 'user@sipinjam.ac.id' }}</p>
-                </div>
-            </div>
-        </div>
-
-        {{-- Navigation --}}
-        <nav class="flex-1 space-y-1 px-3 py-2 overflow-y-auto">
-            <a href="{{ route('dashboard') }}" class="flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-white/80 hover:bg-white/10 hover:text-white hover:scale-105 transition-all duration-200">
-                <i data-lucide="home" class="h-5 w-5 flex-shrink-0"></i>
-                Dashboard
-            </a>
-            
-            <a href="{{ route('bookings.index') }}" class="flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-white/80 hover:bg-white/10 hover:text-white hover:scale-105 transition-all duration-200">
-                <i data-lucide="calendar" class="h-5 w-5 flex-shrink-0"></i>
-                Riwayat Peminjaman
-            </a>
-            
-            <a href="{{ route('ruangan.index') }}" class="flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-white/80 hover:bg-white/10 hover:text-white hover:scale-105 transition-all duration-200">
-                <i data-lucide="building-2" class="h-5 w-5 flex-shrink-0"></i>
-                Ruangan
-            </a>
-            
-            <a href="{{ route('barang.index') }}" class="flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-white/80 hover:bg-white/10 hover:text-white hover:scale-105 transition-all duration-200">
-                <i data-lucide="box" class="h-5 w-5 flex-shrink-0"></i>
-                Barang
-            </a>
-            
-            <a href="{{ route('tata_tertib.index') }}" class="flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium bg-white/20 text-white shadow-sm scale-105 transition-all duration-200">
-                <i data-lucide="book-open" class="h-5 w-5 flex-shrink-0"></i>
-                Tata Tertib
-            </a>
-        </nav>
-
-        <div class="border-t border-white/10 p-4 flex-shrink-0">
-            <form method="POST" action="{{ route('logout') }}">
-                @csrf
-                <button type="submit" class="flex w-full items-center gap-2 rounded-lg px-3 py-2.5 text-sm font-medium text-white/80 hover:bg-white/10 hover:text-white transition-colors">
-                    <i data-lucide="log-out" class="h-5 w-5"></i> Keluar
-                </button>
-            </form>
-        </div>
-    </aside>
+    @include('user.partials.sidebar', ['activePage' => 'tata_tertib'])
 
     {{-- MAIN CONTENT --}}
-    <main class="flex-1 flex flex-col h-screen overflow-y-auto lg:ml-64 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] bg-gray-50/90 relative">
-        <div class="absolute top-0 left-0 w-full h-96 bg-blue-100/30 rounded-b-[3rem] -z-10"></div>
+    <main class="flex-1 flex flex-col h-screen overflow-y-auto lg:ml-64 bg-gray-50 relative">
 
-        <header class="sticky top-0 z-30 flex h-16 items-center justify-between border-b border-gray-200 bg-white/80 backdrop-blur-md px-4 lg:px-8">
-            <h2 class="text-base font-bold text-gray-800">User Portal</h2>
-        </header>
+        @include('user.partials.navbar')
 
         <div class="p-4 sm:p-6 lg:p-8 flex-1 animate-fade-in max-w-7xl mx-auto w-full">
 

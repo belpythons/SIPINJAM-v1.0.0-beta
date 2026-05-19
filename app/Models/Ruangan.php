@@ -11,5 +11,13 @@ class Ruangan extends Model
 
     protected $table = 'ruangans';
 
-    protected $guarded = [];
+    protected $fillable = [
+        'nama',
+        'kode',
+        'kapasitas',
+        'lokasi',
+        'deskripsi',
+        'status',
+        'foto',
+    ];
 }

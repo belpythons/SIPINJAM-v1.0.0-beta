@@ -3,391 +3,193 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Kelola User - SIPINJAM Admin</title>
-    
-    <!-- Tailwind CSS & FontAwesome -->
+    <title>Kelola User - SiPinjam Admin</title>
+    <link rel="icon" type="image/png" href="{{ asset('image/logo-sp.png') }}">
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
-    
     <script>
-        tailwind.config = {
-            theme: {
-                extend: {
-                    colors: {
-                        brand: {
-                            DEFAULT: '#ea580c', // Orange dominan
-                            dark: '#c2410c',
-                            light: '#f97316'
-                        }
-                    }
-                }
-            }
-        }
+        tailwind.config = { theme: { extend: { colors: { brand: { DEFAULT: '#ea580c', dark: '#c2410c', light: '#f97316' } } } } }
     </script>
 </head>
 <body class="bg-[#f8f9fa] text-gray-800 font-sans flex h-screen overflow-hidden">
 
-   <!-- SIDEBAR -->
-    <aside class="fixed left-0 top-0 z-40 h-screen w-64 bg-brand text-white transition-all duration-300 flex flex-col hidden lg:flex shadow-xl">
-        <div class="flex-1 flex flex-col">
-            <!-- Logo -->
-            <div class="flex h-20 items-center gap-3 px-6 mt-2 flex-shrink-0">
-                <img src="{{ asset('image/logo-sp.png') }}" alt="Logo SIPINJAM" class="w-10 h-auto drop-shadow-md">
-                <h1 class="text-2xl font-bold tracking-wide">SIPINJAM</h1>
+    @include('admin.partials.sidebar', ['activePage' => 'user'])
+
+    <main class="flex-1 lg:ml-64 h-screen overflow-y-auto flex flex-col relative">
+        @include('admin.partials.navbar')
+        <div class="p-8 flex-1">
+
+        {{-- Toast --}}
+        @if(session('success'))
+            <div id="toast" class="fixed top-6 right-6 z-[60] bg-green-600 text-white px-5 py-3 rounded-lg shadow-lg flex items-center gap-3 animate-slide-in">
+                <i class="fas fa-check-circle"></i><span>{{ session('success') }}</span>
+                <button onclick="document.getElementById('toast').remove()" class="ml-2 opacity-70 hover:opacity-100"><i class="fas fa-times"></i></button>
             </div>
-
-            <!-- User Info -->
-            <div class="px-6 py-2 flex items-center space-x-3 mb-6">
-                <div class="w-12 h-12 rounded-full border-[1.5px] border-white/50 flex items-center justify-center font-semibold text-lg bg-white/10">
-                    AS
-                </div>
-                <div class="leading-tight">
-                    <p class="text-[15px] font-semibold">Admin SIPINJAM</p>
-                    <p class="text-[12px] text-white/80 font-light mt-0.5">admin@sipinjam.ac.id</p>
-                </div>
+        @endif
+        @if(session('error'))
+            <div id="toast" class="fixed top-6 right-6 z-[60] bg-red-600 text-white px-5 py-3 rounded-lg shadow-lg flex items-center gap-3 animate-slide-in">
+                <i class="fas fa-exclamation-circle"></i><span>{{ session('error') }}</span>
+                <button onclick="document.getElementById('toast').remove()" class="ml-2 opacity-70 hover:opacity-100"><i class="fas fa-times"></i></button>
             </div>
+        @endif
 
-            <!-- Navigation -->
-            <nav class="px-4 space-y-1.5">
-                <a href="{{ route('admin.dashboard') }}" class="flex items-center space-x-3 px-4 py-3 hover:bg-white/10 rounded-lg text-white/90 transition-colors">
-                    <i class="fas fa-border-all w-5 text-center text-[18px]"></i>
-                    <span class="text-[15px]">Dashboard</span>
-                </a>
-                
-                <a href="{{ route('admin.kelola_user') }}" class="flex items-center space-x-3 px-4 py-3 bg-white/20 rounded-lg text-white font-medium transition-colors">
-                    <i class="fas fa-user-friends w-5 text-center text-[18px]"></i>
-                    <span class="text-[15px]">Kelola User</span>
-                </a>
-
-                <a href="{{ route('admin.kelola_peminjaman') }}" class="flex items-center space-x-3 px-4 py-3 hover:bg-white/10 rounded-lg text-white/90 transition-colors">
-                    <i class="far fa-calendar-alt w-5 text-center text-[18px]"></i>
-                    <span class="text-[15px]">Kelola Peminjaman</span>
-                </a>
-                
-                <a href="{{ route('admin.kelola_ruangan') }}" class="flex items-center space-x-3 px-4 py-3 hover:bg-white/10 rounded-lg text-white/90 transition-colors">
-                    <i class="fas fa-building w-5 text-center text-[18px]"></i>
-                    <span class="text-[15px]">Kelola Ruangan</span>
-                </a>
-                
-                <a href="{{ route('admin.kelola_barang') }}" class="flex items-center space-x-3 px-4 py-3 hover:bg-white/10 rounded-lg text-white/90 transition-colors">
-                    <i class="fas fa-box w-5 text-center text-[18px]"></i>
-                    <span class="text-[15px]">Kelola Barang</span>
-                </a>
-            </nav>
-        </div>
-
-        <!-- Footer Sidebar -->
-        <!-- Footer Sidebar -->
-        <div class="border-t border-white/20 mt-auto">
-            <a href="{{ route('logout') }}" 
-                onclick="event.preventDefault(); document.getElementById('form-logout').submit();" 
-                class="flex items-center space-x-3 px-8 py-5 hover:bg-white/10 text-white/90 transition-colors cursor-pointer">
-                <i class="fas fa-sign-out-alt w-5 text-center text-[18px]"></i>
-                <span class="text-[15px]">Keluar</span>
-            </a>
-
-            <!-- Form tersembunyi yang akan mengeksekusi proses logout -->
-            <form id="form-logout" action="{{ route('logout') }}" method="POST" class="hidden">
-                @csrf
-            </form>
-        </div>
-    </aside>
-
-    <!-- MAIN CONTENT -->
-    <main class="flex-1 flex flex-col h-screen overflow-hidden ml-64">
-
-        <!-- Scrollable Content -->
-        <div class="flex-1 overflow-y-auto p-8">
-            
-            <!-- Page Title & Top Button -->
-            <div class="flex flex-col md:flex-row md:items-start justify-between gap-4 mb-8">
-                <div>
-                    <h2 class="text-[28px] font-bold text-gray-900">Kelola User</h2>
-                    <p class="text-gray-500 mt-1">Manajemen user dan hak akses sistem</p>
-                </div>
-                <button onclick="toggleModal('addUserModal')" class="bg-brand hover:bg-brand-dark text-white px-5 py-2.5 rounded-lg font-medium shadow-sm transition-all flex items-center gap-2">
-                    <i class="fas fa-plus text-sm"></i> Tambah User
-                </button>
+        <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
+            <div>
+                <h2 class="text-3xl font-bold text-gray-900 tracking-tight">Kelola User</h2>
+                <p class="text-gray-500 mt-1">Kelola pengguna sistem SiPinjam</p>
             </div>
-
-            <!-- Stats Cards -->
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-                <!-- Card Total User -->
-                <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100/80">
-                    <div class="flex justify-between items-center mb-6">
-                        <span class="text-[15px] font-medium text-gray-800">Total User</span>
-                        <i class="fas fa-user-friends text-gray-400"></i>
-                    </div>
-                    <div class="text-[32px] font-bold text-gray-900">6</div>
-                </div>
-
-                <!-- Card Aktif -->
-                <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100/80">
-                    <div class="flex justify-between items-center mb-6">
-                        <span class="text-[15px] font-medium text-gray-800">Aktif</span>
-                        <i class="fas fa-user-check text-green-500"></i>
-                    </div>
-                    <div class="text-[32px] font-bold text-green-600">5</div>
-                </div>
-
-                <!-- Card Nonaktif -->
-                <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100/80">
-                    <div class="flex justify-between items-center mb-6">
-                        <span class="text-[15px] font-medium text-gray-800">Nonaktif</span>
-                        <i class="fas fa-user-times text-red-500"></i>
-                    </div>
-                    <div class="text-[32px] font-bold text-red-600">1</div>
-                </div>
-            </div>
-
-            <!-- Toolbar: Search & Filters -->
-            <div class="flex flex-col md:flex-row gap-4 mb-4">
-                <div class="relative flex-1">
-                    <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                        <i class="fas fa-search text-gray-400 font-light"></i>
-                    </div>
-                    <input type="text" class="block w-full pl-10 pr-3 py-2.5 border border-gray-200 rounded-lg text-sm bg-white placeholder-gray-400 focus:outline-none focus:ring-1 focus:ring-brand focus:border-brand transition-all" placeholder="Cari nama atau email...">
-                </div>
-                
-                <div class="flex gap-3">
-                    <select class="border border-gray-200 bg-white rounded-lg px-4 py-2.5 text-sm text-gray-700 focus:outline-none focus:ring-1 focus:ring-brand">
-                        <option>Semua Role</option>
-                    </select>
-                    <select class="border border-gray-200 bg-white rounded-lg px-4 py-2.5 text-sm text-gray-700 focus:outline-none focus:ring-1 focus:ring-brand">
-                        <option>Semua Status</option>
-                    </select>
-                    <button onclick="toggleModal('addUserModal')" class="bg-brand hover:bg-brand-dark text-white px-5 py-2.5 rounded-lg font-medium flex items-center gap-2 transition-all">
-                        <i class="fas fa-user-plus text-sm"></i> Tambah User
-                    </button>
-                </div>
-            </div>
-
-            <!-- Table Section -->
-            <div class="bg-white rounded-2xl shadow-sm border border-gray-100/80 overflow-hidden mb-6">
-                <div class="overflow-x-auto">
-                    <table class="w-full text-left border-collapse">
-                        <thead>
-                            <tr class="border-b border-gray-100 text-sm text-gray-900 font-bold bg-white">
-                                <th class="px-6 py-4 whitespace-nowrap">Nama</th>
-                                <th class="px-6 py-4 whitespace-nowrap">Email</th>
-                                <th class="px-6 py-4 whitespace-nowrap">Role</th>
-                                <th class="px-6 py-4 whitespace-nowrap">Status</th>
-                                <th class="px-6 py-4 whitespace-nowrap">Dibuat</th>
-                                <th class="px-6 py-4 text-center whitespace-nowrap">Aksi</th>
-                            </tr>
-                        </thead>
-                        <tbody class="divide-y divide-gray-50 text-[14px]">
-                            
-                            <!-- User 1 -->
-                            <tr class="hover:bg-gray-50/50 transition-colors">
-                                <td class="px-6 py-4 font-medium text-gray-800">John Doe</td>
-                                <td class="px-6 py-4 text-gray-600">user@sipinjam.ac.id</td>
-                                <td class="px-6 py-4">
-                                    <span class="inline-flex items-center px-3 py-1 rounded-full text-[11px] font-semibold bg-gray-100 text-gray-600 border border-gray-200">
-                                        User
-                                    </span>
-                                </td>
-                                <td class="px-6 py-4">
-                                    <span class="inline-flex items-center px-3 py-1 rounded-full text-[11px] font-semibold bg-blue-600 text-white shadow-sm">
-                                        Aktif
-                                    </span>
-                                </td>
-                                <td class="px-6 py-4 text-gray-500">01 Jan 2024</td>
-                                <td class="px-6 py-4 text-center">
-                                    <button class="text-gray-400 hover:text-gray-700 transition-colors">
-                                        <i class="fas fa-ellipsis-v"></i>
-                                    </button>
-                                </td>
-                            </tr>
-
-                            <!-- User 2 -->
-                            <tr class="hover:bg-gray-50/50 transition-colors">
-                                <td class="px-6 py-4 font-medium text-gray-800">Admin SIPINJAM</td>
-                                <td class="px-6 py-4 text-gray-600">admin@sipinjam.ac.id</td>
-                                <td class="px-6 py-4">
-                                    <span class="inline-flex items-center px-3 py-1 rounded-full text-[11px] font-semibold bg-brand text-white shadow-sm">
-                                        Admin
-                                    </span>
-                                </td>
-                                <td class="px-6 py-4">
-                                    <span class="inline-flex items-center px-3 py-1 rounded-full text-[11px] font-semibold bg-blue-600 text-white shadow-sm">
-                                        Aktif
-                                    </span>
-                                </td>
-                                <td class="px-6 py-4 text-gray-500">01 Jan 2024</td>
-                                <td class="px-6 py-4 text-center">
-                                    <button class="text-gray-400 hover:text-gray-700 transition-colors">
-                                        <i class="fas fa-ellipsis-v"></i>
-                                    </button>
-                                </td>
-                            </tr>
-
-                            <!-- User 3 -->
-                            <tr class="hover:bg-gray-50/50 transition-colors">
-                                <td class="px-6 py-4 font-medium text-gray-800">Jane Smith</td>
-                                <td class="px-6 py-4 text-gray-600">jane.smith@sipinjam.ac.id</td>
-                                <td class="px-6 py-4">
-                                    <span class="inline-flex items-center px-3 py-1 rounded-full text-[11px] font-semibold bg-gray-100 text-gray-600 border border-gray-200">
-                                        User
-                                    </span>
-                                </td>
-                                <td class="px-6 py-4">
-                                    <span class="inline-flex items-center px-3 py-1 rounded-full text-[11px] font-semibold bg-blue-600 text-white shadow-sm">
-                                        Aktif
-                                    </span>
-                                </td>
-                                <td class="px-6 py-4 text-gray-500">15 Feb 2024</td>
-                                <td class="px-6 py-4 text-center">
-                                    <button class="text-gray-400 hover:text-gray-700 transition-colors">
-                                        <i class="fas fa-ellipsis-v"></i>
-                                    </button>
-                                </td>
-                            </tr>
-
-                            <!-- User 4 -->
-                            <tr class="hover:bg-gray-50/50 transition-colors">
-                                <td class="px-6 py-4 font-medium text-gray-800">Michael Johnson</td>
-                                <td class="px-6 py-4 text-gray-600">michael.j@sipinjam.ac.id</td>
-                                <td class="px-6 py-4">
-                                    <span class="inline-flex items-center px-3 py-1 rounded-full text-[11px] font-semibold bg-gray-100 text-gray-600 border border-gray-200">
-                                        User
-                                    </span>
-                                </td>
-                                <td class="px-6 py-4">
-                                    <span class="inline-flex items-center px-3 py-1 rounded-full text-[11px] font-semibold bg-[#e11d48] text-white shadow-sm">
-                                        Nonaktif
-                                    </span>
-                                </td>
-                                <td class="px-6 py-4 text-gray-500">10 Mar 2024</td>
-                                <td class="px-6 py-4 text-center">
-                                    <button class="text-gray-400 hover:text-gray-700 transition-colors">
-                                        <i class="fas fa-ellipsis-v"></i>
-                                    </button>
-                                </td>
-                            </tr>
-
-                            <!-- User 5 -->
-                            <tr class="hover:bg-gray-50/50 transition-colors">
-                                <td class="px-6 py-4 font-medium text-gray-800">Sarah Williams</td>
-                                <td class="px-6 py-4 text-gray-600">sarah.w@sipinjam.ac.id</td>
-                                <td class="px-6 py-4">
-                                    <span class="inline-flex items-center px-3 py-1 rounded-full text-[11px] font-semibold bg-gray-100 text-gray-600 border border-gray-200">
-                                        User
-                                    </span>
-                                </td>
-                                <td class="px-6 py-4">
-                                    <span class="inline-flex items-center px-3 py-1 rounded-full text-[11px] font-semibold bg-blue-600 text-white shadow-sm">
-                                        Aktif
-                                    </span>
-                                </td>
-                                <td class="px-6 py-4 text-gray-500">20 Apr 2024</td>
-                                <td class="px-6 py-4 text-center">
-                                    <button class="text-gray-400 hover:text-gray-700 transition-colors">
-                                        <i class="fas fa-ellipsis-v"></i>
-                                    </button>
-                                </td>
-                            </tr>
-
-                            <!-- User 6 -->
-                            <tr class="hover:bg-gray-50/50 transition-colors">
-                                <td class="px-6 py-4 font-medium text-gray-800">Admin Support</td>
-                                <td class="px-6 py-4 text-gray-600">support@sipinjam.ac.id</td>
-                                <td class="px-6 py-4">
-                                    <span class="inline-flex items-center px-3 py-1 rounded-full text-[11px] font-semibold bg-brand text-white shadow-sm">
-                                        Admin
-                                    </span>
-                                </td>
-                                <td class="px-6 py-4">
-                                    <span class="inline-flex items-center px-3 py-1 rounded-full text-[11px] font-semibold bg-blue-600 text-white shadow-sm">
-                                        Aktif
-                                    </span>
-                                </td>
-                                <td class="px-6 py-4 text-gray-500">15 Jan 2024</td>
-                                <td class="px-6 py-4 text-center">
-                                    <button class="text-gray-400 hover:text-gray-700 transition-colors">
-                                        <i class="fas fa-ellipsis-v"></i>
-                                    </button>
-                                </td>
-                            </tr>
-
-                        </tbody>
-                    </table>
-                </div>
-                
-                <!-- Table Footer (Info) -->
-                <div class="px-6 py-5 border-t border-gray-100 bg-white">
-                    <p class="text-sm text-gray-500">Menampilkan 6 dari 6 user</p>
-                </div>
-            </div>
-
-            <!-- Page Footer -->
-            <footer class="mt-auto pt-6 pb-2 flex justify-between items-center text-[13px] text-gray-500">
-                <p>&copy; 2026 SIPINJAM - Sistem Informasi Peminjaman Ruangan dan Barang</p>
-                <p>Built with Next.js</p>
-            </footer>
-
-        </div>
-    </main>
-    <!-- MODAL TAMBAH USER -->
-    <div id="addUserModal" class="fixed inset-0 z-50 flex items-center justify-center hidden bg-black/40 backdrop-blur-sm transition-opacity duration-300">
-        <div class="bg-white rounded-2xl shadow-xl w-full max-w-md p-6 sm:p-8 transform transition-all relative">
-            
-            <!-- Tombol Tutup (X) -->
-            <button type="button" onclick="toggleModal('addUserModal')" class="absolute top-5 right-5 text-gray-400 hover:text-gray-600 transition-colors">
-                <i class="fas fa-times text-lg"></i>
+            <button onclick="openAddModal()" class="bg-brand hover:bg-brand-dark text-white px-5 py-2.5 rounded-lg font-medium shadow-md transition-colors flex items-center gap-2">
+                <i class="fas fa-plus"></i> Tambah User
             </button>
+        </div>
 
-            <h2 class="text-xl font-bold text-gray-900 mb-1">Tambah User Baru</h2>
-            <p class="text-sm text-gray-500 mb-6">Masukkan informasi untuk mendaftarkan pengguna baru ke sistem.</p>
+        {{-- Stats --}}
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+            <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100 flex flex-col">
+                <span class="text-gray-800 font-semibold text-sm">Total User</span>
+                <span class="text-4xl font-bold text-gray-900 mt-4">{{ $users->count() }}</span>
+            </div>
+            <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100 flex flex-col">
+                <span class="text-gray-800 font-semibold text-sm">Admin</span>
+                <span class="text-4xl font-bold text-orange-600 mt-4">{{ $users->where('role', 'admin')->count() }}</span>
+            </div>
+            <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100 flex flex-col">
+                <span class="text-gray-800 font-semibold text-sm">User Biasa</span>
+                <span class="text-4xl font-bold text-blue-600 mt-4">{{ $users->where('role', 'user')->count() }}</span>
+            </div>
+        </div>
 
-            <!-- Ganti action dengan route yang benar nanti, misal: route('admin.users.store') -->
-            <form action="#" method="POST" id="formTambahUser" class="space-y-4">
+        {{-- Table --}}
+        <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden mb-8 flex-1">
+            <div class="overflow-x-auto">
+                <table class="w-full">
+                    <thead class="bg-gray-50 border-b border-gray-200">
+                        <tr>
+                            <th class="text-left px-6 py-3 text-xs font-semibold text-gray-500 uppercase">Nama</th>
+                            <th class="text-left px-6 py-3 text-xs font-semibold text-gray-500 uppercase">Email</th>
+                            <th class="text-left px-6 py-3 text-xs font-semibold text-gray-500 uppercase">Role</th>
+                            <th class="text-left px-6 py-3 text-xs font-semibold text-gray-500 uppercase">Login via</th>
+                            <th class="text-left px-6 py-3 text-xs font-semibold text-gray-500 uppercase">Terdaftar</th>
+                            <th class="text-right px-6 py-3 text-xs font-semibold text-gray-500 uppercase">Aksi</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-gray-100">
+                        @forelse($users as $u)
+                            <tr class="hover:bg-gray-50">
+                                <td class="px-6 py-4">
+                                    <div class="flex items-center gap-3">
+                                        @if($u->avatar)
+                                            <img src="{{ $u->avatar }}" class="w-9 h-9 rounded-full object-cover border border-gray-200">
+                                        @else
+                                            <div class="w-9 h-9 rounded-full bg-gray-200 flex items-center justify-center text-gray-500 font-semibold text-sm">
+                                                {{ strtoupper(substr($u->name, 0, 2)) }}
+                                            </div>
+                                        @endif
+                                        <span class="font-medium text-gray-900">{{ $u->name }}</span>
+                                    </div>
+                                </td>
+                                <td class="px-6 py-4 text-sm text-gray-600">{{ $u->email }}</td>
+                                <td class="px-6 py-4">
+                                    <span class="inline-flex px-2.5 py-0.5 rounded-full text-xs font-medium {{ $u->role === 'admin' ? 'bg-orange-100 text-orange-700' : 'bg-blue-100 text-blue-700' }}">
+                                        {{ ucfirst($u->role) }}
+                                    </span>
+                                </td>
+                                <td class="px-6 py-4 text-sm text-gray-500">
+                                    @if($u->google_id)
+                                        <span class="inline-flex items-center gap-1 text-xs"><i class="fab fa-google text-red-500"></i> Google</span>
+                                    @else
+                                        <span class="text-xs">Email</span>
+                                    @endif
+                                </td>
+                                <td class="px-6 py-4 text-sm text-gray-500">{{ $u->created_at?->format('d/m/Y') }}</td>
+                                <td class="px-6 py-4 text-right">
+                                    <button onclick='openEditModal(@json($u))' class="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg text-sm font-medium text-blue-600 hover:bg-blue-50 transition-colors">
+                                        <i class="fas fa-pencil text-xs"></i> Edit
+                                    </button>
+                                    @if($u->id !== auth()->id())
+                                        <form action="{{ route('admin.user.destroy', $u->id) }}" method="POST" class="inline" onsubmit="return confirm('Hapus user {{ $u->name }}?')">
+                                            @csrf @method('DELETE')
+                                            <button type="submit" class="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg text-sm font-medium text-red-600 hover:bg-red-50 transition-colors">
+                                                <i class="fas fa-trash text-xs"></i> Hapus
+                                            </button>
+                                        </form>
+                                    @endif
+                                </td>
+                            </tr>
+                        @empty
+                            <tr><td colspan="6" class="px-6 py-12 text-center text-gray-400">Belum ada data user.</td></tr>
+                        @endforelse
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        </div>
+        <footer class="mt-auto pt-4 pb-2 px-8 flex justify-between items-center text-[13px] text-gray-500 border-t border-gray-200/60">
+            <p>&copy; 2026 SiPinjam</p><p>Built with Laravel</p>
+        </footer>
+    </main>
+
+    {{-- MODAL TAMBAH --}}
+    <div id="modalTambah" class="fixed inset-0 z-50 hidden bg-black/40 backdrop-blur-sm flex items-center justify-center p-4">
+        <div class="bg-white rounded-xl shadow-2xl w-full max-w-[480px] overflow-hidden flex flex-col max-h-[90vh]">
+            <div class="px-6 py-5 border-b border-gray-100 flex justify-between items-start">
+                <div><h3 class="text-xl font-bold text-gray-900">Tambah User Baru</h3><p class="text-[13px] text-gray-500 mt-1">Buat akun pengguna baru</p></div>
+                <button onclick="closeModal('modalTambah')" class="text-gray-400 hover:text-gray-600"><i class="fas fa-times text-lg"></i></button>
+            </div>
+            <form action="{{ route('admin.user.store') }}" method="POST" class="p-6 overflow-y-auto space-y-4">
                 @csrf
-                
-                <div>
-                    <label class="block text-sm font-medium text-gray-900 mb-1.5">Nama Lengkap</label>
-                    <input type="text" name="name" required placeholder="Contoh: Budi Santoso" class="w-full px-4 py-2.5 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-1 focus:ring-brand focus:border-brand transition-all">
-                </div>
-
-                <div>
-                    <label class="block text-sm font-medium text-gray-900 mb-1.5">Alamat Email</label>
-                    <input type="email" name="email" required placeholder="Contoh: budi@sipinjam.ac.id" class="w-full px-4 py-2.5 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-1 focus:ring-brand focus:border-brand transition-all">
-                </div>
-
-                <div>
-                    <label class="block text-sm font-medium text-gray-900 mb-1.5">Password</label>
-                    <input type="password" name="password" required placeholder="Minimal 8 karakter" class="w-full px-4 py-2.5 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-1 focus:ring-brand focus:border-brand transition-all">
-                </div>
-
-                <div>
-                    <label class="block text-sm font-medium text-gray-900 mb-1.5">Role Pengguna</label>
-                    <div class="flex gap-3">
-                        <label class="flex-1 cursor-pointer">
-                            <input type="radio" name="role" value="user" class="peer sr-only" checked>
-                            <div class="px-4 py-3 rounded-xl border border-gray-200 text-center peer-checked:border-brand peer-checked:bg-orange-50 peer-checked:text-brand transition-all">
-                                <span class="font-medium text-sm">User Biasa</span>
-                            </div>
-                        </label>
-                        <label class="flex-1 cursor-pointer">
-                            <input type="radio" name="role" value="admin" class="peer sr-only">
-                            <div class="px-4 py-3 rounded-xl border border-gray-200 text-center peer-checked:border-brand peer-checked:bg-orange-50 peer-checked:text-brand transition-all">
-                                <span class="font-medium text-sm">Admin</span>
-                            </div>
-                        </label>
-                    </div>
-                </div>
-
-                <div class="pt-4 mt-6 border-t border-gray-100 flex justify-end gap-3">
-                    <button type="button" onclick="toggleModal('addUserModal')" class="px-5 py-2.5 text-sm font-medium text-gray-600 bg-gray-50 hover:bg-gray-100 rounded-xl transition-colors">
-                        Batal
-                    </button>
-                    <button type="submit" class="px-6 py-2.5 text-sm font-medium text-white bg-brand hover:bg-brand-dark rounded-xl shadow-sm transition-colors">
-                        Simpan User
-                    </button>
+                <div><label class="block text-sm font-medium text-gray-900 mb-1">Nama Lengkap *</label><input type="text" name="name" required class="w-full px-4 py-2.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"></div>
+                <div><label class="block text-sm font-medium text-gray-900 mb-1">Email *</label><input type="email" name="email" required class="w-full px-4 py-2.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"></div>
+                <div><label class="block text-sm font-medium text-gray-900 mb-1">Password *</label><input type="password" name="password" required minlength="6" class="w-full px-4 py-2.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"></div>
+                <div><label class="block text-sm font-medium text-gray-900 mb-1">Role *</label><select name="role" class="w-full px-4 py-2.5 border border-gray-300 rounded-lg text-sm bg-white"><option value="user">User</option><option value="admin">Admin</option></select></div>
+                <div class="flex justify-end gap-3 pt-2">
+                    <button type="button" onclick="closeModal('modalTambah')" class="px-5 py-2.5 bg-white border border-gray-200 text-gray-700 font-medium rounded-lg hover:bg-gray-50 text-sm">Batal</button>
+                    <button type="submit" class="px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg text-sm">Tambah User</button>
                 </div>
             </form>
         </div>
     </div>
-    
+
+    {{-- MODAL EDIT --}}
+    <div id="modalEdit" class="fixed inset-0 z-50 hidden bg-black/40 backdrop-blur-sm flex items-center justify-center p-4">
+        <div class="bg-white rounded-xl shadow-2xl w-full max-w-[480px] overflow-hidden flex flex-col max-h-[90vh]">
+            <div class="px-6 py-5 border-b border-gray-100 flex justify-between items-start">
+                <div><h3 class="text-xl font-bold text-gray-900">Edit User</h3><p class="text-[13px] text-gray-500 mt-1">Perbarui data pengguna</p></div>
+                <button onclick="closeModal('modalEdit')" class="text-gray-400 hover:text-gray-600"><i class="fas fa-times text-lg"></i></button>
+            </div>
+            <form id="editForm" method="POST" class="p-6 overflow-y-auto space-y-4">
+                @csrf @method('PUT')
+                <div><label class="block text-sm font-medium text-gray-900 mb-1">Nama Lengkap *</label><input type="text" name="name" id="editName" required class="w-full px-4 py-2.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"></div>
+                <div><label class="block text-sm font-medium text-gray-900 mb-1">Email *</label><input type="email" name="email" id="editEmail" required class="w-full px-4 py-2.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"></div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-900 mb-1">Password Baru <span class="text-gray-400 font-normal">(kosongkan jika tidak diubah)</span></label>
+                    <input type="password" name="password" minlength="6" class="w-full px-4 py-2.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500">
+                </div>
+                <div><label class="block text-sm font-medium text-gray-900 mb-1">Role *</label><select name="role" id="editRole" class="w-full px-4 py-2.5 border border-gray-300 rounded-lg text-sm bg-white"><option value="user">User</option><option value="admin">Admin</option></select></div>
+                <div class="flex justify-end gap-3 pt-2">
+                    <button type="button" onclick="closeModal('modalEdit')" class="px-5 py-2.5 bg-white border border-gray-200 text-gray-700 font-medium rounded-lg hover:bg-gray-50 text-sm">Batal</button>
+                    <button type="submit" class="px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg text-sm">Simpan Perubahan</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <style>@keyframes slideIn { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } } .animate-slide-in { animation: slideIn 0.3s ease-out; }</style>
+    <script>
+        function openAddModal() { document.getElementById('modalTambah').classList.remove('hidden'); }
+        function closeModal(id) { document.getElementById(id).classList.add('hidden'); }
+        function openEditModal(data) {
+            document.getElementById('editForm').action = '/admin/kelola-user/' + data.id;
+            document.getElementById('editName').value = data.name;
+            document.getElementById('editEmail').value = data.email;
+            document.getElementById('editRole').value = data.role;
+            document.getElementById('modalEdit').classList.remove('hidden');
+        }
+        ['modalTambah', 'modalEdit'].forEach(id => {
+            document.getElementById(id)?.addEventListener('click', function(e) { if (e.target === this) closeModal(id); });
+        });
+        setTimeout(() => { document.getElementById('toast')?.remove(); }, 4000);
+    </script>
 </body>
 </html>
