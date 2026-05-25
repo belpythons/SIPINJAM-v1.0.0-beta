@@ -33,19 +33,15 @@ class BookingController extends Controller
         return view('user.bookings.index', compact('bookings', 'stats'));
     }
 
-    public function store(StoreBookingRequest $request): \Illuminate\Http\JsonResponse|\Illuminate\Http\RedirectResponse
+    public function store(StoreBookingRequest $request): \Illuminate\Http\RedirectResponse
     {
         try {
             $this->bookingService->createBooking($request->validated(), $request->user());
         } catch (\RuntimeException $e) {
-            return $request->wantsJson()
-                ? response()->json(['success' => false, 'message' => $e->getMessage()], 422)
-                : redirect()->back()->withErrors(['booking' => $e->getMessage()]);
+            return redirect()->back()->withErrors(['booking' => $e->getMessage()]);
         }
 
-        return $request->wantsJson()
-            ? response()->json(['success' => true, 'message' => 'Peminjaman berhasil diajukan!'])
-            : redirect()->route('bookings.index')->with('success', 'Peminjaman berhasil diajukan!');
+        return redirect()->route('dashboard')->with('success', 'Peminjaman berhasil diajukan!');
     }
 
     public function generatePDF(int $id): \Symfony\Component\HttpFoundation\Response

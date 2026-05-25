@@ -11,8 +11,9 @@ use App\Http\Controllers\CalendarController;
 use App\Http\Controllers\ReportController;
 use App\Http\Controllers\Auth\SocialiteController;
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\LandingController;
 
-Route::redirect('/', '/login');
+Route::get('/', [LandingController::class, 'index'])->name('landing');
 
 // ==========================================
 // SOCIALITE (Google Login)
