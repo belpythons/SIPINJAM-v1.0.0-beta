@@ -49,12 +49,15 @@ class SocialiteController extends Controller
                     'password'  => Hash::make(Str::random(24)),
                     'role'      => 'user',
                 ]);
+
+                // Assign Spatie role untuk user baru
+                $user->assignRole('user');
             }
 
             Auth::login($user, true);
 
-            // Redirect berdasarkan role
-            if ($user->role === 'admin') {
+            // Redirect berdasarkan Spatie role
+            if ($user->hasRole('admin')) {
                 return redirect()->intended(route('admin.dashboard'));
             }
 

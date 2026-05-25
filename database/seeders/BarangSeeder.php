@@ -10,16 +10,17 @@ class BarangSeeder extends Seeder
     public function run(): void
     {
         $barangs = [
-            ['nama' => 'Proyektor Epson',       'stok' => 10, 'kategori' => 'Elektronik'],
-            ['nama' => 'Kabel HDMI',             'stok' => 20, 'kategori' => 'Kabel & Aksesoris'],
-            ['nama' => 'Mikrofon Wireless',      'stok' => 8,  'kategori' => 'Audio'],
-            ['nama' => 'Speaker Portable',       'stok' => 5,  'kategori' => 'Audio'],
-            ['nama' => 'Laptop Asus',            'stok' => 6,  'kategori' => 'Komputer'],
-            ['nama' => 'Pointer Presenter',      'stok' => 10, 'kategori' => 'Aksesoris'],
-            ['nama' => 'Extension Kabel 10m',    'stok' => 15, 'kategori' => 'Kabel & Aksesoris'],
-            ['nama' => 'Papan Tulis Portable',   'stok' => 4,  'kategori' => 'Peralatan Kelas'],
-            ['nama' => 'Kamera DSLR Canon',      'stok' => 3,  'kategori' => 'Elektronik'],
-            ['nama' => 'Tripod Kamera',          'stok' => 5,  'kategori' => 'Aksesoris'],
+            ['nama' => 'Smart TV',           'stok' => 1,  'kategori' => 'Elektronik'],
+            ['nama' => 'Microphone',         'stok' => 3,  'kategori' => 'Audio'],
+            ['nama' => 'Meja Tamu',          'stok' => 2,  'kategori' => 'Furnitur'],
+            ['nama' => 'Sofa Kecil',         'stok' => 2,  'kategori' => 'Furnitur'],
+            ['nama' => 'Sofa Besar',         'stok' => 1,  'kategori' => 'Furnitur'],
+            ['nama' => 'Terminal Kabel',     'stok' => 7,  'kategori' => 'Kabel & Aksesoris'],
+            ['nama' => 'Proyektor',          'stok' => 4,  'kategori' => 'Elektronik'],
+            ['nama' => 'Mikrotik Jaringan',  'stok' => 13, 'kategori' => 'Jaringan'],
+            ['nama' => 'Motherboard',        'stok' => 4,  'kategori' => 'Komputer'],
+            ['nama' => 'Sound System',       'stok' => 2,  'kategori' => 'Audio'],
+            ['nama' => 'Kipas Turbo',        'stok' => 3,  'kategori' => 'Pendingin'],
         ];
 
         foreach ($barangs as $index => $b) {
@@ -30,7 +31,7 @@ class BarangSeeder extends Seeder
                     'stok_total'     => $b['stok'],
                     'stok_tersedia'  => $b['stok'],
                     'kategori'       => $b['kategori'],
-                    'deskripsi'      => 'Inventaris kampus: ' . $b['nama'],
+                    'deskripsi'      => 'Inventaris kampus STITEK Bontang: ' . $b['nama'],
                     'status'         => 'tersedia',
                 ]
             );
