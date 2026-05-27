@@ -11,6 +11,7 @@ use App\Services\BookingService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Storage;
+use Inertia\Inertia;
 
 class AdminController extends Controller
 {
@@ -21,18 +22,34 @@ class AdminController extends Controller
     // ────────────────────────────────────────
     // Dashboard
     // ────────────────────────────────────────
-    public function dashboard(): \Illuminate\View\View
+    public function dashboard()
     {
-        return view('admin.dashboard');
+        $totalPending = Peminjaman::where('status', Peminjaman::STATUS_PENDING)->count();
+        $totalApproved = Peminjaman::where('status', Peminjaman::STATUS_APPROVED)->count();
+        $totalUsers = User::count();
+        $totalRuangan = Ruangan::count();
+        $totalBarang = Barang::count();
+
+        return Inertia::render('Admin/Dashboard', [
+            'stats' => [
+                'pending'   => $totalPending,
+                'approved'  => $totalApproved,
+                'users'     => $totalUsers,
+                'ruangan'   => $totalRuangan,
+                'barang'    => $totalBarang,
+            ],
+        ]);
     }
 
     // ════════════════════════════════════════
     // KELOLA USER — CRUD Lengkap
     // ════════════════════════════════════════
-    public function kelolaUser(): \Illuminate\View\View
+    public function kelolaUser()
     {
         $users = User::orderBy('created_at', 'desc')->get();
-        return view('admin.kelola_user', compact('users'));
+        return Inertia::render('Admin/KelolaUser', [
+            'users' => $users,
+        ]);
     }
 
     public function storeUser(Request $request): \Illuminate\Http\RedirectResponse
@@ -45,12 +62,13 @@ class AdminController extends Controller
         ]);
 
         try {
-            User::create([
+            $user = User::create([
                 'name'     => $request->name,
                 'email'    => $request->email,
                 'password' => Hash::make($request->password),
                 'role'     => $request->role,
             ]);
+            $user->assignRole($request->role);
 
             return redirect()->back()->with('success', 'User berhasil ditambahkan!');
         } catch (\Throwable $e) {
@@ -75,12 +93,12 @@ class AdminController extends Controller
                 'role'  => $request->role,
             ];
 
-            // Hanya update password jika diisi
             if ($request->filled('password')) {
                 $data['password'] = Hash::make($request->password);
             }
 
             $user->update($data);
+            $user->syncRoles([$request->role]);
 
             return redirect()->back()->with('success', 'User berhasil diperbarui!');
         } catch (\Throwable $e) {
@@ -93,7 +111,6 @@ class AdminController extends Controller
         try {
             $user = User::findOrFail($id);
 
-            // Cegah admin menghapus dirinya sendiri
             if ($user->id === auth()->id()) {
                 return redirect()->back()->with('error', 'Anda tidak bisa menghapus akun sendiri!');
             }
@@ -109,10 +126,12 @@ class AdminController extends Controller
     // ════════════════════════════════════════
     // KELOLA PEMINJAMAN
     // ════════════════════════════════════════
-    public function kelolaPeminjaman(): \Illuminate\View\View
+    public function kelolaPeminjaman()
     {
-        $peminjamans = Peminjaman::with('user')->orderBy('created_at', 'desc')->get();
-        return view('admin.kelola_peminjaman', compact('peminjamans'));
+        $peminjamans = Peminjaman::with(['user', 'ruangan', 'barang'])->orderBy('created_at', 'desc')->get();
+        return Inertia::render('Admin/KelolaPeminjaman', [
+            'peminjamans' => $peminjamans,
+        ]);
     }
 
     public function setujuiPeminjaman(int $id): \Illuminate\Http\RedirectResponse
@@ -140,10 +159,12 @@ class AdminController extends Controller
     // ════════════════════════════════════════
     // KELOLA RUANGAN — CRUD Lengkap
     // ════════════════════════════════════════
-    public function kelolaRuangan(): \Illuminate\View\View
+    public function kelolaRuangan()
     {
         $ruangans = Ruangan::orderBy('created_at', 'desc')->get();
-        return view('admin.kelola_ruangan', compact('ruangans'));
+        return Inertia::render('Admin/KelolaRuangan', [
+            'ruangans' => $ruangans,
+        ]);
     }
 
     public function storeRuangan(Request $request): \Illuminate\Http\RedirectResponse
@@ -190,7 +211,6 @@ class AdminController extends Controller
             $data = $request->only(['nama', 'kode', 'kapasitas', 'lokasi', 'deskripsi', 'status']);
 
             if ($request->hasFile('foto')) {
-                // Hapus foto lama jika ada
                 if ($ruangan->foto) {
                     Storage::disk('public')->delete($ruangan->foto);
                 }
@@ -225,10 +245,12 @@ class AdminController extends Controller
     // ════════════════════════════════════════
     // KELOLA BARANG — CRUD Lengkap
     // ════════════════════════════════════════
-    public function kelolaBarang(): \Illuminate\View\View
+    public function kelolaBarang()
     {
         $barangs = Barang::orderBy('created_at', 'desc')->get();
-        return view('admin.kelola_barang', compact('barangs'));
+        return Inertia::render('Admin/KelolaBarang', [
+            'barangs' => $barangs,
+        ]);
     }
 
     public function storeBarang(Request $request): \Illuminate\Http\RedirectResponse

@@ -32,23 +32,20 @@ class DashboardController extends Controller
             ->get(['id', 'nama', 'kode', 'kapasitas', 'lokasi', 'deskripsi', 'status']);
 
         // ── Katalog Barang dengan stok real-time ─────────────
-        $barangs = Barang::orderBy('kategori')
-            ->orderBy('nama')
-            ->get(['id', 'nama', 'kode', 'stok_total', 'stok_tersedia', 'kategori', 'deskripsi', 'status'])
-            ->map(function (Barang $barang) {
-                // Hitung jumlah unit yang sedang aktif dipinjam (pending + approved)
-                $aktiveDipinjam = Peminjaman::where('barang_id', $barang->id)
-                    ->whereIn('status', [
-                        Peminjaman::STATUS_PENDING,
-                        Peminjaman::STATUS_APPROVED,
-                    ])
-                    ->count();
-
-                $barang->sedang_dipinjam = $aktiveDipinjam;
-                $barang->stok_tersedia   = max(0, $barang->stok_total - $aktiveDipinjam);
-
-                return $barang;
-            });
+        $barangs = Barang::withCount(['peminjamans as sedang_dipinjam' => function ($query) {
+            $query->whereIn('status', [
+                Peminjaman::STATUS_PENDING,
+                Peminjaman::STATUS_APPROVED,
+            ]);
+        }])
+        ->orderBy('kategori')
+        ->orderBy('nama')
+        ->get(['id', 'nama', 'kode', 'stok_total', 'stok_tersedia', 'kategori', 'deskripsi', 'status'])
+        ->map(function (Barang $barang) {
+            $barang->sedang_dipinjam = $barang->sedang_dipinjam ?? 0;
+            $barang->stok_tersedia   = max(0, $barang->stok_total - $barang->sedang_dipinjam);
+            return $barang;
+        });
 
         return Inertia::render('User/Dashboard', [
             'stats'    => $stats,

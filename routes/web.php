@@ -29,7 +29,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
     // Peminjaman
     Route::get('/bookings', [BookingController::class, 'index'])->name('bookings.index');
-    Route::post('/bookings', [BookingController::class, 'store'])->name('bookings.store');
+    Route::post('/bookings', [BookingController::class, 'store'])->middleware('throttle:5,1')->name('bookings.store');
     Route::get('/bookings/{id}/pdf', [BookingController::class, 'generatePDF'])->name('bookings.pdf');
 
     // Menu Lainnya
@@ -44,6 +44,10 @@ Route::middleware(['auth', 'verified'])->group(function () {
     // Laporan Pribadi (User)
     Route::get('/laporan', [ReportController::class, 'userIndex'])->name('laporan.index');
     Route::get('/laporan/export-pdf', [ReportController::class, 'userExportPdf'])->name('laporan.export_pdf');
+
+    // Profile Edit
+    Route::get('/profile/edit', [ProfileController::class, 'edit'])->name('profile.edit');
+    Route::post('/profile/edit', [ProfileController::class, 'update'])->name('profile.update');
 });
 
 // ==========================================

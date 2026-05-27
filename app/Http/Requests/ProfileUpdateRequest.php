@@ -18,6 +18,7 @@ class ProfileUpdateRequest extends FormRequest
     {
         return [
             'name' => ['required', 'string', 'max:255'],
+            'nickname' => ['nullable', 'string', 'max:50'],
             'email' => [
                 'required',
                 'string',
@@ -26,6 +27,8 @@ class ProfileUpdateRequest extends FormRequest
                 'max:255',
                 Rule::unique(User::class)->ignore($this->user()->id),
             ],
+            'avatar' => ['nullable', 'image', 'max:5120'], // Max 5MB
+            'password' => ['nullable', 'string', 'min:8', 'confirmed'],
         ];
     }
 }

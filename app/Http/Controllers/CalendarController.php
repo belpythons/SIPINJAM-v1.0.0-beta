@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\StoreCalendarRequest;
 use App\Models\Calendar;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
@@ -11,11 +12,13 @@ class CalendarController extends Controller
 {
     // ── USER: Tampilkan kalender aktif ──────────────────
 
-    public function index(): \Illuminate\View\View
+    public function index()
     {
         $calendar = Calendar::where('is_active', true)->latest()->first();
 
-        return view('user.kalender.index', compact('calendar'));
+        return \Inertia\Inertia::render('User/Kalender', [
+            'calendar' => $calendar,
+        ]);
     }
 
     /**
@@ -40,22 +43,20 @@ class CalendarController extends Controller
 
     // ── ADMIN: Kelola kalender ──────────────────────────
 
-    public function adminIndex(): \Illuminate\View\View
+    public function adminIndex()
     {
         $calendars = Calendar::orderByDesc('year')->get();
 
-        return view('admin.kelola_kalender', compact('calendars'));
+        return \Inertia\Inertia::render('Admin/KelolaKalender', [
+            'calendars' => $calendars,
+        ]);
     }
 
     /**
-     * Upload gambar kalender baru.
+     * Upload gambar/PDF kalender baru.
      */
-    public function store(Request $request): \Illuminate\Http\RedirectResponse
+    public function store(StoreCalendarRequest $request): \Illuminate\Http\RedirectResponse
     {
-        $request->validate([
-            'image' => 'required|image|mimes:jpeg,png,jpg,webp|max:5120', // max 5MB
-            'year'  => 'required|integer|min:2020|max:2100',
-        ]);
 
         try {
             $path = $request->file('image')->store('calendars', 'public');
