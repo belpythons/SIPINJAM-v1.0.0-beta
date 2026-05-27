@@ -42,6 +42,8 @@ class Peminjaman extends Model
         'jam_selesai',
         'keterangan',
         'status',
+        'approved_at',
+        'completed_at',
     ];
 
     protected function casts(): array
@@ -49,6 +51,8 @@ class Peminjaman extends Model
         return [
             'tanggal_mulai'   => 'date',
             'tanggal_selesai' => 'date',
+            'approved_at'     => 'datetime',
+            'completed_at'    => 'datetime',
         ];
     }
 
