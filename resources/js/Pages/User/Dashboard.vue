@@ -1,8 +1,9 @@
 <script setup>
-import { ref, computed } from 'vue';
+import { ref, computed, watch, onMounted } from 'vue';
 import { Head, usePage } from '@inertiajs/vue3';
 import UserLayout from '@/Layouts/UserLayout.vue';
 import BookingModal from '@/Components/BookingModal.vue';
+import StatCard from '@/Components/StatCard.vue';
 import {
   ClipboardList,
   PackageCheck,
@@ -15,6 +16,8 @@ import {
   Layers,
   Search,
   Sparkles,
+  AlertCircle,
+  X,
 } from '@lucide/vue';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent } from '@/components/ui/card';
@@ -31,6 +34,41 @@ const props = defineProps({
 
 const page = usePage();
 const flash = computed(() => page.props.flash);
+const pageErrors = computed(() => page.props.errors);
+
+// ── Toast State ──────────────────────────────────────
+const showSuccessToast = ref(false);
+const showErrorToast = ref(false);
+const errorMessages = ref([]);
+let successTimer = null;
+let errorTimer = null;
+
+// Watch for flash success
+watch(() => flash.value?.success, (msg) => {
+  if (msg) {
+    showSuccessToast.value = true;
+    clearTimeout(successTimer);
+    successTimer = setTimeout(() => { showSuccessToast.value = false; }, 5000);
+  }
+}, { immediate: true });
+
+// Watch for errors (validation + flash.error)
+watch([() => pageErrors.value, () => flash.value?.error], ([errors, flashErr]) => {
+  const msgs = [];
+  if (flashErr) msgs.push(flashErr);
+  if (errors && typeof errors === 'object') {
+    Object.values(errors).forEach(e => {
+      if (Array.isArray(e)) msgs.push(...e);
+      else if (typeof e === 'string') msgs.push(e);
+    });
+  }
+  if (msgs.length) {
+    errorMessages.value = msgs;
+    showErrorToast.value = true;
+    clearTimeout(errorTimer);
+    errorTimer = setTimeout(() => { showErrorToast.value = false; }, 8000);
+  }
+}, { immediate: true });
 
 // ── Search & Filter ────────────────────────────────
 const searchQuery = ref('');
@@ -99,71 +137,116 @@ const statCards = computed(() => [
     textColor: 'text-emerald-600',
   },
 ]);
+
+// ── Adaptive Greeting ──────────────────────────────
+const greetingMessage = computed(() => {
+  const hour = new Date().getHours();
+  if (hour >= 5 && hour < 11) return 'Selamat Pagi';
+  if (hour >= 11 && hour < 15) return 'Selamat Siang';
+  if (hour >= 15 && hour < 18.5) return 'Selamat Sore';
+  return 'Selamat Malam';
+});
 </script>
 
 <template>
   <Head title="Dashboard" />
 
   <div class="px-6 py-8 lg:px-10">
-    <!-- ── Page Header ──────────────────────────────── -->
-    <div class="mb-8">
-      <div class="flex items-center gap-2 mb-1">
-        <Sparkles class="h-5 w-5 text-blue-500" />
-        <h1 class="text-2xl font-bold tracking-tight text-slate-900">Dashboard</h1>
+    <!-- ── Adaptive Hero Banner Section ──────────────── -->
+    <div class="mb-8 overflow-hidden rounded-2xl bg-gradient-to-r from-blue-700 to-cyan-600 p-6 shadow-sm text-white relative">
+      <div class="relative z-10">
+        <h2 class="text-xl font-bold tracking-tight md:text-2xl">{{ greetingMessage }}, {{ $page.props.auth.user?.name }}!</h2>
+        <p class="text-xs text-blue-100/90 mt-1 md:text-sm">
+          Semoga hari Anda menyenangkan. Kelola peminjaman dan penggunaan aset kampus STITEK dengan mudah.
+        </p>
       </div>
-      <p class="text-sm text-slate-500">
-        Selamat datang, <span class="font-semibold text-slate-700">{{ $page.props.auth.user?.name }}</span>. Kelola peminjaman aset kampus Anda di sini.
-      </p>
+      <!-- Subtle visual accents -->
+      <div class="absolute -right-10 -top-10 w-40 h-40 bg-white/5 rounded-full blur-xl pointer-events-none" />
+      <div class="absolute right-20 -bottom-20 w-60 h-60 bg-cyan-500/10 rounded-full blur-2xl pointer-events-none" />
     </div>
 
-    <!-- ── Flash Message ────────────────────────────── -->
+    <!-- ── Page Header ──────────────────────────────── -->
+    <div class="mb-8 flex items-center justify-between border-b border-slate-100 pb-5">
+      <div>
+        <div class="flex items-center gap-2 mb-1">
+          <Sparkles class="h-5 w-5 text-blue-500" />
+          <h1 class="text-xl font-bold tracking-tight text-slate-900">Ringkasan Aktivitas</h1>
+        </div>
+        <p class="text-xs text-slate-500">
+          Kelola dan tinjau status peminjaman aset kampus secara real-time.
+        </p>
+      </div>
+    </div>
+
+    <!-- ── Floating Toast Notifications ─────────────── -->
+    <!-- Success Toast -->
     <Transition
       enter-active-class="transition duration-300 ease-out"
-      enter-from-class="opacity-0 -translate-y-2"
-      enter-to-class="opacity-100 translate-y-0"
+      enter-from-class="opacity-0 translate-x-8"
+      enter-to-class="opacity-100 translate-x-0"
       leave-active-class="transition duration-200 ease-in"
-      leave-from-class="opacity-100"
-      leave-to-class="opacity-0"
+      leave-from-class="opacity-100 translate-x-0"
+      leave-to-class="opacity-0 translate-x-8"
     >
       <div
-        v-if="flash?.success"
-        class="mb-6 flex items-center gap-3 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-medium text-emerald-700"
+        v-if="showSuccessToast && flash?.success"
+        class="fixed top-6 right-6 z-50 flex items-start gap-3 rounded-xl border border-emerald-200 bg-white px-4 py-3.5 shadow-lg shadow-emerald-500/10 max-w-sm"
       >
-        <CheckCircle2 class="h-5 w-5 shrink-0 text-emerald-500" />
-        {{ flash.success }}
+        <div class="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-emerald-50">
+          <CheckCircle2 class="h-4.5 w-4.5 text-emerald-500" />
+        </div>
+        <div class="min-w-0 flex-1">
+          <p class="text-sm font-semibold text-slate-800">Berhasil</p>
+          <p class="text-xs text-slate-500 mt-0.5">{{ flash.success }}</p>
+        </div>
+        <button @click="showSuccessToast = false" class="shrink-0 text-slate-400 hover:text-slate-600 transition-colors">
+          <X class="h-4 w-4" />
+        </button>
+      </div>
+    </Transition>
+
+    <!-- Error Toast -->
+    <Transition
+      enter-active-class="transition duration-300 ease-out"
+      enter-from-class="opacity-0 translate-x-8"
+      enter-to-class="opacity-100 translate-x-0"
+      leave-active-class="transition duration-200 ease-in"
+      leave-from-class="opacity-100 translate-x-0"
+      leave-to-class="opacity-0 translate-x-8"
+    >
+      <div
+        v-if="showErrorToast && errorMessages.length"
+        class="fixed top-6 right-6 z-50 flex items-start gap-3 rounded-xl border border-red-200 bg-white px-4 py-3.5 shadow-lg shadow-red-500/10 max-w-sm"
+      >
+        <div class="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-red-50">
+          <AlertCircle class="h-4.5 w-4.5 text-red-500" />
+        </div>
+        <div class="min-w-0 flex-1">
+          <p class="text-sm font-semibold text-red-800">Terjadi Kesalahan</p>
+          <ul class="mt-0.5 space-y-0.5">
+            <li v-for="(msg, i) in errorMessages" :key="i" class="text-xs text-red-600">
+              {{ msg }}
+            </li>
+          </ul>
+        </div>
+        <button @click="showErrorToast = false" class="shrink-0 text-slate-400 hover:text-slate-600 transition-colors">
+          <X class="h-4 w-4" />
+        </button>
       </div>
     </Transition>
 
     <!-- ── Stat Cards ───────────────────────────────── -->
     <div class="mb-10 grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
-      <div
+      <StatCard
         v-for="stat in statCards"
         :key="stat.label"
-        class="group relative overflow-hidden rounded-2xl border border-slate-200/80 bg-white p-5 shadow-sm transition-all duration-300 hover:shadow-md hover:-translate-y-0.5"
-      >
-        <!-- Gradient accent bar -->
-        <div
-          :class="['absolute inset-x-0 top-0 h-1 bg-gradient-to-r', stat.color]"
-        />
-        <div class="flex items-start justify-between">
-          <div>
-            <p class="text-xs font-semibold uppercase tracking-wider text-slate-400">
-              {{ stat.label }}
-            </p>
-            <p class="mt-2 text-3xl font-bold tabular-nums text-slate-900">
-              {{ stat.value }}
-            </p>
-          </div>
-          <div
-            :class="[
-              'flex h-10 w-10 items-center justify-center rounded-xl transition-transform group-hover:scale-110',
-              stat.bgLight,
-            ]"
-          >
-            <component :is="stat.icon" :class="['h-5 w-5', stat.textColor]" />
-          </div>
-        </div>
-      </div>
+        :label="stat.label"
+        :value="stat.value"
+        :icon="stat.icon"
+        :color="stat.color"
+        :bg-light="stat.bgLight"
+        :text-color="stat.textColor"
+      />
     </div>
 
     <!-- ── Asset Catalog ────────────────────────────── -->
