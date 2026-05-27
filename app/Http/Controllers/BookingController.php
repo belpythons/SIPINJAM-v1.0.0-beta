@@ -7,7 +7,7 @@ use App\Models\Peminjaman;
 use App\Services\BookingService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Barryvdh\DomPDF\Facade\Pdf;
+use Inertia\Inertia;
 
 class BookingController extends Controller
 {
@@ -15,7 +15,7 @@ class BookingController extends Controller
         private readonly BookingService $bookingService
     ) {}
 
-    public function index(): \Illuminate\View\View
+    public function index(): \Inertia\Response
     {
         // Fix N+1 — eager-load relasi barang & ruangan
         $bookings = Peminjaman::with(['barang', 'ruangan'])
@@ -30,7 +30,10 @@ class BookingController extends Controller
             'completed' => $bookings->where('status', Peminjaman::STATUS_DONE)->count(),
         ];
 
-        return view('user.bookings.index', compact('bookings', 'stats'));
+        return Inertia::render('User/RiwayatPeminjaman', [
+            'bookings' => $bookings,
+            'stats'    => $stats,
+        ]);
     }
 
     public function store(StoreBookingRequest $request): \Illuminate\Http\RedirectResponse
@@ -42,16 +45,5 @@ class BookingController extends Controller
         }
 
         return redirect()->route('dashboard')->with('success', 'Peminjaman berhasil diajukan!');
-    }
-
-    public function generatePDF(int $id): \Symfony\Component\HttpFoundation\Response
-    {
-        $booking = Peminjaman::with('user')->findOrFail($id);
-
-        $this->authorize('downloadPdf', $booking);
-
-        $pdf = Pdf::loadView('user.bookings.pdf', compact('booking'));
-
-        return $pdf->download('Bukti-Peminjaman-' . $booking->id . '.pdf');
     }
 }

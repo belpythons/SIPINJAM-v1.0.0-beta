@@ -21,4 +21,9 @@ class Barang extends Model
         'status',
         'foto',
     ];
+
+    public function peminjamans()
+    {
+        return $this->hasMany(Peminjaman::class, 'barang_id');
+    }
 }

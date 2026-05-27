@@ -11,8 +11,19 @@ import {
   Sparkles,
   Layers,
   ChevronRight,
-  Info
+  Info,
+  LogIn,
+  GraduationCap
 } from '@lucide/vue';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
+import { Button } from '@/components/ui/button';
 
 const props = defineProps({
   ruangans: Array,
@@ -21,8 +32,14 @@ const props = defineProps({
 
 const searchQuery = ref('');
 const activeTab = ref('all'); // 'all', 'ruangan', 'barang'
+const showLoginDialog = ref(false);
 
 const handlePinjam = () => {
+  showLoginDialog.value = true;
+};
+
+const confirmLogin = () => {
+  showLoginDialog.value = false;
   router.visit('/login');
 };
 
@@ -39,8 +56,6 @@ const filteredBarangs = computed(() => {
     b.kategori.toLowerCase().includes(searchQuery.value.toLowerCase())
   );
 });
-
-const totalAvailable = computed(() => props.ruangans.length + props.barangs.length);
 </script>
 
 <template>
@@ -64,10 +79,10 @@ const totalAvailable = computed(() => props.ruangans.length + props.barangs.leng
           
           <div class="space-y-2">
             <h1 class="text-4xl sm:text-5xl font-extrabold tracking-tight bg-gradient-to-r from-white via-slate-100 to-indigo-200 bg-clip-text text-transparent">
-              SiPinjam STITEK
+              SiPinjam
             </h1>
             <p class="text-xs tracking-[0.25em] uppercase text-indigo-300/80 font-semibold">
-              The Knowledgeable and Virtue Campus
+              STITEK Bontang — The Knowledgeable and Virtue Campus
             </p>
           </div>
 
@@ -78,6 +93,7 @@ const totalAvailable = computed(() => props.ruangans.length + props.barangs.leng
           <div class="flex flex-wrap gap-4 pt-2">
             <button 
               @click="handlePinjam"
+              id="btn-mulai-pinjam"
               class="inline-flex items-center gap-2 bg-blue-600 hover:bg-blue-500 active:bg-blue-700 text-white font-semibold px-6 py-3 rounded-xl shadow-lg shadow-blue-600/20 transition-all duration-200 hover:-translate-y-0.5 active:translate-y-0 group"
             >
               Mulai Peminjaman 
@@ -326,9 +342,59 @@ const totalAvailable = computed(() => props.ruangans.length + props.barangs.leng
     <!-- Footer -->
     <footer class="bg-white border-t border-slate-200 py-8 px-6 text-center text-slate-500 text-xs">
       <div class="max-w-7xl mx-auto space-y-2">
-        <p>&copy; 2026 SiPinjam STITEK Bontang. All rights reserved.</p>
+        <p>&copy; 2026 SiPinjam — STITEK Bontang. All rights reserved.</p>
         <p class="font-medium text-slate-400 tracking-wider">The Knowledgeable and Virtue Campus</p>
       </div>
     </footer>
+
+    <!-- ── Login Confirmation Dialog ───────────────── -->
+    <Dialog v-model:open="showLoginDialog">
+      <DialogContent class="sm:max-w-md">
+        <DialogHeader>
+          <div class="mx-auto mb-3 flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-blue-500 to-indigo-600 shadow-lg shadow-blue-500/20">
+            <GraduationCap class="h-7 w-7 text-white" />
+          </div>
+          <DialogTitle class="text-center text-xl font-bold">
+            Masuk ke SiPinjam
+          </DialogTitle>
+          <DialogDescription class="text-center text-sm text-muted-foreground leading-relaxed pt-2">
+            Silakan masuk dengan akun kampus Anda untuk mengakses layanan peminjaman aset. 
+            Pastikan Anda sudah terdaftar di sistem akademik STITEK Bontang.
+          </DialogDescription>
+        </DialogHeader>
+
+        <div class="mt-2 rounded-xl border border-blue-100 bg-blue-50/50 p-4">
+          <div class="flex items-start gap-3">
+            <div class="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-blue-100 text-blue-600">
+              <Info class="h-4 w-4" />
+            </div>
+            <div class="space-y-1">
+              <p class="text-sm font-semibold text-blue-900">Informasi Akun</p>
+              <p class="text-xs text-blue-700 leading-relaxed">
+                Gunakan email institusi <span class="font-mono font-semibold">@stitek.ac.id</span> yang telah didaftarkan oleh admin kampus.
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <DialogFooter class="mt-4 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
+          <Button 
+            variant="outline" 
+            @click="showLoginDialog = false"
+            class="w-full sm:w-auto"
+          >
+            Kembali
+          </Button>
+          <Button 
+            @click="confirmLogin"
+            id="btn-confirm-login"
+            class="w-full sm:w-auto gap-2 bg-blue-600 hover:bg-blue-500"
+          >
+            <LogIn class="h-4 w-4" />
+            Masuk Sekarang
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   </div>
 </template>

@@ -80,19 +80,70 @@ const keperluanOptions = [
 const isRuangan = computed(() => props.asset?.tipe === 'ruangan');
 const assetIcon = computed(() => (isRuangan.value ? Building2 : Package));
 
+// ── Stock Validation ───────────────────────────────
+const stockAvailable = computed(() => {
+  if (isRuangan.value) return true; // Ruangan doesn't have stock limits
+  return (props.asset?.stok_tersedia ?? 0) > 0;
+});
+
 const todayString = computed(() => {
   const d = new Date();
   return d.toISOString().split('T')[0];
 });
 
 // ── Step 1 Validation ──────────────────────────────
+const isTimeValid = computed(() => {
+  if (!form.waktu_mulai || !form.waktu_selesai) return false;
+  
+  const [startHour, startMin] = form.waktu_mulai.split(':').map(Number);
+  const [endHour, endMin] = form.waktu_selesai.split(':').map(Number);
+  
+  const startTimeVal = startHour * 60 + startMin;
+  const endTimeVal = endHour * 60 + endMin;
+
+  // Operational hours: 07:00 (420) to 22:00 (1320)
+  const opStart = 7 * 60;
+  const opEnd = 22 * 60;
+
+  return (
+    startTimeVal >= opStart &&
+    startTimeVal <= opEnd &&
+    endTimeVal >= opStart &&
+    endTimeVal <= opEnd &&
+    endTimeVal > startTimeVal
+  );
+});
+
+const timeWarning = computed(() => {
+  if (!form.waktu_mulai || !form.waktu_selesai) return '';
+  
+  const [startHour, startMin] = form.waktu_mulai.split(':').map(Number);
+  const [endHour, endMin] = form.waktu_selesai.split(':').map(Number);
+  
+  const startTimeVal = startHour * 60 + startMin;
+  const endTimeVal = endHour * 60 + endMin;
+
+  const opStart = 7 * 60;
+  const opEnd = 22 * 60;
+
+  if (startTimeVal < opStart || startTimeVal > opEnd || endTimeVal < opStart || endTimeVal > opEnd) {
+    return 'Waktu peminjaman harus berada di dalam jam operasional kampus (07:00 - 22:00 WITA).';
+  }
+  if (endTimeVal <= startTimeVal) {
+    return 'Waktu selesai harus lebih lambat dari waktu mulai.';
+  }
+  return '';
+});
+
 const step1Valid = computed(() => {
   return (
+    stockAvailable.value &&
     form.tanggal_mulai &&
     form.tanggal_selesai &&
     form.waktu_mulai &&
     form.waktu_selesai &&
-    form.tanggal_selesai >= form.tanggal_mulai
+    form.tanggal_selesai >= form.tanggal_mulai &&
+    isTimeValid.value
   );
 });
 
@@ -153,8 +204,9 @@ const closeModal = () => {
 <template>
   <Dialog :open="open" @update:open="closeModal">
     <DialogContent class="sm:max-w-lg max-h-[90vh] overflow-y-auto p-0">
-      <!-- ── Header ─────────────────────────────────── -->
-      <DialogHeader class="px-6 pt-6 pb-0">
+      <form @submit.prevent="submit" class="flex flex-col">
+        <!-- ── Header ─────────────────────────────────── -->
+        <DialogHeader class="px-6 pt-6 pb-0">
         <div class="flex items-center gap-3 mb-1">
           <div
             :class="[
@@ -238,6 +290,15 @@ const closeModal = () => {
         {{ form.errors.booking }}
       </div>
 
+      <!-- ── Stock Exhausted Warning ────────────────── -->
+      <div
+        v-if="!isRuangan && !stockAvailable"
+        class="mx-6 mt-4 flex items-center gap-2 rounded-lg border border-red-200 bg-red-50 px-3 py-2.5 text-sm text-red-700"
+      >
+        <AlertCircle class="h-4 w-4 shrink-0 text-red-500" />
+        <span>Stok <strong>{{ asset?.nama }}</strong> sedang habis (0 tersedia). Peminjaman tidak dapat dilakukan saat ini.</span>
+      </div>
+
       <!-- ── STEP 1: Jadwal ─────────────────────────── -->
       <div v-if="currentStep === 1" class="px-6 py-5 space-y-5">
         <div class="grid grid-cols-2 gap-4">
@@ -277,30 +338,36 @@ const closeModal = () => {
 
         <div class="grid grid-cols-2 gap-4">
           <div class="space-y-2">
-            <Label for="waktu_mulai" class="text-xs font-semibold text-slate-600 flex items-center gap-1.5">
-              <Clock class="h-3.5 w-3.5 text-slate-400" />
-              Waktu Mulai
+            <Label for="waktu_mulai" class="text-xs font-semibold text-slate-600 flex items-center gap-1.5 justify-between">
+              <span class="flex items-center gap-1.5">
+                <Clock class="h-3.5 w-3.5 text-slate-400" />
+                Waktu Mulai
+              </span>
+              <span class="text-[9px] text-slate-400 font-normal">24 Jam / WITA</span>
             </Label>
             <Input
               id="waktu_mulai"
               v-model="form.waktu_mulai"
               type="time"
-              class="text-sm"
+              class="text-sm border-slate-200 focus:ring-blue-500/20 focus:border-blue-500"
             />
             <p v-if="form.errors.waktu_mulai" class="text-xs text-red-500">
               {{ form.errors.waktu_mulai }}
             </p>
           </div>
           <div class="space-y-2">
-            <Label for="waktu_selesai" class="text-xs font-semibold text-slate-600 flex items-center gap-1.5">
-              <Clock class="h-3.5 w-3.5 text-slate-400" />
-              Waktu Selesai
+            <Label for="waktu_selesai" class="text-xs font-semibold text-slate-600 flex items-center gap-1.5 justify-between">
+              <span class="flex items-center gap-1.5">
+                <Clock class="h-3.5 w-3.5 text-slate-400" />
+                Waktu Selesai
+              </span>
+              <span class="text-[9px] text-slate-400 font-normal">24 Jam / WITA</span>
             </Label>
             <Input
               id="waktu_selesai"
               v-model="form.waktu_selesai"
               type="time"
-              class="text-sm"
+              class="text-sm border-slate-200 focus:ring-blue-500/20 focus:border-blue-500"
             />
             <p v-if="form.errors.waktu_selesai" class="text-xs text-red-500">
               {{ form.errors.waktu_selesai }}
@@ -308,10 +375,19 @@ const closeModal = () => {
           </div>
         </div>
 
+        <!-- Time warning alert -->
+        <div
+          v-if="timeWarning"
+          class="rounded-lg bg-amber-50 border border-amber-200 px-3 py-2.5 text-xs text-amber-800 flex items-start gap-2"
+        >
+          <AlertCircle class="h-3.5 w-3.5 mt-0.5 shrink-0 text-amber-600" />
+          <span>{{ timeWarning }}</span>
+        </div>
+
         <!-- Info tip -->
         <div class="rounded-lg bg-blue-50/60 border border-blue-100 px-3 py-2.5 text-xs text-blue-700 flex items-start gap-2">
           <AlertCircle class="h-3.5 w-3.5 mt-0.5 shrink-0 text-blue-500" />
-          <span>Pastikan jadwal tidak bentrok dengan peminjaman lain. Sistem akan memeriksa ketersediaan secara otomatis.</span>
+          <span>Jam Operasional Kampus: 07:00 - 22:00 WITA. Sistem otomatis menolak pengajuan di luar jam operasional.</span>
         </div>
       </div>
 
@@ -459,7 +535,7 @@ const closeModal = () => {
           </Button>
           <Button
             v-else
-            @click="submit"
+            type="submit"
             :disabled="!step2Valid || form.processing"
             class="gap-2 bg-blue-600 hover:bg-blue-700 text-white min-w-[140px]"
           >
@@ -469,6 +545,7 @@ const closeModal = () => {
           </Button>
         </div>
       </DialogFooter>
+      </form>
     </DialogContent>
   </Dialog>
 </template>

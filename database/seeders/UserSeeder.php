@@ -11,24 +11,29 @@ class UserSeeder extends Seeder
 {
     public function run(): void
     {
+        // Truncate — fresh start
+        User::query()->delete();
+
         // Buat role Spatie jika belum ada
         Role::firstOrCreate(['name' => 'admin', 'guard_name' => 'web']);
         Role::firstOrCreate(['name' => 'user',  'guard_name' => 'web']);
 
-        // Super Admin — satu-satunya akun awal.
-        // Semua akun user baru dibuat melalui panel Admin atau Google Login.
-        $admin = User::updateOrCreate(
-            ['email' => 'admin@sipinjam.ac.id'],
-            [
-                'name'     => 'Super Admin',
-                'password' => Hash::make('password123'),
-                'role'     => 'admin',
-            ]
-        );
+        // ── 1. Admin Account ────────────────────────────
+        $admin = User::create([
+            'name'     => 'Admin STITEK',
+            'email'    => 'admin@stitek.ac.id',
+            'password' => Hash::make('admin123'),
+            'role'     => 'admin',
+        ]);
+        $admin->assignRole('admin');
 
-        // Assign Spatie role
-        if (!$admin->hasRole('admin')) {
-            $admin->assignRole('admin');
-        }
+        // ── 2. Mahasiswa Account ────────────────────────
+        $user = User::create([
+            'name'     => 'Mahasiswa STITEK',
+            'email'    => 'mahasiswa@stitek.ac.id',
+            'password' => Hash::make('user123'),
+            'role'     => 'user',
+        ]);
+        $user->assignRole('user');
     }
 }

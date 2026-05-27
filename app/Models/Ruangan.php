@@ -19,5 +19,11 @@ class Ruangan extends Model
         'deskripsi',
         'status',
         'foto',
+        'image_path',
     ];
+
+    public function peminjamans()
+    {
+        return $this->hasMany(Peminjaman::class, 'ruangan_id');
+    }
 }

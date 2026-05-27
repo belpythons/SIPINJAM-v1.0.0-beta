@@ -2,32 +2,34 @@
 
 namespace App\Services;
 
-use App\Mail\BookingCreatedNotification;
-use App\Mail\BookingStatusUpdated;
 use App\Models\Barang;
 use App\Models\Peminjaman;
 use App\Models\Ruangan;
 use App\Models\User;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Mail;
 
 class BookingService
 {
     /**
-     * Buat peminjaman baru dengan pessimistic locking pada stok/jadwal.
+     * Buat peminjaman baru dengan pessimistic locking pada jadwal ruangan.
+     *
+     * PENTING (Delayed Deduction):
+     * Stok barang TIDAK dikurangi saat booking dibuat (status PENDING).
+     * Stok hanya dikurangi saat Admin meng-approve booking.
      */
     public function createBooking(array $data, User $user): Peminjaman
     {
         return DB::transaction(function () use ($data, $user) {
             if ($data['tipe_peminjaman'] === 'barang') {
-                // Lock record barang untuk cegah race condition pada stok
+                // Lock record barang untuk validasi stok (read-only, no decrement)
                 $barang = Barang::lockForUpdate()->findOrFail($data['barang_id']);
 
                 if ($barang->stok_tersedia < 1) {
                     throw new \RuntimeException('Stok barang "' . $barang->nama . '" sudah habis.');
                 }
 
-                $barang->decrement('stok_tersedia');
+                // ⛔ TIDAK ada $barang->decrement() di sini.
+                // Stok hanya dikurangi saat Admin approve (lihat approveBooking).
 
                 $peminjaman = $this->buildPeminjaman($data, $user, [
                     'tipe'       => 'barang',
@@ -47,52 +49,94 @@ class BookingService
                 ]);
             }
 
-            // Kirim notifikasi ke Admin via queue agar tidak blocking
-            $admin = User::where('role', 'admin')->first();
-            if ($admin) {
-                Mail::to($admin->email)->queue(new BookingCreatedNotification($peminjaman));
-            }
+            // ⛔ Email notification DISABLED for MVP — relying on UI only.
 
             return $peminjaman;
         });
     }
 
     /**
-     * Setujui peminjaman — ubah status dengan locking.
+     * Setujui peminjaman — deduct stock dan auto-reject jika habis.
+     *
+     * Flow:
+     * 1. Lock baris peminjaman + barang (pessimistic locking).
+     * 2. Validasi stok cukup (>= 1 untuk barang).
+     * 3. Update status → APPROVED, set approved_at.
+     * 4. Deduct stok_tersedia (hanya untuk tipe barang).
+     * 5. Auto-reject semua PENDING bookings lain jika stok menjadi 0.
      */
     public function approveBooking(Peminjaman $peminjaman): Peminjaman
     {
         return DB::transaction(function () use ($peminjaman) {
             // Lock baris peminjaman agar tidak diproses ganda oleh admin lain
             $peminjaman = Peminjaman::lockForUpdate()->findOrFail($peminjaman->id);
-            $peminjaman->update(['status' => Peminjaman::STATUS_APPROVED]);
 
-            Mail::to($peminjaman->user->email)->queue(
-                new BookingStatusUpdated($peminjaman, Peminjaman::STATUS_APPROVED)
-            );
+            // Guard: hanya bisa approve dari status PENDING
+            if ($peminjaman->status !== Peminjaman::STATUS_PENDING) {
+                throw new \RuntimeException('Peminjaman ini sudah diproses sebelumnya.');
+            }
+
+            if ($peminjaman->tipe === 'barang' && $peminjaman->barang_id) {
+                // ── CRITICAL: Pessimistic lock pada barang ─────────
+                $barang = Barang::where('id', $peminjaman->barang_id)
+                    ->lockForUpdate()
+                    ->firstOrFail();
+
+                $newStock = $barang->stok_tersedia - 1;
+
+                if ($newStock < 0) {
+                    throw new \RuntimeException(
+                        'Stok barang "' . $barang->nama . '" tidak mencukupi untuk disetujui.'
+                    );
+                }
+
+                // Deduct stock
+                $barang->update(['stok_tersedia' => $newStock]);
+
+                // ── AUTO-REJECT: jika stok habis, reject semua PENDING lainnya ──
+                if ($newStock === 0) {
+                    Peminjaman::where('barang_id', $barang->id)
+                        ->where('id', '!=', $peminjaman->id)
+                        ->where('status', Peminjaman::STATUS_PENDING)
+                        ->update([
+                            'status'     => Peminjaman::STATUS_REJECTED,
+                            'keterangan' => 'Dibatalkan sistem: Stok habis',
+                        ]);
+                }
+            }
+
+            // Update status to APPROVED + stamp approval time
+            $peminjaman->update([
+                'status'      => Peminjaman::STATUS_APPROVED,
+                'approved_at' => now(),
+            ]);
+
+            // ⛔ Email notification DISABLED for MVP — relying on UI only.
 
             return $peminjaman;
         });
     }
 
     /**
-     * Tolak peminjaman — kembalikan stok barang jika perlu.
+     * Tolak peminjaman.
+     *
+     * Karena Delayed Deduction: stok TIDAK perlu dikembalikan
+     * (tidak pernah dikurangi saat status PENDING).
      */
     public function rejectBooking(Peminjaman $peminjaman): Peminjaman
     {
         return DB::transaction(function () use ($peminjaman) {
             $peminjaman = Peminjaman::lockForUpdate()->findOrFail($peminjaman->id);
-            $peminjaman->update(['status' => Peminjaman::STATUS_REJECTED]);
 
-            // Kembalikan stok barang yang sudah dikurangi saat booking dibuat
-            if ($peminjaman->tipe === 'barang' && $peminjaman->barang_id) {
-                $barang = Barang::lockForUpdate()->findOrFail($peminjaman->barang_id);
-                $barang->increment('stok_tersedia');
+            // Guard: hanya bisa reject dari status PENDING
+            if ($peminjaman->status !== Peminjaman::STATUS_PENDING) {
+                throw new \RuntimeException('Peminjaman ini sudah diproses sebelumnya.');
             }
 
-            Mail::to($peminjaman->user->email)->queue(
-                new BookingStatusUpdated($peminjaman, Peminjaman::STATUS_REJECTED)
-            );
+            $peminjaman->update(['status' => Peminjaman::STATUS_REJECTED]);
+
+            // ⛔ TIDAK ada increment stok — karena stok tidak pernah dideduct saat PENDING.
+            // ⛔ Email notification DISABLED for MVP — relying on UI only.
 
             return $peminjaman;
         });
