@@ -3,9 +3,11 @@
 namespace App\Models;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
+use App\Mail\ResetPasswordMail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Illuminate\Support\Facades\Mail;
 use Spatie\Permission\Traits\HasRoles;
 
 class User extends Authenticatable
@@ -52,6 +54,16 @@ class User extends Authenticatable
             'is_blocked' => 'boolean',
             'blocked_until' => 'datetime',
         ];
+    }
+
+    // ── Custom Password Reset Notification ─────────────
+
+    /**
+     * Send the password reset notification using our custom Mailable.
+     */
+    public function sendPasswordResetNotification($token): void
+    {
+        Mail::to($this->email)->send(new ResetPasswordMail($this, $token));
     }
 
     // ── Sanction Methods ────────────────────────────────
