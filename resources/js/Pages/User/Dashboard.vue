@@ -1,9 +1,12 @@
 <script setup>
-import { ref, computed, watch, onMounted } from 'vue';
-import { Head, usePage } from '@inertiajs/vue3';
+import { ref, computed, watch, onMounted, onUnmounted } from 'vue';
+import { Head, usePage, Link } from '@inertiajs/vue3';
 import UserLayout from '@/Layouts/UserLayout.vue';
 import BookingModal from '@/Components/BookingModal.vue';
 import StatCard from '@/Components/StatCard.vue';
+import FullCalendar from '@fullcalendar/vue3';
+import dayGridPlugin from '@fullcalendar/daygrid';
+import interactionPlugin from '@fullcalendar/interaction';
 import {
   ClipboardList,
   PackageCheck,
@@ -18,6 +21,9 @@ import {
   Sparkles,
   AlertCircle,
   X,
+  Plus,
+  History,
+  CalendarDays,
 } from '@lucide/vue';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent } from '@/components/ui/card';
@@ -30,6 +36,7 @@ const props = defineProps({
   stats: Object,
   ruangans: Array,
   barangs: Array,
+  calendarEvents: { type: Array, default: () => [] },
 });
 
 const page = usePage();
@@ -96,11 +103,62 @@ const filteredBarangs = computed(() => {
 // ── Booking Modal State ────────────────────────────
 const showBookingModal = ref(false);
 const selectedAsset = ref(null);
+const prefillDates = ref(null);
 
 const openBooking = (asset, type) => {
   selectedAsset.value = { ...asset, tipe: type };
+  prefillDates.value = null;
   showBookingModal.value = true;
 };
+
+const openQuickBooking = () => {
+  selectedAsset.value = null;
+  prefillDates.value = null;
+  showBookingModal.value = true;
+};
+
+// ── Guest Cookie Detection (from Landing page drag) ─
+onMounted(() => {
+  const cookies = document.cookie.split(';').map(c => c.trim());
+  const guestCookie = cookies.find(c => c.startsWith('sipinjam_guest_dates='));
+  if (guestCookie) {
+    try {
+      const val = decodeURIComponent(guestCookie.split('=')[1]);
+      const parsed = JSON.parse(val);
+      if (parsed.start && parsed.end) {
+        prefillDates.value = parsed;
+        if (props.ruangans?.length > 0) {
+          selectedAsset.value = { ...props.ruangans[0], tipe: 'ruangan' };
+        }
+        showBookingModal.value = true;
+      }
+    } catch (e) {
+      // Ignore malformed cookie
+    }
+    document.cookie = 'sipinjam_guest_dates=;path=/;max-age=0';
+  }
+});
+
+// ── FullCalendar Config ────────────────────────────
+const calendarOptions = computed(() => ({
+  plugins: [dayGridPlugin, interactionPlugin],
+  initialView: 'dayGridMonth',
+  events: props.calendarEvents,
+  locale: 'id',
+  headerToolbar: {
+    left: 'prev,next today',
+    center: 'title',
+    right: 'dayGridMonth,dayGridWeek',
+  },
+  height: 'auto',
+  dayMaxEvents: 3,
+  eventDisplay: 'block',
+  eventTimeFormat: {
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12: false,
+  },
+}));
 
 // ── Stat Card Definitions ──────────────────────────
 const statCards = computed(() => [
@@ -163,6 +221,37 @@ const greetingMessage = computed(() => {
       <!-- Subtle visual accents -->
       <div class="absolute -right-10 -top-10 w-40 h-40 bg-white/5 rounded-full blur-xl pointer-events-none" />
       <div class="absolute right-20 -bottom-20 w-60 h-60 bg-cyan-500/10 rounded-full blur-2xl pointer-events-none" />
+    </div>
+
+    <!-- ── Quick Access Cards ────────────────────────── -->
+    <div class="mb-8 grid grid-cols-1 sm:grid-cols-2 gap-4">
+      <button
+        @click="openQuickBooking"
+        id="btn-quick-booking"
+        class="group flex items-center gap-4 rounded-xl border border-border bg-card p-5 shadow-sm transition-all duration-200 hover:shadow-md hover:border-blue-200 hover:-translate-y-0.5 text-left"
+      >
+        <div class="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-blue-50 text-blue-600 group-hover:bg-blue-100 transition-colors">
+          <Plus class="h-6 w-6" />
+        </div>
+        <div>
+          <p class="text-sm font-bold text-foreground">Mulai Pinjam</p>
+          <p class="text-xs text-muted-foreground mt-0.5">Ajukan peminjaman barang atau ruangan baru</p>
+        </div>
+      </button>
+
+      <Link
+        href="/bookings"
+        id="btn-quick-riwayat"
+        class="group flex items-center gap-4 rounded-xl border border-border bg-card p-5 shadow-sm transition-all duration-200 hover:shadow-md hover:border-violet-200 hover:-translate-y-0.5 text-left"
+      >
+        <div class="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-violet-50 text-violet-600 group-hover:bg-violet-100 transition-colors">
+          <History class="h-6 w-6" />
+        </div>
+        <div>
+          <p class="text-sm font-bold text-foreground">Riwayat Peminjaman</p>
+          <p class="text-xs text-muted-foreground mt-0.5">Lihat status dan histori peminjaman Anda</p>
+        </div>
+      </Link>
     </div>
 
     <!-- ── Page Header ──────────────────────────────── -->
@@ -247,6 +336,27 @@ const greetingMessage = computed(() => {
         :bg-light="stat.bgLight"
         :text-color="stat.textColor"
       />
+    </div>
+
+    <!-- ── Interactive Calendar ──────────────────────── -->
+    <div class="mb-10">
+      <div class="flex items-center gap-2 mb-4">
+        <CalendarDays class="h-5 w-5 text-blue-500" />
+        <h2 class="text-lg font-bold text-slate-900">Jadwal Peminjaman</h2>
+      </div>
+      <div class="rounded-xl border border-border bg-card p-4 shadow-sm">
+        <FullCalendar :options="calendarOptions" />
+      </div>
+      <div class="mt-3 flex items-center gap-5">
+        <div class="flex items-center gap-2">
+          <span class="inline-block h-3 w-3 rounded-sm" style="background-color:#2563eb" />
+          <span class="text-xs text-muted-foreground">Ruangan</span>
+        </div>
+        <div class="flex items-center gap-2">
+          <span class="inline-block h-3 w-3 rounded-sm" style="background-color:#64748b" />
+          <span class="text-xs text-muted-foreground">Barang</span>
+        </div>
+      </div>
     </div>
 
     <!-- ── Asset Catalog ────────────────────────────── -->
@@ -427,5 +537,8 @@ const greetingMessage = computed(() => {
   <BookingModal
     v-model:open="showBookingModal"
     :asset="selectedAsset"
+    :prefill-dates="prefillDates"
+    :ruangans="ruangans"
+    :barangs="barangs"
   />
 </template>

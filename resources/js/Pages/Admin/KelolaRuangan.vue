@@ -2,7 +2,7 @@
 import { Head, useForm, router } from '@inertiajs/vue3';
 import { ref } from 'vue';
 import AdminLayout from '@/Layouts/AdminLayout.vue';
-import { DoorOpen, Plus, Pencil, Trash2, X } from '@lucide/vue';
+import { DoorOpen, Plus, Pencil, Trash2, X, AlertTriangle, MessageSquare } from '@lucide/vue';
 
 defineOptions({ layout: AdminLayout });
 
@@ -32,6 +32,30 @@ const submit = () => {
     }
 };
 const destroy = (id) => { if (confirm('Hapus ruangan ini?')) router.delete(`/admin/kelola-ruangan/${id}`, { preserveScroll: true }); };
+
+// ── Feedback Modal for Lapor Berantakan ────────────
+const showLaporModal = ref(false);
+const laporTarget = ref({ id: null, nama: '' });
+const laporForm = useForm({ feedback: '' });
+
+const openLaporModal = (id, nama) => {
+    laporTarget.value = { id, nama };
+    laporForm.reset();
+    showLaporModal.value = true;
+};
+
+const closeLaporModal = () => {
+    showLaporModal.value = false;
+    laporTarget.value = { id: null, nama: '' };
+    laporForm.reset();
+};
+
+const submitLapor = () => {
+    laporForm.post(`/admin/kelola-ruangan/${laporTarget.value.id}/lapor-berantakan`, {
+        preserveScroll: true,
+        onSuccess: closeLaporModal,
+    });
+};
 </script>
 
 <template>
@@ -96,8 +120,16 @@ const destroy = (id) => { if (confirm('Hapus ruangan ini?')) router.delete(`/adm
                         </td>
                         <td class="px-5 py-3.5 text-center">
                             <div class="flex items-center justify-center gap-2">
-                                <button @click="openEdit(r)" class="rounded-lg p-1.5 text-slate-400 hover:bg-orange-50 hover:text-orange-600 transition-colors"><Pencil class="h-4 w-4" /></button>
-                                <button @click="destroy(r.id)" class="rounded-lg p-1.5 text-slate-400 hover:bg-red-50 hover:text-red-600 transition-colors"><Trash2 class="h-4 w-4" /></button>
+                                <button @click="openEdit(r)" class="rounded-lg p-1.5 text-slate-400 hover:bg-orange-50 hover:text-orange-600 transition-colors" title="Edit"><Pencil class="h-4 w-4" /></button>
+                                <button @click="destroy(r.id)" class="rounded-lg p-1.5 text-slate-400 hover:bg-red-50 hover:text-red-600 transition-colors" title="Hapus"><Trash2 class="h-4 w-4" /></button>
+                                <button
+                                  @click="openLaporModal(r.id, r.nama)"
+                                  class="inline-flex items-center gap-1 rounded-lg border-2 border-red-500 bg-red-50 px-2 py-1 text-[10px] font-bold text-red-700 uppercase hover:bg-red-500 hover:text-white transition-all"
+                                  title="Lapor Ruangan Berantakan"
+                                >
+                                  <AlertTriangle class="h-3 w-3" />
+                                  Lapor
+                                </button>
                             </div>
                         </td>
                     </tr>
@@ -105,5 +137,66 @@ const destroy = (id) => { if (confirm('Hapus ruangan ini?')) router.delete(`/adm
                 </tbody>
             </table>
         </div>
+
+        <!-- ── Lapor Feedback Modal ─────────────────── -->
+        <Teleport to="body">
+          <Transition
+            enter-active-class="transition duration-200 ease-out"
+            enter-from-class="opacity-0"
+            enter-to-class="opacity-100"
+            leave-active-class="transition duration-150 ease-in"
+            leave-from-class="opacity-100"
+            leave-to-class="opacity-0"
+          >
+            <div v-if="showLaporModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
+              <div class="w-full max-w-md rounded-2xl border border-border bg-white shadow-lg" @click.stop>
+                <!-- Header -->
+                <div class="flex items-center gap-3 border-b border-slate-100 px-6 py-4">
+                  <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-red-50 text-red-600">
+                    <AlertTriangle class="h-5 w-5" />
+                  </div>
+                  <div>
+                    <h3 class="text-base font-bold text-slate-900">Lapor Ruangan Berantakan</h3>
+                    <p class="text-xs text-slate-500">{{ laporTarget.nama }}</p>
+                  </div>
+                </div>
+
+                <!-- Body -->
+                <form @submit.prevent="submitLapor" class="px-6 py-5 space-y-4">
+                  <div class="rounded-lg bg-amber-50 border border-amber-200 px-3 py-2.5 text-xs text-amber-800 flex items-start gap-2">
+                    <AlertTriangle class="h-3.5 w-3.5 mt-0.5 shrink-0 text-amber-600" />
+                    <span>Peminjam terakhir hari ini akan diblokir selama <strong>30 hari</strong>. Pastikan Anda sudah memverifikasi kondisi ruangan.</span>
+                  </div>
+
+                  <div class="space-y-2">
+                    <label class="text-xs font-semibold text-slate-600 flex items-center gap-1.5">
+                      <MessageSquare class="h-3.5 w-3.5 text-slate-400" />
+                      Catatan Pelanggaran (Feedback)
+                    </label>
+                    <textarea
+                      v-model="laporForm.feedback"
+                      rows="3"
+                      placeholder="Jelaskan kondisi ruangan yang ditemukan (misal: kursi berantakan, AC tidak dimatikan, sampah berserakan)..."
+                      class="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm placeholder:text-slate-400 focus:ring-2 focus:ring-red-500/20 focus:border-red-500 resize-none"
+                      required
+                    />
+                    <p v-if="laporForm.errors.feedback" class="text-xs text-red-500">{{ laporForm.errors.feedback }}</p>
+                  </div>
+
+                  <div class="flex items-center justify-end gap-3 pt-2">
+                    <button type="button" @click="closeLaporModal" class="rounded-lg px-4 py-2 text-sm font-medium text-slate-500 hover:text-slate-700 transition-colors">
+                      Batal
+                    </button>
+                    <button type="submit" :disabled="laporForm.processing || !laporForm.feedback"
+                      class="inline-flex items-center gap-1.5 rounded-lg bg-red-600 px-4 py-2 text-sm font-semibold text-white hover:bg-red-700 disabled:opacity-50 transition-colors">
+                      <AlertTriangle class="h-4 w-4" />
+                      {{ laporForm.processing ? 'Memproses...' : 'Laporkan & Blokir' }}
+                    </button>
+                  </div>
+                </form>
+              </div>
+            </div>
+          </Transition>
+        </Teleport>
     </div>
 </template>

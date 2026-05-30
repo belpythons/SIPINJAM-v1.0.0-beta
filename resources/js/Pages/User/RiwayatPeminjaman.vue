@@ -159,7 +159,19 @@ const timelineSteps = [
             </div>
             
             <div class="flex items-center gap-2">
-              <!-- PDF Receipt Print Button (Only if approved/completed) -->
+              <!-- Download Surat PDF (Only if APPROVED — before event starts) -->
+              <a
+                v-if="booking.status === 'sedang_dipinjam'"
+                :href="'/bookings/' + booking.id + '/pdf'"
+                target="_blank"
+                class="inline-flex h-8 items-center gap-1.5 bg-primary px-3 text-[11px] font-semibold text-primary-foreground rounded-lg shadow-sm transition-all duration-200 hover:opacity-90"
+                title="Download Surat Peminjaman"
+              >
+                <FileText class="h-3.5 w-3.5" />
+                Download Surat
+              </a>
+
+              <!-- Cetak Bukti (Approved or Done) -->
               <a
                 v-if="booking.status === 'sedang_dipinjam' || booking.status === 'selesai'"
                 :href="'/bookings/' + booking.id + '/pdf'"

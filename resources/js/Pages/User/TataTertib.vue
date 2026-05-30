@@ -1,46 +1,111 @@
 <script setup>
 import { Head } from '@inertiajs/vue3';
+import { ref } from 'vue';
 import UserLayout from '@/Layouts/UserLayout.vue';
 import {
   ShieldCheck,
+  Target,
+  BookOpen,
   FileText,
-  Clock,
-  ThumbsUp,
+  ClipboardCheck,
+  Ban,
   AlertTriangle,
-  Info,
+  ChevronDown,
 } from '@lucide/vue';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 
 defineOptions({ layout: UserLayout });
 
-const rules = [
+const openItems = ref(['tujuan']); // Default open
+
+const toggleItem = (id) => {
+  const idx = openItems.value.indexOf(id);
+  if (idx >= 0) {
+    openItems.value.splice(idx, 1);
+  } else {
+    openItems.value.push(id);
+  }
+};
+
+const isOpen = (id) => openItems.value.includes(id);
+
+const sections = [
   {
-    title: 'Prosedur Pengajuan',
+    id: 'tujuan',
+    title: 'Tujuan & Ruang Lingkup',
+    icon: Target,
+    color: '#007AFF',
+    content: [
+      'Tata Tertib ini bertujuan untuk mengatur tata cara dan ketentuan peminjaman sarana dan prasarana (ruangan dan barang inventaris) di lingkungan Sekolah Tinggi Teknologi (STITEK) Bontang.',
+      'Ruang lingkup mencakup seluruh ruangan gedung utama dan laboratorium, serta seluruh barang inventaris yang terdata dalam sistem SiPinjam.',
+      'Berlaku untuk seluruh civitas akademika STITEK Bontang meliputi dosen, mahasiswa, tenaga kependidikan, dan pihak lain yang mendapat izin resmi.',
+    ],
+  },
+  {
+    id: 'ketentuan',
+    title: 'Ketentuan Umum',
+    icon: BookOpen,
+    color: '#FFE500',
+    content: [
+      'Peminjam wajib terdaftar dalam sistem SiPinjam dengan akun aktif yang diverifikasi oleh admin kampus.',
+      'Peminjaman hanya dapat dilakukan melalui aplikasi SiPinjam — tidak menerima pengajuan lisan atau manual.',
+      'Setiap peminjaman memerlukan persetujuan dari Biro Administrasi sebelum dapat digunakan.',
+      'Aset yang dipinjam harus digunakan sesuai dengan keperluan yang tercantum dalam formulir pengajuan.',
+      'Peminjam bertanggung jawab penuh atas kondisi aset selama masa peminjaman hingga pengembalian.',
+    ],
+  },
+  {
+    id: 'sop-pengajuan',
+    title: 'SOP Pengajuan',
     icon: FileText,
-    color: 'text-blue-600',
-    bg: 'bg-blue-50',
-    desc: 'Pengajuan peminjaman ruangan atau barang wajib dilakukan maksimal 2 hari sebelum waktu penggunaan melalui aplikasi SiPinjam.',
+    color: '#30D158',
+    content: [
+      'Login ke SiPinjam menggunakan akun institusi (@stitek.ac.id) atau akun yang terdaftar.',
+      'Pilih jenis aset yang ingin dipinjam (Ruangan atau Barang Inventaris) dari katalog.',
+      'Isi formulir pengajuan: tanggal mulai, tanggal selesai, waktu, dan keperluan penggunaan.',
+      'Pengajuan akan masuk antrian persetujuan admin. Status dapat dipantau secara real-time di dashboard.',
+      'Pengajuan yang tidak diproses dalam 48 jam akan otomatis ditolak oleh sistem (SLA Auto-Reject).',
+      'Setelah disetujui, peminjam dapat mengunduh Surat Peminjaman resmi dalam format PDF.',
+    ],
   },
   {
-    title: 'Waktu Penggunaan',
-    icon: Clock,
-    color: 'text-amber-600',
-    bg: 'bg-amber-50',
-    desc: 'Penggunaan ruangan & barang inventaris disesuaikan dengan jadwal akademik STITEK Bontang dan persetujuan dari pihak Biro Administrasi.',
+    id: 'sop-penggunaan',
+    title: 'SOP Penggunaan',
+    icon: ClipboardCheck,
+    color: '#007AFF',
+    content: [
+      'Penggunaan aset harus sesuai dengan jadwal yang telah disetujui — tidak boleh melebihi batas waktu.',
+      'Jam operasional kampus: 07:00 – 22:00 WITA. Penggunaan di luar jam operasional tidak diperkenankan.',
+      'Peminjam wajib menjaga kebersihan, ketertiban, dan keutuhan ruangan/barang selama penggunaan.',
+      'Setelah selesai menggunakan, pastikan ruangan dalam keadaan rapi dan barang dikembalikan ke kondisi semula.',
+      'Laporkan segera jika terjadi kerusakan atau kehilangan aset kepada admin melalui sistem.',
+    ],
   },
   {
-    title: 'Tanggung Jawab Aset',
-    icon: ThumbsUp,
-    color: 'text-emerald-600',
-    bg: 'bg-emerald-50',
-    desc: 'Peminjam bertanggung jawab penuh atas kebersihan, ketertiban, dan keutuhan aset selama masa penggunaan hingga pengembalian selesai.',
+    id: 'larangan',
+    title: 'Larangan',
+    icon: Ban,
+    color: '#FF3B30',
+    content: [
+      'Dilarang menggunakan aset untuk kepentingan pribadi atau komersial di luar kegiatan akademik.',
+      'Dilarang memindahkan barang inventaris ke lokasi lain tanpa izin tertulis dari admin.',
+      'Dilarang merusak, mencoret, atau mengubah kondisi ruangan dan barang kampus.',
+      'Dilarang meminjamkan kembali aset yang sudah dipinjam kepada pihak ketiga.',
+      'Dilarang membawa makanan/minuman berat ke dalam ruangan laboratorium.',
+    ],
   },
   {
-    title: 'Pelanggaran & Sanksi',
+    id: 'sanksi',
+    title: 'Sanksi',
     icon: AlertTriangle,
-    color: 'text-rose-600',
-    bg: 'bg-rose-50',
-    desc: 'Keterlambatan pengembalian barang atau kerusakan fasilitas kampus akibat kelalaian peminjam dapat dikenakan sanksi pemblokiran izin pinjam.',
+    color: '#FF3B30',
+    content: [
+      'Keterlambatan pengembalian barang/ruangan yang melebihi batas waktu (overtime) akan mengakibatkan pemblokiran akun selama 30 hari.',
+      'Pelaporan ruangan dalam kondisi berantakan oleh admin akan menjatuhkan sanksi blokir otomatis 30 hari kepada peminjam terakhir.',
+      'Selama masa blokir, pengguna tidak dapat mengakses fitur peminjaman di SiPinjam.',
+      'Akun akan otomatis di-unblock setelah masa 30 hari terlewati.',
+      'Kerusakan atau kehilangan aset wajib diganti oleh peminjam sesuai ketentuan yang berlaku.',
+      'Pelanggaran berulang dapat mengakibatkan pencabutan hak akses secara permanen melalui keputusan Biro Administrasi.',
+    ],
   },
 ];
 </script>
@@ -48,53 +113,92 @@ const rules = [
 <template>
   <Head title="Tata Tertib Peminjaman" />
 
-  <div class="px-6 py-8 lg:px-10 max-w-4xl">
+  <div class="max-w-7xl mx-auto px-8 py-10 lg:px-12 flex flex-col gap-8">
     <!-- Header -->
     <div class="mb-8">
-      <div class="flex items-center gap-2 mb-1">
-        <ShieldCheck class="h-5 w-5 text-blue-500" />
-        <h1 class="text-2xl font-bold tracking-tight text-slate-900">Tata Tertib Peminjaman</h1>
+      <div class="flex items-center gap-3 mb-2">
+        <div class="w-10 h-10 bg-primary/10 rounded-lg flex items-center justify-center">
+          <ShieldCheck class="h-5 w-5 text-primary" />
+        </div>
+        <div>
+          <h1 class="text-2xl font-bold tracking-tight text-foreground">Tata Tertib Peminjaman</h1>
+          <p class="text-xs text-muted-foreground">
+            Panduan dan ketentuan resmi peminjaman aset kampus STITEK Bontang
+          </p>
+        </div>
       </div>
-      <p class="text-sm text-slate-500">
-        Panduan dan tata tertib resmi peminjaman aset kampus STITEK Bontang.
-      </p>
     </div>
 
-    <!-- Main Card -->
-    <Card class="border-slate-200 shadow-sm overflow-hidden mb-8">
-      <CardHeader class="bg-slate-50/50 border-b border-slate-100 py-4 px-6 flex flex-row items-center gap-2">
-        <Info class="h-4.5 w-4.5 text-blue-500" />
-        <CardTitle class="text-sm font-bold text-slate-800">Ketentuan Umum Peminjam</CardTitle>
-      </CardHeader>
-      <CardContent class="p-6 space-y-6">
-        <p class="text-xs leading-relaxed text-slate-600">
-          Untuk menjaga kelancaran kegiatan akademik dan non-akademik di lingkungan kampus Sekolah Tinggi Teknologi (STITEK) Bontang, seluruh civitas akademika wajib mematuhi aturan dan tata tertib peminjaman sarana dan prasarana di bawah ini:
-        </p>
-
-        <!-- Rules Grid -->
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+    <!-- Accordion Sections (Clean Enterprise) -->
+    <div class="space-y-4">
+      <div
+        v-for="section in sections"
+        :key="section.id"
+        class="bg-card border border-border rounded-xl shadow-card overflow-hidden transition-all duration-200"
+      >
+        <!-- Accordion Header -->
+        <button
+          @click="toggleItem(section.id)"
+          class="w-full flex items-center gap-4 p-5 text-left transition-all duration-200 hover:bg-muted/50 group"
+          :id="'accordion-' + section.id"
+        >
           <div
-            v-for="rule in rules"
-            :key="rule.title"
-            class="flex items-start gap-4 p-4 rounded-xl border border-slate-100 hover:shadow-sm transition-shadow bg-white"
+            class="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg"
+            :style="{ backgroundColor: section.color + '18' }"
           >
-            <div :class="['flex h-9 w-9 shrink-0 items-center justify-center rounded-lg', rule.bg]">
-              <component :is="rule.icon" :class="['h-5 w-5', rule.color]" />
-            </div>
-            <div>
-              <h3 class="text-sm font-bold text-slate-800">{{ rule.title }}</h3>
-              <p class="text-xs text-slate-500 mt-1 leading-relaxed">{{ rule.desc }}</p>
+            <component :is="section.icon" class="h-[18px] w-[18px]" :style="{ color: section.color }" />
+          </div>
+
+          <span class="flex-1 text-sm font-semibold text-foreground">
+            {{ section.title }}
+          </span>
+
+          <ChevronDown
+            :class="[
+              'h-4 w-4 text-muted-foreground transition-transform duration-200 shrink-0',
+              isOpen(section.id) ? 'rotate-180' : ''
+            ]"
+          />
+        </button>
+
+        <!-- Accordion Content -->
+        <Transition
+          enter-active-class="transition-all duration-300 ease-out"
+          enter-from-class="max-h-0 opacity-0"
+          enter-to-class="max-h-[1000px] opacity-100"
+          leave-active-class="transition-all duration-200 ease-in"
+          leave-from-class="max-h-[1000px] opacity-100"
+          leave-to-class="max-h-0 opacity-0"
+        >
+          <div v-show="isOpen(section.id)" class="overflow-hidden">
+            <div class="border-t border-border px-5 py-5">
+              <ul class="space-y-3">
+                <li
+                  v-for="(item, idx) in section.content"
+                  :key="idx"
+                  class="flex items-start gap-3"
+                >
+                  <span
+                    class="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-md text-[10px] font-bold text-white"
+                    :style="{ backgroundColor: section.color }"
+                  >
+                    {{ idx + 1 }}
+                  </span>
+                  <p class="text-sm text-muted-foreground leading-relaxed">{{ item }}</p>
+                </li>
+              </ul>
             </div>
           </div>
-        </div>
-      </CardContent>
-    </Card>
+        </Transition>
+      </div>
+    </div>
 
-    <!-- Tagline Info -->
-    <div class="text-center">
-      <p class="text-[10px] tracking-[0.25em] uppercase font-semibold text-slate-400">
-        The Knowledgeable and Virtue Campus
+    <!-- Tagline -->
+    <div class="text-center pt-4">
+      <p class="text-xs tracking-widest uppercase text-muted-foreground font-medium">
+        The Knowledgeable and Virtue Campus — STITEK Bontang
       </p>
     </div>
   </div>
 </template>
+
