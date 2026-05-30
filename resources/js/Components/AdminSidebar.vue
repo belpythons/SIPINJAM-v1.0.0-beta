@@ -32,7 +32,7 @@ const getInitials = (name) => {
 
         <!-- ── Avatar & Profile (Top) ──────────────────── -->
         <div class="flex flex-col items-center pt-8 pb-6 px-5">
-            <Link href="/profile/edit" class="group flex flex-col items-center">
+            <Link href="/admin/profile" class="group flex flex-col items-center">
                 <div class="w-20 h-20 rounded-full border-[3px] border-white/30 overflow-hidden bg-white/10 flex items-center justify-center mb-3 group-hover:border-orange-300 transition-colors">
                     <img v-if="user?.avatar" :src="user.avatar" :alt="user?.name" class="w-full h-full object-cover" />
                     <span v-else class="text-xl font-bold text-white/70">{{ getInitials(user?.name) }}</span>
