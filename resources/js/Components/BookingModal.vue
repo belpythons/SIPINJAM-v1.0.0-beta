@@ -266,10 +266,10 @@ const stepLabels = ['Jadwal', 'Aset', 'Detail'];
             </Label>
             <!-- Ruangan Select -->
             <Select v-if="isRuangan" v-model="form.ruangan_id" :disabled="hasPreselectedAsset">
-              <SelectTrigger class="text-sm" style="position: relative; z-index: 70;">
+              <SelectTrigger class="text-sm">
                 <SelectValue placeholder="Pilih ruangan..." />
               </SelectTrigger>
-              <SelectContent style="z-index: 80;">
+              <SelectContent>
                 <SelectGroup>
                   <SelectLabel>Daftar Ruangan</SelectLabel>
                   <SelectItem v-for="r in ruangans" :key="r.id" :value="r.id">
@@ -280,10 +280,10 @@ const stepLabels = ['Jadwal', 'Aset', 'Detail'];
             </Select>
             <!-- Barang Select -->
             <Select v-else v-model="form.barang_id" :disabled="hasPreselectedAsset">
-              <SelectTrigger class="text-sm" style="position: relative; z-index: 70;">
+              <SelectTrigger class="text-sm">
                 <SelectValue placeholder="Pilih barang..." />
               </SelectTrigger>
-              <SelectContent style="z-index: 80;">
+              <SelectContent>
                 <SelectGroup>
                   <SelectLabel>Daftar Barang</SelectLabel>
                   <SelectItem v-for="b in barangs" :key="b.id" :value="b.id">
@@ -332,10 +332,10 @@ const stepLabels = ['Jadwal', 'Aset', 'Detail'];
               <FileText class="h-3.5 w-3.5 text-slate-400" /> Keperluan
             </Label>
             <Select v-model="form.keterangan">
-              <SelectTrigger class="text-sm" style="position: relative; z-index: 70;">
+              <SelectTrigger class="text-sm">
                 <SelectValue placeholder="Pilih keperluan..." />
               </SelectTrigger>
-              <SelectContent style="z-index: 80;">
+              <SelectContent>
                 <SelectGroup>
                   <SelectLabel>Keperluan Peminjaman</SelectLabel>
                   <SelectItem v-for="opt in keperluanOptions" :key="opt" :value="opt">{{ opt }}</SelectItem>

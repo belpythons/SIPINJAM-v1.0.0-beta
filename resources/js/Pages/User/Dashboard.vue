@@ -139,12 +139,27 @@ onMounted(() => {
   }
 });
 
+// ── Localized Date ────────────────────────────────
+const currentDateString = computed(() => {
+  return new Intl.DateTimeFormat('id-ID', {
+    weekday: 'long',
+    day: 'numeric',
+    month: 'long',
+    year: 'numeric'
+  }).format(new Date());
+});
+
 // ── FullCalendar Config ────────────────────────────
 const calendarOptions = computed(() => ({
   plugins: [dayGridPlugin, interactionPlugin],
   initialView: 'dayGridMonth',
   events: props.calendarEvents,
   locale: 'id',
+  selectable: true,
+  select: (info) => {
+    prefillDates.value = { start: info.startStr, end: info.endStr };
+    showBookingModal.value = true;
+  },
   headerToolbar: {
     left: 'prev,next today',
     center: 'title',
@@ -211,20 +226,27 @@ const greetingMessage = computed(() => {
 
   <div class="px-6 py-8 lg:px-10">
     <!-- ── Adaptive Hero Banner Section ──────────────── -->
-    <div class="mb-8 overflow-hidden rounded-none border-4 border-black shadow-[6px_6px_0px_rgba(0,0,0,1)] text-white relative min-h-[220px] flex items-center p-6">
-      <img src="/image/hero section user.png" alt="User Hero" class="absolute inset-0 w-full h-full object-cover" />
-      <div class="absolute inset-0 bg-black/60" />
+    <div class="mb-8 overflow-hidden rounded-2xl border border-border shadow-card relative min-h-[260px] flex items-center p-8 bg-slate-900">
+      <img src="/image/hero section user.png" alt="User Hero" class="absolute inset-0 w-full h-full object-cover opacity-70" />
+      <div class="absolute inset-0 bg-gradient-to-r from-black/90 via-black/60 to-transparent" />
       
-      <div class="relative z-10 max-w-lg bg-cyan-300 border-4 border-black p-5 text-black shadow-[4px_4px_0px_rgba(0,0,0,1)]">
-        <h2 class="text-2xl font-black uppercase tracking-tight mb-2">
-          {{ greetingMessage }}, {{ $page.props.auth.user?.name }}!
+      <div class="relative z-10 max-w-xl text-white drop-shadow-md">
+        <p class="text-xs font-bold text-blue-400 uppercase tracking-widest mb-2">{{ currentDateString }}</p>
+        <h2 class="text-3xl font-extrabold tracking-tight mb-2 drop-shadow-md">
+          Selamat Datang, {{ $page.props.auth.user?.name }}!
         </h2>
-        <h3 class="text-lg font-black uppercase tracking-wide text-blue-800 mb-1">
+        <h3 class="text-sm font-semibold text-slate-300 uppercase tracking-widest mb-4">
           Portal Peminjaman Mahasiswa
         </h3>
-        <p class="text-sm font-bold leading-relaxed text-gray-900">
+        <p class="text-sm font-medium leading-relaxed text-slate-200 mb-6 max-w-md drop-shadow-sm">
           Temukan dan pinjam ruangan atau barang untuk kebutuhan kegiatanmu dengan mudah. Pastikan Anda membaca tata tertib peminjaman sebelum mengajukan permohonan.
         </p>
+        <button
+          @click="openQuickBooking"
+          class="inline-flex items-center justify-center bg-primary hover:bg-primary/90 text-primary-foreground font-semibold text-xs rounded-lg px-5 py-3 shadow-md transition-all duration-200 hover:-translate-y-0.5"
+        >
+          Buat Peminjaman Baru
+        </button>
       </div>
     </div>
 

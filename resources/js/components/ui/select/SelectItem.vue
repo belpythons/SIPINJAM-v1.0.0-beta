@@ -44,7 +44,7 @@ const forwardedProps = useForwardProps(delegatedProps);
     </span>
 
     <SelectItemText>
-      <slot />
+      <span class="block truncate max-w-[280px] sm:max-w-[360px]"><slot /></span>
     </SelectItemText>
   </SelectItem>
 </template>
