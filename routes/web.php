@@ -24,7 +24,7 @@ Route::get('/auth/google/callback', [SocialiteController::class, 'handleGoogleCa
 // ==========================================
 // ROUTE UNTUK USER BIASA
 // ==========================================
-Route::middleware(['auth', 'verified'])->group(function () {
+Route::middleware(['auth', 'verified', 'blocked'])->group(function () {
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
 
     // Peminjaman
@@ -45,8 +45,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/laporan', [ReportController::class, 'userIndex'])->name('laporan.index');
     Route::get('/laporan/export-pdf', [ReportController::class, 'userExportPdf'])->name('laporan.export_pdf');
 
-    // Profile Edit
-    Route::get('/profile/edit', [ProfileController::class, 'edit'])->name('profile.edit');
+    // Profile Edit (User)
+    Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
+    Route::get('/profile/edit', fn () => redirect('/profile'));
     Route::post('/profile/edit', [ProfileController::class, 'update'])->name('profile.update');
 });
 
@@ -66,12 +67,14 @@ Route::middleware(['auth', 'admin'])->group(function () {
     Route::get('/admin/kelola-peminjaman', [AdminController::class, 'kelolaPeminjaman'])->name('admin.kelola_peminjaman');
     Route::patch('/admin/kelola-peminjaman/{id}/setujui', [AdminController::class, 'setujuiPeminjaman'])->name('admin.peminjaman.setujui');
     Route::patch('/admin/kelola-peminjaman/{id}/tolak', [AdminController::class, 'tolakPeminjaman'])->name('admin.peminjaman.tolak');
+    Route::patch('/admin/kelola-peminjaman/{id}/selesai', [AdminController::class, 'selesaiPeminjaman'])->name('admin.peminjaman.selesai');
 
     // Kelola Ruangan (CRUD)
     Route::get('/admin/kelola-ruangan', [AdminController::class, 'kelolaRuangan'])->name('admin.kelola_ruangan');
     Route::post('/admin/kelola-ruangan', [AdminController::class, 'storeRuangan'])->name('admin.ruangan.store');
     Route::put('/admin/kelola-ruangan/{id}', [AdminController::class, 'updateRuangan'])->name('admin.ruangan.update');
     Route::delete('/admin/kelola-ruangan/{id}', [AdminController::class, 'destroyRuangan'])->name('admin.ruangan.destroy');
+    Route::post('/admin/kelola-ruangan/{id}/lapor-berantakan', [AdminController::class, 'laporBerantakan'])->name('admin.ruangan.lapor_berantakan');
 
     // Kelola Barang (CRUD)
     Route::get('/admin/kelola-barang', [AdminController::class, 'kelolaBarang'])->name('admin.kelola_barang');
@@ -89,6 +92,10 @@ Route::middleware(['auth', 'admin'])->group(function () {
     Route::get('/admin/laporan', [ReportController::class, 'adminIndex'])->name('admin.laporan');
     Route::get('/admin/laporan/export-pdf', [ReportController::class, 'adminExportPdf'])->name('admin.laporan.export_pdf');
     Route::get('/admin/laporan/export-excel', [ReportController::class, 'adminExportExcel'])->name('admin.laporan.export_excel');
+
+    // Profile Edit (Admin — renders Admin/ProfileEdit with AdminLayout)
+    Route::get('/admin/profile', [AdminController::class, 'profileEdit'])->name('admin.profile.edit');
+    Route::post('/admin/profile', [AdminController::class, 'profileUpdate'])->name('admin.profile.update');
 });
 
 require __DIR__.'/auth.php';

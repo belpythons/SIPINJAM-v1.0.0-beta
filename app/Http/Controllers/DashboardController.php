@@ -47,10 +47,34 @@ class DashboardController extends Controller
             return $barang;
         });
 
+        // ── Kalender Events (Approved / Sedang Dipinjam) ────
+        $calendarEvents = Peminjaman::with(['ruangan', 'barang'])
+            ->where('status', Peminjaman::STATUS_APPROVED)
+            ->get()
+            ->map(function (Peminjaman $p) {
+                $isRuangan = $p->tipe === 'ruangan';
+                return [
+                    'id'              => $p->id,
+                    'title'           => ($isRuangan ? '🏠 ' : '📦 ') . ($p->nama_item ?? 'Peminjaman'),
+                    'start'           => $p->tanggal_mulai?->format('Y-m-d'),
+                    'end'             => $p->tanggal_selesai?->addDay()->format('Y-m-d'), // FullCalendar end is exclusive
+                    'backgroundColor' => $isRuangan ? '#2563eb' : '#64748b', // blue vs slate
+                    'borderColor'     => $isRuangan ? '#1d4ed8' : '#475569',
+                    'textColor'       => '#ffffff',
+                    'extendedProps'   => [
+                        'tipe'       => $p->tipe,
+                        'jam_mulai'  => $p->jam_mulai,
+                        'jam_selesai'=> $p->jam_selesai,
+                        'keterangan' => $p->keterangan,
+                    ],
+                ];
+            });
+
         return Inertia::render('User/Dashboard', [
-            'stats'    => $stats,
-            'ruangans' => $ruangans,
-            'barangs'  => $barangs,
+            'stats'          => $stats,
+            'ruangans'       => $ruangans,
+            'barangs'        => $barangs,
+            'calendarEvents' => $calendarEvents,
         ]);
     }
 }
