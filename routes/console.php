@@ -10,3 +10,6 @@ Artisan::command('inspire', function () {
 
 // SLA Auto-Reject: tolak otomatis peminjaman pending > 48 jam
 Schedule::command('booking:auto-reject')->hourly();
+
+// Sanction: blokir user overtime & unblock user yang masa blokirnya habis
+Schedule::command('sanction:apply')->dailyAt('00:00');
