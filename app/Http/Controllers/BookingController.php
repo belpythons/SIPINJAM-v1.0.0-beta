@@ -5,8 +5,10 @@ namespace App\Http\Controllers;
 use App\Http\Requests\StoreBookingRequest;
 use App\Models\Peminjaman;
 use App\Services\BookingService;
+use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Storage;
 use Inertia\Inertia;
 
 class BookingController extends Controller
@@ -45,5 +47,64 @@ class BookingController extends Controller
         }
 
         return redirect()->route('dashboard')->with('success', 'Peminjaman berhasil diajukan!');
+    }
+
+    /**
+     * Generate & download surat peminjaman PDF.
+     *
+     * Validasi:
+     * - Hanya user pemilik booking yang bisa download
+     * - Status harus "sedang_dipinjam" (Approved)
+     *
+     * Alur:
+     * 1. Jika nomor_surat belum ada → generate & simpan
+     * 2. Render Blade template → PDF via DomPDF
+     * 3. Simpan fisik ke storage/app/public/surat/
+     * 4. Return download response
+     */
+    public function generatePDF(int $id)
+    {
+        $peminjaman = Peminjaman::with(['user', 'ruangan', 'barang'])
+            ->findOrFail($id);
+
+        // Guard: hanya pemilik yang bisa download
+        if ($peminjaman->user_id !== Auth::id()) {
+            abort(403, 'Anda tidak memiliki akses ke surat ini.');
+        }
+
+        // Guard: hanya status "Approved" (sedang_dipinjam) yang bisa cetak surat
+        if ($peminjaman->status !== Peminjaman::STATUS_APPROVED) {
+            abort(403, 'Surat hanya dapat diunduh untuk peminjaman yang telah disetujui.');
+        }
+
+        // Generate nomor surat jika belum ada
+        if (empty($peminjaman->nomor_surat)) {
+            $peminjaman->update([
+                'nomor_surat' => Peminjaman::generateNomorSurat(),
+            ]);
+            $peminjaman->refresh();
+        }
+
+        // Render PDF
+        $pdf = Pdf::loadView('pdf.surat-peminjaman', [
+            'peminjaman' => $peminjaman,
+            'user'       => $peminjaman->user,
+            'asset'      => $peminjaman->tipe === 'ruangan'
+                                ? $peminjaman->ruangan
+                                : $peminjaman->barang,
+        ]);
+
+        $pdf->setPaper('A4', 'portrait');
+
+        // Slugified filename
+        $safeNomor = str_replace(['/', '\\'], '-', $peminjaman->nomor_surat);
+        $filename = "surat-peminjaman-{$safeNomor}.pdf";
+
+        // Simpan fisik ke storage
+        $storagePath = "public/surat/{$filename}";
+        Storage::put($storagePath, $pdf->output());
+
+        // Download response
+        return $pdf->download($filename);
     }
 }

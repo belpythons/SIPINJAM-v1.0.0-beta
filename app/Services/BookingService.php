@@ -169,6 +169,44 @@ class BookingService
     }
 
     /**
+     * Selesaikan peminjaman (validasi admin bahwa barang/ruangan telah dikembalikan).
+     *
+     * Flow:
+     * 1. Lock baris peminjaman (pessimistic locking).
+     * 2. Validasi status harus APPROVED (sedang_dipinjam).
+     * 3. Jika tipe barang → kembalikan stok (+1).
+     * 4. Update status → DONE, set completed_at.
+     */
+    public function completeBooking(Peminjaman $peminjaman): Peminjaman
+    {
+        return DB::transaction(function () use ($peminjaman) {
+            $peminjaman = Peminjaman::lockForUpdate()->findOrFail($peminjaman->id);
+
+            if ($peminjaman->status !== Peminjaman::STATUS_APPROVED) {
+                throw new \RuntimeException('Hanya peminjaman berstatus "Sedang Dipinjam" yang bisa diselesaikan.');
+            }
+
+            // Kembalikan stok barang jika tipe = barang
+            if ($peminjaman->tipe === 'barang' && $peminjaman->barang_id) {
+                $barang = Barang::where('id', $peminjaman->barang_id)
+                    ->lockForUpdate()
+                    ->firstOrFail();
+
+                $barang->update([
+                    'stok_tersedia' => $barang->stok_tersedia + 1,
+                ]);
+            }
+
+            $peminjaman->update([
+                'status'       => Peminjaman::STATUS_DONE,
+                'completed_at' => now(),
+            ]);
+
+            return $peminjaman;
+        });
+    }
+
+    /**
      * Helper: buat record Peminjaman dari data form.
      */
     private function buildPeminjaman(array $data, User $user, array $extra): Peminjaman
