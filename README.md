@@ -1,132 +1,107 @@
-🎓 SIPINJAM 🚀
-Sistem Informasi Peminjaman Alat & Reservasi Ruang Enterprise
-Solusi terpadu untuk manajemen peminjaman aset institusi dengan antarmuka yang cepat, aman, dan real-time.
-1. 🔎 Overview Project
-SIPINJAM dirancang untuk menangani beban operasional kampus atau instansi secara real-time tanpa perlu memuat ulang halaman (page reload). Sistem ini mencegah terjadinya race condition (bentrok peminjaman) dengan keamanan database locking tingkat tinggi, dan kini dilengkapi dengan notifikasi Multi-Channel (Email & WhatsApp).
-✨ Fitur Unggulan
-⚡ VILT Stack Architecture: Navigasi super cepat ala SPA berkat Vue 3 & Inertia.js. Transisi antarmuka terasa sangat smooth.
-🛡️ Pessimistic Locking & Service Pattern: Mencegah 1 barang dipinjam oleh 2 orang di detik yang sama. Transaksi aman terkendali di dalam BookingService.
-🤖 SLA Auto-Reject & Scheduler: Booking pending dibiarkan berhari-hari? Sistem akan membatalkannya secara otomatis melalui background job.
-📲 Omnichannel Notifications: Terintegrasi dengan SMTP Gmail dan WhatsApp Gateway via Fonnte untuk notifikasi status peminjaman instan.
-🔐 Socialite Google SSO: Login satu kali klik. Akun baru dengan domain kampus/instansi akan otomatis terdaftar.
-📅 Interactive Calendar: Menggunakan FullCalendar Vue 3 untuk visualisasi jadwal ruangan yang intuitif.
-2. 🛠️ Tech Stack Application
-Kategori
-Teknologi Utama
-Backend Core
-Laravel 11 (PHP 8.2+), Eloquent ORM
-Frontend Core
-Vue 3 (Composition API), Inertia.js
-Styling & UI
-Tailwind CSS, Reka UI, Radix Vue, Lucide Icons
-Interactive Elements
-FullCalendar Vue 3, GSAP (Animations)
-Database
-MySQL 8.0 / MariaDB
-Authentication
-Laravel Breeze + Laravel Socialite (Google OAuth)
-Role & Permission
-Spatie Laravel Permission
-Reports & Export
-Barryvdh Laravel DOMPDF (PDF Reports)
-Integrations
-Mail (SMTP Gmail) & WhatsApp Gateway (Fonnte)
+# **SIPINJAM: Sistem Informasi Peminjaman Alat & Reservasi Ruang Enterprise**
 
-3. 🚀 Step-by-Step Installation
-Mari persiapkan lingkungan pengembangan Anda. Ikuti panduan ini secara berurutan.
-Tahap 1: Clone & Install Dependencies
-# 1. Clone repositori ke mesin lokal Anda
-git clone https://github.com/your-username/SiPinjam.git
-cd SiPinjam
+Selamat datang di repositori **SIPINJAM**\! Sistem ini dirancang sebagai solusi terpadu untuk menangani manajemen peminjaman aset institusi atau kampus dengan antarmuka yang sangat cepat, aman, dan beroperasi secara *real-time*.
 
-# 2. Install dependensi Backend (PHP)
-composer install
+## **1\. Overview Project**
 
-# 3. Install dependensi Frontend (Node.js)
-npm install
+Aplikasi ini menargetkan efisiensi tinggi tanpa beban operasional, dan mencegah masalah yang sering terjadi seperti bentrok jadwal peminjaman.
 
+**Fitur Unggulan:**
 
-Tahap 2: Environment Setup
-Duplikat file konfigurasi environment dan hasilkan app key.
-cp .env.example .env
-php artisan key:generate
+* **Arsitektur VILT Stack:** Menawarkan navigasi super mulus sekelas *Single Page Application* (SPA) tanpa perlu *reload* halaman.  
+* **Pessimistic Locking & Service Pattern:** Mengamankan transaksi di dalam BookingService untuk memastikan satu barang tidak dapat diklaim oleh dua orang pada detik yang bersamaan.  
+* **SLA Auto-Reject & Scheduler:** Terdapat fitur pekerjaan latar belakang (background job) yang akan otomatis membatalkan pesanan yang tertunda (pending) terlalu lama.  
+* **Omnichannel Notifications:** Setiap perubahan status akan segera diinformasikan melalui Email (SMTP Gmail) dan pesan WhatsApp (Fonnte).  
+* **Socialite Google SSO:** Cukup sekali klik untuk masuk ke aplikasi, di mana akun domain instansi akan otomatis didaftarkan.  
+* **Interactive Calendar:** Pemantauan jadwal ruangan secara interaktif dengan antarmuka kalender yang intuitif.
 
+## **2\. Tech Stack Application**
 
-Buka file .env di code editor Anda dan atur koneksi database:
-DB_CONNECTION=mysql
-DB_HOST=127.0.0.1
-DB_PORT=3306
-DB_DATABASE=sipinjam
-DB_USERNAME=root
-DB_PASSWORD=password_database_anda
+Proyek ini ditenagai oleh kombinasi ekosistem PHP dan JavaScript termodern:
 
+**Bagian Backend (Core & Database):**
 
-Tahap 3: Konfigurasi Kredensial (⚠️ KRITIKAL)
-Penting: Bagian ini wajib diisi agar fitur Email, Login Google, dan Notifikasi WhatsApp dapat berjalan sempurna.
-A. Konfigurasi SMTP Email (Gmail) ✉️
-Jangan gunakan password email biasa Anda. Gunakan App Password Google.
-Aktifkan 2-Step Verification pada akun Google Anda.
-Buka Kelola Akun Google > Keamanan > Sandi Aplikasi (App Passwords).
-Buat sandi baru (Anda akan mendapat 16 digit huruf).
-Masukkan ke dalam .env:
-MAIL_MAILER=smtp
-MAIL_HOST=smtp.gmail.com
-MAIL_PORT=465
-MAIL_USERNAME="email.kampus.anda@gmail.com"
-MAIL_PASSWORD="kodenamabelasdigit" # Tanpa spasi
-MAIL_ENCRYPTION=smtps
-MAIL_FROM_ADDRESS="email.kampus.anda@gmail.com"
-MAIL_FROM_NAME="${APP_NAME}"
+* **Bahasa Utama & Framework:** PHP 8.2+ dengan Laravel 11\.  
+* **Database:** MySQL 8.0 / MariaDB yang dieksekusi dengan Eloquent ORM.  
+* **Sistem Autentikasi:** Laravel Breeze, Spatie Laravel Permission, dan Laravel Socialite.  
+* **Generator Laporan:** Barryvdh Laravel DOMPDF.
 
+**Bagian Frontend (UI/UX):**
 
-B. Konfigurasi Login with Google (OAuth 2.0) 🌐
-Buka Google Cloud Console.
-Buat proyek baru lalu buka APIs & Services > Credentials.
-Buat kredensial OAuth Client ID (Tipe: Web Application).
-Tambahkan Authorized redirect URIs: http://localhost:8000/auth/google/callback
-Salin ID & Secret, lalu tambahkan di .env:
-GOOGLE_CLIENT_ID="paste_client_id_anda.apps.googleusercontent.com"
-GOOGLE_CLIENT_SECRET="paste_client_secret_anda"
-GOOGLE_REDIRECT_URI="http://localhost:8000/auth/google/callback"
+* **Framework UI:** Vue 3 (Composition API) yang dijahit dengan Inertia.js.  
+* **Styling & Komponen:** Menggunakan Tailwind CSS, Reka UI, Radix Vue, dan Lucide Icons.  
+* **Interaktivitas:** FullCalendar Vue 3 untuk komponen kalender, dan GSAP untuk rendering animasi yang mulus.
 
+## **3\. Step-by-Step Installation**
 
-C. Konfigurasi WhatsApp Gateway (Fonnte) 💬
-Daftar dan login ke akun Fonnte.
-Hubungkan nomor WhatsApp (Bot) Anda di dashboard Fonnte dengan scan QR Code.
-Masuk ke menu API/Token dan salin Token yang diberikan.
-Tambahkan baris konfigurasi ini di .env:
-FONNTE_TOKEN="paste_token_fonnte_anda_disini"
-FONNTE_URL="https://api.fonnte.com/send"
+Mari persiapkan lingkungan pengembangan agar aplikasi ini bisa berjalan lancar di perangkat lokal Anda. Lakukan langkah-langkah ini secara berurutan.
 
+**Tahap 1: Kloning & Dependensi**
 
-Tahap 4: Finalisasi Database & Storage
-Terapkan struktur database, symlink file, dan masukkan data dummy/default.
-# 1. Link penyimpanan publik (wajib untuk render gambar aset)
-php artisan storage:link
+1. Unduh kode sumber ke lokal mesin Anda: git clone https://github.com/your-username/SiPinjam.git lalu cd SiPinjam.  
+2. Instal pustaka backend PHP: composer install.  
+3. Instal pustaka frontend JavaScript: npm install.
 
-# 2. Migrasi database dan jalankan Seeder
-php artisan migrate:fresh --seed
+**Tahap 2: Manajemen Environment & Database**
 
+1. Gandakan file env untuk konfigurasi sistem lokal: cp .env.example .env.  
+2. Generate kunci enkripsi dari Laravel: php artisan key:generate.  
+3. Sambungkan penyimpanan aset lokal ke ruang publik: php artisan storage:link.  
+4. Bangun tabel-tabel di database sekaligus memasukkan data awalan (Seeder): php artisan migrate:fresh \--seed.
 
-💡 Akses Default Super Admin:
-Email: admin@sipinjam.ac.id (Atau cek UserSeeder.php)
-Password: password
-Tahap 5: Menjalankan Aplikasi 🚦
-Karena aplikasi ini modern dan memiliki fitur background task, Anda harus membuka 4 terminal terpisah di dalam direktori project:
-Terminal 1 — Server Backend (Laravel)
-php artisan serve
+**Tahap 3: Menjalankan Multi-Service Terminal**
 
+Karena SIPINJAM memiliki arsitektur modern yang memproses tugas di balik layar, buka 4 tab terminal Anda di folder proyek untuk menjalankan perintah berikut:
 
-Terminal 2 — Server Frontend (Vite/Vue)
-npm run dev
+* Terminal 1 (Backend): php artisan serve  
+* Terminal 2 (Frontend Vue): npm run dev  
+* Terminal 3 (Worker Notifikasi): php artisan queue:work  
+* Terminal 4 (Cron/Scheduler Status SLA): php artisan schedule:work
 
+Aplikasi siap diakses di http://localhost:8000.
 
-Terminal 3 — Background Jobs (Email & WA)
-php artisan queue:work
+## **4\. Setup Environment Lengkap (Email, WA & Google SSO)**
 
+**PERHATIAN KRITIKAL**: Fitur terpenting di SIPINJAM bergantung pada pihak ketiga. Buka file .env di *code editor* Anda dan perhatikan cara melengkapi variabel berikut ini:
 
-Terminal 4 — Scheduler (Auto-Reject & SLA)
-php artisan schedule:work
+### **Konfigurasi SMTP Email (Notifikasi Lewat Gmail)**
 
+Sistem **tidak boleh** memakai *password* akun Gmail sehari-hari Anda karena rentan diblokir.
 
-🎉 Selesai! Aplikasi kini dapat diakses melalui browser Anda di: http://localhost:8000
+1. Pergi ke pengaturan akun Google Anda, dan pastikan fitur **Verifikasi 2 Langkah (2-Step Verification)** sudah menyala.  
+2. Cari menu **Sandi Aplikasi (App Passwords)**.  
+3. Buat konfigurasi baru, lalu Anda akan diberikan sandi unik berisikan 16 digit huruf.  
+4. Sesuaikan blok email di file .env sebagai berikut:  
+   MAIL\_MAILER=smtp  
+   MAIL\_HOST=smtp.gmail.com  
+   MAIL\_PORT=465  
+   MAIL\_USERNAME=emailkampus@gmail.com  
+   MAIL\_PASSWORD="paste\_16\_digit\_sandi\_tanpa\_spasi"  
+   MAIL\_ENCRYPTION=smtps  
+   MAIL\_FROM\_ADDRESS="emailkampus@gmail.com"  
+   MAIL\_FROM\_NAME="Admin SIPINJAM"
+
+### **Konfigurasi Google SSO (Masuk Dengan Sekali Klik)**
+
+Agar pengguna (mahasiswa/staf) bisa langsung *login* tanpa registrasi manual.
+
+1. Akses menu kredensial pada **Google Cloud Console**.  
+2. Buat kredensial bertipe **OAuth Client ID** lalu pilih jenis **Web Application**.  
+3. Pada isian **Authorized redirect URIs**, wajib masukkan: http://localhost:8000/auth/google/callback.  
+4. Salin ID dan Secret tersebut ke dalam .env:  
+   GOOGLE\_CLIENT\_ID=salin\_client\_id\_dari\_google\_cloud  
+   GOOGLE\_CLIENT\_SECRET=salin\_client\_secret\_dari\_google\_cloud  
+   GOOGLE\_REDIRECT\_URI="${APP\_URL}/auth/google/callback"
+
+### **Konfigurasi WhatsApp Gateway (Notifikasi Real-Time Fonnte)**
+
+Untuk memastikan status *approved* atau *rejected* langsung dikabarkan ke WhatsApp si pengguna.
+
+1. Buat akun dan lakukan *login* di platform pihak ketiga **Fonnte**.  
+2. Hubungkan nomor WhatsApp pusat (Bot) dengan melakukan *scan* QR Code di dalam *dashboard* Fonnte.  
+3. Temukan dan salin kode dari menu **API/Token**.  
+4. Sisipkan pada pengaturan .env:  
+   FONNTE\_TOKEN=salin\_token\_fonnte\_anda\_kesini  
+   VITE\_ADMIN\_WA\_NUMBER=isi\_dengan\_nomor\_wa\_administrator
+
+   *(Catatan opsional dari rujukan aslinya, pastikan Anda juga menambahkan FONNTE\_URL="https://api.fonnte.com/send" jika diminta).*
