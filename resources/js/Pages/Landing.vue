@@ -1,400 +1,315 @@
 <script setup>
 import { Head, router } from '@inertiajs/vue3';
 import { ref, computed } from 'vue';
-import { 
-  Building2, 
-  Package, 
-  Search, 
-  MapPin, 
-  Users, 
-  ArrowRight,
-  Sparkles,
-  Layers,
-  ChevronRight,
-  Info,
-  LogIn,
-  GraduationCap
-} from '@lucide/vue';
+import FullCalendar from '@fullcalendar/vue3';
+import dayGridPlugin from '@fullcalendar/daygrid';
+import interactionPlugin from '@fullcalendar/interaction';
 import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog';
-import { Button } from '@/components/ui/button';
+  Building2, Package, Search, MapPin, Users,
+  ArrowRight, Sparkles, Layers, ChevronRight,
+  Info, LogIn, GraduationCap, CalendarDays, X,
+} from '@lucide/vue';
 
 const props = defineProps({
   ruangans: Array,
-  barangs: Array
+  barangs: Array,
 });
 
 const searchQuery = ref('');
-const activeTab = ref('all'); // 'all', 'ruangan', 'barang'
+const activeTab = ref('all');
 const showLoginDialog = ref(false);
+const guestDateRange = ref(null);
 
-const handlePinjam = () => {
+// ── FullCalendar Config ─────────────────────────────
+const calendarOptions = ref({
+  plugins: [dayGridPlugin, interactionPlugin],
+  initialView: 'dayGridMonth',
+  selectable: true,
+  editable: false,
+  headerToolbar: { left: 'prev', center: 'title', right: 'next' },
+  height: 'auto',
+  locale: 'id',
+  select: handleDateSelect,
+  validRange: { start: new Date().toISOString().split('T')[0] },
+  dayHeaderFormat: { weekday: 'short' },
+  slotLabelFormat: { hour: '2-digit', minute: '2-digit', hour12: false },
+  eventTimeFormat: { hour: '2-digit', minute: '2-digit', hour12: false },
+});
+
+function handleDateSelect(selectInfo) {
+  guestDateRange.value = { start: selectInfo.startStr, end: selectInfo.endStr };
+  const cookieVal = JSON.stringify(guestDateRange.value);
+  document.cookie = `sipinjam_guest_dates=${encodeURIComponent(cookieVal)};path=/;max-age=3600;SameSite=Lax`;
   showLoginDialog.value = true;
-};
+}
 
-const confirmLogin = () => {
-  showLoginDialog.value = false;
-  router.visit('/login');
-};
+const handlePinjam = () => { showLoginDialog.value = true; };
+const confirmLogin = () => { showLoginDialog.value = false; router.visit('/login'); };
+const closeDialog = () => { showLoginDialog.value = false; };
 
-const filteredRuangans = computed(() => {
-  return props.ruangans.filter(r => 
+const filteredRuangans = computed(() =>
+  props.ruangans.filter(r =>
     r.nama.toLowerCase().includes(searchQuery.value.toLowerCase()) ||
     r.lokasi.toLowerCase().includes(searchQuery.value.toLowerCase())
-  );
-});
-
-const filteredBarangs = computed(() => {
-  return props.barangs.filter(b => 
+  )
+);
+const filteredBarangs = computed(() =>
+  props.barangs.filter(b =>
     b.nama.toLowerCase().includes(searchQuery.value.toLowerCase()) ||
     b.kategori.toLowerCase().includes(searchQuery.value.toLowerCase())
-  );
-});
+  )
+);
 </script>
 
 <template>
   <Head title="Katalog Aset Kampus" />
 
-  <div class="min-h-screen bg-slate-50 text-slate-900 selection:bg-blue-600 selection:text-white font-sans antialiased">
-    <!-- Header / Hero Section -->
-    <header class="relative overflow-hidden bg-gradient-to-br from-slate-900 via-indigo-950 to-slate-950 text-white py-16 px-6 sm:px-12 border-b border-indigo-900/50 shadow-2xl">
-      <!-- Decorative Glow elements -->
-      <div class="absolute inset-0">
-        <div class="absolute top-0 left-1/4 w-96 h-96 bg-blue-500/10 rounded-full blur-3xl -translate-y-1/2"></div>
-        <div class="absolute bottom-0 right-1/4 w-96 h-96 bg-indigo-500/10 rounded-full blur-3xl translate-y-1/2"></div>
-      </div>
+  <div class="min-h-screen bg-background text-foreground font-sans antialiased">
+    <!-- ── Header / Hero ──────────────────────────── -->
+    <header class="relative bg-primary py-16 px-6 sm:px-12 overflow-hidden">
+      <div class="absolute inset-0 bg-gradient-to-br from-primary to-blue-700 opacity-90" />
+      <div class="absolute -right-20 -top-20 w-72 h-72 bg-white/5 rounded-full blur-3xl" />
+      <div class="absolute right-40 -bottom-32 w-96 h-96 bg-blue-400/10 rounded-full blur-3xl" />
 
       <div class="max-w-7xl mx-auto relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-12">
-        <div class="max-w-2xl space-y-6">
-          <div class="inline-flex items-center gap-2 bg-indigo-500/10 border border-indigo-500/25 px-3 py-1 rounded-full text-indigo-300 text-xs font-semibold uppercase tracking-wider backdrop-blur-sm">
+        <div class="max-w-2xl space-y-5">
+          <div class="inline-flex items-center gap-2 bg-white/15 backdrop-blur-sm border border-white/20 px-4 py-1.5 rounded-full text-white text-xs font-semibold uppercase tracking-wider">
             <Sparkles class="w-3.5 h-3.5" />
             Sistem Peminjaman Aset Kampus
           </div>
-          
           <div class="space-y-2">
-            <h1 class="text-4xl sm:text-5xl font-extrabold tracking-tight bg-gradient-to-r from-white via-slate-100 to-indigo-200 bg-clip-text text-transparent">
-              SiPinjam
-            </h1>
-            <p class="text-xs tracking-[0.25em] uppercase text-indigo-300/80 font-semibold">
-              STITEK Bontang — The Knowledgeable and Virtue Campus
-            </p>
+            <h1 class="text-5xl sm:text-6xl font-extrabold tracking-tight text-white">SiPinjam</h1>
+            <p class="text-sm tracking-widest uppercase text-white/80 font-medium">STITEK Bontang — The Knowledgeable and Virtue Campus</p>
           </div>
-
-          <p class="text-lg text-slate-300 font-light leading-relaxed max-w-xl">
-            Layanan peminjaman barang dan ruangan kampus STITEK Bontang secara praktis, terintegrasi, dan terpantau dalam satu platform SPA.
+          <p class="text-lg text-white/90 font-normal leading-relaxed max-w-xl">
+            Layanan peminjaman barang dan ruangan kampus secara praktis, terintegrasi, dan terpantau dalam satu platform.
           </p>
-
-          <div class="flex flex-wrap gap-4 pt-2">
-            <button 
-              @click="handlePinjam"
-              id="btn-mulai-pinjam"
-              class="inline-flex items-center gap-2 bg-blue-600 hover:bg-blue-500 active:bg-blue-700 text-white font-semibold px-6 py-3 rounded-xl shadow-lg shadow-blue-600/20 transition-all duration-200 hover:-translate-y-0.5 active:translate-y-0 group"
-            >
-              Mulai Peminjaman 
-              <ArrowRight class="w-4 h-4 transition-transform group-hover:translate-x-1" />
+          <div class="flex flex-wrap gap-3 pt-2">
+            <button @click="handlePinjam" id="btn-mulai-pinjam"
+              class="inline-flex items-center gap-2 bg-white text-primary font-semibold px-6 py-3 rounded-lg shadow-sm transition-all duration-200 hover:shadow-md hover:-translate-y-0.5 group">
+              Mulai Peminjaman
+              <ArrowRight class="w-4 h-4 transition-transform group-hover:translate-x-0.5" />
             </button>
-            <a 
-              href="#katalog" 
-              class="inline-flex items-center justify-center border border-slate-700 hover:border-slate-500 bg-slate-900/50 hover:bg-slate-900 text-slate-300 hover:text-white font-medium px-6 py-3 rounded-xl backdrop-blur-sm transition-all duration-200"
-            >
+            <a href="#katalog"
+              class="inline-flex items-center justify-center border border-white/40 text-white font-semibold px-6 py-3 rounded-lg transition-all duration-200 hover:bg-white/10">
               Lihat Katalog Aset
             </a>
           </div>
         </div>
 
-        <!-- Stat Card Widget -->
-        <div class="w-full md:w-80 bg-white/5 border border-white/10 p-6 rounded-2xl backdrop-blur-md shadow-2xl flex flex-col justify-between">
+        <!-- Stat Widget -->
+        <div class="w-full md:w-80 bg-card border border-white/20 backdrop-blur-sm rounded-xl p-6 shadow-soft text-white">
           <div class="space-y-4">
             <div class="flex items-center justify-between">
-              <span class="text-xs font-semibold uppercase tracking-wider text-slate-400">Status Operasional</span>
+              <span class="text-xs font-semibold uppercase tracking-wider text-white/80">Status Operasional</span>
               <span class="flex h-2.5 w-2.5 relative">
-                <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-                <span class="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500"></span>
+                <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
+                <span class="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-400" />
               </span>
             </div>
-            
-            <div class="border-t border-white/5 my-3"></div>
-
-            <div class="grid grid-cols-2 gap-4">
-              <div class="bg-white/5 rounded-xl p-3 border border-white/5">
+            <div class="border-t border-white/15 my-3" />
+            <div class="grid grid-cols-2 gap-3">
+              <div class="bg-white/10 backdrop-blur-sm rounded-lg p-3">
                 <p class="text-2xl font-bold text-white">{{ ruangans.length }}</p>
-                <p class="text-xs text-slate-400">Total Ruangan</p>
+                <p class="text-xs font-medium text-white/70">Total Ruangan</p>
               </div>
-              <div class="bg-white/5 rounded-xl p-3 border border-white/5">
+              <div class="bg-white/10 backdrop-blur-sm rounded-lg p-3">
                 <p class="text-2xl font-bold text-white">{{ barangs.length }}</p>
-                <p class="text-xs text-slate-400">Total Barang</p>
+                <p class="text-xs font-medium text-white/70">Total Barang</p>
               </div>
             </div>
           </div>
-          
-          <div class="mt-6 flex items-center justify-between text-xs text-slate-400 bg-white/5 -mx-6 -mb-6 p-4 rounded-b-2xl border-t border-white/5">
+          <div class="mt-5 flex items-center justify-between text-xs font-medium text-white/60 pt-4 border-t border-white/15">
             <span>Aksesibilitas Terjamin</span>
-            <span class="flex items-center gap-1 font-semibold text-blue-300">
-              STITEK Bontang
-            </span>
+            <span>STITEK</span>
           </div>
         </div>
       </div>
     </header>
 
-    <!-- Main Content Catalog -->
+    <!-- ── FullCalendar Section ────────────────────── -->
+    <section class="max-w-7xl mx-auto py-12 px-6 sm:px-12">
+      <div class="mb-6 flex items-center gap-3">
+        <div class="w-10 h-10 bg-primary/10 rounded-lg flex items-center justify-center">
+          <CalendarDays class="w-5 h-5 text-primary" />
+        </div>
+        <div>
+          <h2 class="text-xl font-bold text-foreground">Pilih Tanggal Peminjaman</h2>
+          <p class="text-xs text-muted-foreground">Drag untuk memilih rentang tanggal → login → booking otomatis terisi</p>
+        </div>
+      </div>
+      <div class="bg-card border border-border rounded-xl shadow-card p-4 sm:p-6 clean-calendar">
+        <FullCalendar :options="calendarOptions" />
+      </div>
+    </section>
+
+    <!-- ── Catalog ─────────────────────────────────── -->
     <main id="katalog" class="max-w-7xl mx-auto py-12 px-6 sm:px-12 space-y-10">
-      
-      <!-- Filter controls and Search -->
-      <div class="flex flex-col md:flex-row gap-4 items-center justify-between bg-white border border-slate-200 p-4 rounded-2xl shadow-sm">
-        <!-- Tabs -->
-        <div class="flex gap-1 p-1 bg-slate-100 rounded-xl w-full md:w-auto">
-          <button 
-            @click="activeTab = 'all'"
-            :class="[
-              'flex-1 md:flex-none px-4 py-2 rounded-lg text-sm font-semibold transition-all duration-200',
-              activeTab === 'all' 
-                ? 'bg-white text-blue-600 shadow-sm' 
-                : 'text-slate-600 hover:text-slate-900'
-            ]"
-          >
-            Semua Aset
-          </button>
-          <button 
-            @click="activeTab = 'ruangan'"
-            :class="[
-              'flex-1 md:flex-none px-4 py-2 rounded-lg text-sm font-semibold transition-all duration-200',
-              activeTab === 'ruangan' 
-                ? 'bg-white text-blue-600 shadow-sm' 
-                : 'text-slate-600 hover:text-slate-900'
-            ]"
-          >
-            Ruangan
-          </button>
-          <button 
-            @click="activeTab = 'barang'"
-            :class="[
-              'flex-1 md:flex-none px-4 py-2 rounded-lg text-sm font-semibold transition-all duration-200',
-              activeTab === 'barang' 
-                ? 'bg-white text-blue-600 shadow-sm' 
-                : 'text-slate-600 hover:text-slate-900'
-            ]"
-          >
-            Barang
+      <!-- Filter + Search -->
+      <div class="flex flex-col md:flex-row gap-4 items-center justify-between bg-card border border-border rounded-xl p-4 shadow-card">
+        <div class="flex gap-1 w-full md:w-auto bg-muted rounded-lg p-1">
+          <button v-for="tab in [{key:'all',label:'Semua'},{key:'ruangan',label:'Ruangan'},{key:'barang',label:'Barang'}]"
+            :key="tab.key" @click="activeTab = tab.key"
+            :class="['flex-1 md:flex-none px-5 py-2 text-sm font-medium rounded-md transition-all duration-200',
+              activeTab === tab.key ? 'bg-card text-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground']">
+            {{ tab.label }}
           </button>
         </div>
-
-        <!-- Search input -->
         <div class="relative w-full md:w-80">
-          <span class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
-            <Search class="w-4 h-4" />
-          </span>
-          <input 
-            v-model="searchQuery"
-            type="text" 
-            placeholder="Cari nama atau lokasi aset..."
-            class="w-full pl-10 pr-4 py-2.5 rounded-xl border border-slate-200 bg-slate-50/50 text-sm focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-600/20 focus:border-blue-600 transition-all duration-200 placeholder:text-slate-400"
-          />
+          <Search class="absolute inset-y-0 left-3 my-auto h-4 w-4 text-muted-foreground" />
+          <input v-model="searchQuery" type="text" placeholder="Cari nama atau lokasi aset..."
+            class="w-full pl-10 pr-4 py-2.5 border border-input bg-background text-sm rounded-lg placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring/20 focus:border-ring transition-all" />
         </div>
       </div>
 
-      <!-- Ruangan Section -->
+      <!-- Ruangan -->
       <section v-if="activeTab === 'all' || activeTab === 'ruangan'" class="space-y-6">
-        <div class="flex items-center gap-2.5 pb-2 border-b border-slate-200">
-          <div class="w-8 h-8 rounded-lg bg-indigo-50 flex items-center justify-center text-indigo-600">
-            <Building2 class="w-4.5 h-4.5" />
+        <div class="flex items-center gap-3 pb-3 border-b border-border">
+          <div class="w-8 h-8 bg-primary/10 rounded-lg flex items-center justify-center">
+            <Building2 class="w-4 h-4 text-primary" />
           </div>
           <div>
-            <h2 class="text-xl font-bold text-slate-900">Ruangan Gedung Utama & Djuanda</h2>
-            <p class="text-xs text-slate-500">Ruang kelas teori dan laboratorium praktikum yang dapat dipesan</p>
+            <h2 class="text-lg font-bold text-foreground">Ruangan Gedung Utama & Djuanda</h2>
+            <p class="text-xs text-muted-foreground">Ruang kelas teori dan laboratorium praktikum</p>
           </div>
         </div>
-
-        <div v-if="filteredRuangans.length > 0" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          <div 
-            v-for="ruangan in filteredRuangans" 
-            :key="ruangan.id"
-            class="group bg-white rounded-2xl border border-slate-200/80 shadow-sm overflow-hidden hover:shadow-lg hover:border-slate-300 transition-all duration-200 flex flex-col justify-between"
-          >
-            <div class="p-6 space-y-4">
-              <!-- Card Header -->
+        <div v-if="filteredRuangans.length > 0" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+          <div v-for="ruangan in filteredRuangans" :key="ruangan.id"
+            class="group bg-card border border-border rounded-xl shadow-card overflow-hidden flex flex-col justify-between transition-all duration-200 hover:shadow-soft hover:-translate-y-0.5">
+            <div class="p-5 space-y-3">
               <div class="flex items-start justify-between gap-3">
-                <span class="text-[10px] font-bold tracking-wider uppercase bg-slate-100 text-slate-600 px-2 py-0.5 rounded">
-                  {{ ruangan.kode }}
-                </span>
-                <span class="inline-flex items-center gap-1 text-[10px] font-semibold bg-emerald-50 text-emerald-700 px-2 py-0.5 rounded-full">
-                  <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
-                  Tersedia
+                <span class="text-[10px] font-semibold tracking-wider uppercase bg-muted text-muted-foreground px-2.5 py-1 rounded-md">{{ ruangan.kode }}</span>
+                <span class="inline-flex items-center gap-1.5 text-[10px] font-semibold bg-emerald-50 text-emerald-700 px-2.5 py-1 rounded-md">
+                  <span class="w-1.5 h-1.5 rounded-full bg-emerald-500" />Tersedia
                 </span>
               </div>
-
-              <!-- Name & Location -->
-              <div class="space-y-1.5">
-                <h3 class="text-lg font-bold text-slate-900 group-hover:text-blue-600 transition-colors">
-                  {{ ruangan.nama }}
-                </h3>
-                <div class="flex items-center gap-1.5 text-xs text-slate-500 font-medium">
-                  <MapPin class="w-3.5 h-3.5 text-slate-400" />
-                  {{ ruangan.lokasi }}
-                </div>
+              <div class="space-y-1">
+                <h3 class="text-base font-bold text-foreground group-hover:text-primary transition-colors">{{ ruangan.nama }}</h3>
+                <div class="flex items-center gap-1.5 text-xs text-muted-foreground"><MapPin class="w-3.5 h-3.5" />{{ ruangan.lokasi }}</div>
               </div>
-
-              <!-- Description -->
-              <p class="text-xs text-slate-600 line-clamp-2 leading-relaxed">
-                {{ ruangan.deskripsi || 'Tidak ada deskripsi tambahan.' }}
-              </p>
+              <p class="text-xs text-muted-foreground line-clamp-2 leading-relaxed">{{ ruangan.deskripsi || 'Tidak ada deskripsi tambahan.' }}</p>
             </div>
-
-            <!-- Card Footer -->
-            <div class="px-6 py-4 bg-slate-50/50 border-t border-slate-100 flex items-center justify-between gap-4 rounded-b-2xl">
-              <div class="flex items-center gap-1.5 text-xs text-slate-600 font-semibold">
-                <Users class="w-4 h-4 text-slate-400" />
-                <span>Kapasitas: {{ ruangan.kapasitas }} Orang</span>
-              </div>
-
-              <button 
-                @click="handlePinjam"
-                class="inline-flex items-center gap-1 text-xs font-bold text-blue-600 hover:text-blue-500 active:text-blue-700 transition-colors group-hover:translate-x-0.5 duration-200"
-              >
-                Pinjam Ruangan
-                <ChevronRight class="w-4 h-4" />
+            <div class="px-5 py-3.5 bg-muted/50 border-t border-border flex items-center justify-between">
+              <div class="flex items-center gap-1.5 text-xs font-medium text-muted-foreground"><Users class="w-4 h-4" />{{ ruangan.kapasitas }} Orang</div>
+              <button @click="handlePinjam" class="text-xs font-semibold text-primary hover:text-primary/80 transition-colors flex items-center gap-0.5">
+                Pinjam <ChevronRight class="w-3.5 h-3.5" />
               </button>
             </div>
           </div>
         </div>
-        <div v-else class="text-center py-12 bg-white rounded-2xl border border-slate-100 text-slate-400 text-sm">
-          Tidak ada ruangan yang cocok dengan pencarian Anda.
-        </div>
+        <div v-else class="text-center py-16 bg-card border border-border rounded-xl text-muted-foreground text-sm">Tidak ada ruangan yang cocok.</div>
       </section>
 
-      <!-- Barang Section -->
+      <!-- Barang -->
       <section v-if="activeTab === 'all' || activeTab === 'barang'" class="space-y-6">
-        <div class="flex items-center gap-2.5 pb-2 border-b border-slate-200">
-          <div class="w-8 h-8 rounded-lg bg-blue-50 flex items-center justify-center text-blue-600">
-            <Package class="w-4.5 h-4.5" />
+        <div class="flex items-center gap-3 pb-3 border-b border-border">
+          <div class="w-8 h-8 bg-amber-50 rounded-lg flex items-center justify-center">
+            <Package class="w-4 h-4 text-amber-600" />
           </div>
           <div>
-            <h2 class="text-xl font-bold text-slate-900">Barang & Inventaris Peminjaman</h2>
-            <p class="text-xs text-slate-500">Daftar perangkat elektronik, audio, kabel, dan pendukung perkuliahan</p>
+            <h2 class="text-lg font-bold text-foreground">Barang & Inventaris Peminjaman</h2>
+            <p class="text-xs text-muted-foreground">Perangkat elektronik, audio, kabel, dan pendukung perkuliahan</p>
           </div>
         </div>
-
-        <div v-if="filteredBarangs.length > 0" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          <div 
-            v-for="barang in filteredBarangs" 
-            :key="barang.id"
-            class="group bg-white rounded-2xl border border-slate-200/80 shadow-sm overflow-hidden hover:shadow-lg hover:border-slate-300 transition-all duration-200 flex flex-col justify-between"
-          >
-            <div class="p-6 space-y-4">
-              <!-- Card Header -->
+        <div v-if="filteredBarangs.length > 0" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+          <div v-for="barang in filteredBarangs" :key="barang.id"
+            class="group bg-card border border-border rounded-xl shadow-card overflow-hidden flex flex-col justify-between transition-all duration-200 hover:shadow-soft hover:-translate-y-0.5">
+            <div class="p-5 space-y-3">
               <div class="flex items-start justify-between gap-3">
-                <span class="text-[10px] font-bold tracking-wider uppercase bg-slate-100 text-slate-600 px-2 py-0.5 rounded">
-                  {{ barang.kode }}
-                </span>
-                <span class="inline-flex items-center gap-1 text-[10px] font-semibold bg-emerald-50 text-emerald-700 px-2 py-0.5 rounded-full">
-                  <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
-                  Stok: {{ barang.stok_tersedia }} Unit
-                </span>
+                <span class="text-[10px] font-semibold tracking-wider uppercase bg-muted text-muted-foreground px-2.5 py-1 rounded-md">{{ barang.kode }}</span>
+                <span class="inline-flex items-center gap-1.5 text-[10px] font-semibold bg-emerald-50 text-emerald-700 px-2.5 py-1 rounded-md">Stok: {{ barang.stok_tersedia }}</span>
               </div>
-
-              <!-- Name & Category -->
-              <div class="space-y-1.5">
-                <h3 class="text-lg font-bold text-slate-900 group-hover:text-blue-600 transition-colors">
-                  {{ barang.nama }}
-                </h3>
-                <div class="flex items-center gap-1.5 text-xs text-slate-500 font-medium">
-                  <Layers class="w-3.5 h-3.5 text-slate-400" />
-                  Kategori: {{ barang.kategori || 'Inventaris' }}
-                </div>
+              <div class="space-y-1">
+                <h3 class="text-base font-bold text-foreground group-hover:text-primary transition-colors">{{ barang.nama }}</h3>
+                <div class="flex items-center gap-1.5 text-xs text-muted-foreground"><Layers class="w-3.5 h-3.5" />Kategori: {{ barang.kategori || 'Inventaris' }}</div>
               </div>
-
-              <!-- Description -->
-              <p class="text-xs text-slate-600 line-clamp-2 leading-relaxed">
-                {{ barang.deskripsi || 'Tidak ada deskripsi tambahan.' }}
-              </p>
+              <p class="text-xs text-muted-foreground line-clamp-2 leading-relaxed">{{ barang.deskripsi || 'Tidak ada deskripsi tambahan.' }}</p>
             </div>
-
-            <!-- Card Footer -->
-            <div class="px-6 py-4 bg-slate-50/50 border-t border-slate-100 flex items-center justify-between gap-4 rounded-b-2xl">
-              <div class="flex items-center gap-1 text-xs text-slate-500 font-medium">
-                <Info class="w-3.5 h-3.5 text-slate-400" />
-                <span>Total Stok: {{ barang.stok_total }}</span>
-              </div>
-
-              <button 
-                @click="handlePinjam"
-                class="inline-flex items-center gap-1 text-xs font-bold text-blue-600 hover:text-blue-500 active:text-blue-700 transition-colors group-hover:translate-x-0.5 duration-200"
-              >
-                Pinjam Barang
-                <ChevronRight class="w-4 h-4" />
+            <div class="px-5 py-3.5 bg-muted/50 border-t border-border flex items-center justify-between">
+              <div class="flex items-center gap-1 text-xs text-muted-foreground"><Info class="w-3.5 h-3.5" />Total Stok: {{ barang.stok_total }}</div>
+              <button @click="handlePinjam" class="text-xs font-semibold text-primary hover:text-primary/80 transition-colors flex items-center gap-0.5">
+                Pinjam <ChevronRight class="w-3.5 h-3.5" />
               </button>
             </div>
           </div>
         </div>
-        <div v-else class="text-center py-12 bg-white rounded-2xl border border-slate-100 text-slate-400 text-sm">
-          Tidak ada barang yang cocok dengan pencarian Anda.
-        </div>
+        <div v-else class="text-center py-16 bg-card border border-border rounded-xl text-muted-foreground text-sm">Tidak ada barang yang cocok.</div>
       </section>
-
     </main>
 
-    <!-- Footer -->
-    <footer class="bg-white border-t border-slate-200 py-8 px-6 text-center text-slate-500 text-xs">
-      <div class="max-w-7xl mx-auto space-y-2">
-        <p>&copy; 2026 SiPinjam — STITEK Bontang. All rights reserved.</p>
-        <p class="font-medium text-slate-400 tracking-wider">The Knowledgeable and Virtue Campus</p>
+    <!-- ── Footer ──────────────────────────────────── -->
+    <footer class="bg-foreground py-8 px-6 text-center">
+      <div class="max-w-7xl mx-auto space-y-1.5">
+        <p class="text-sm font-semibold text-white/90">&copy; 2026 SiPinjam — STITEK Bontang</p>
+        <p class="font-medium text-white/50 tracking-wider text-xs">The Knowledgeable and Virtue Campus</p>
       </div>
     </footer>
 
-    <!-- ── Login Confirmation Dialog ───────────────── -->
-    <Dialog v-model:open="showLoginDialog">
-      <DialogContent class="sm:max-w-md">
-        <DialogHeader>
-          <div class="mx-auto mb-3 flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-blue-500 to-indigo-600 shadow-lg shadow-blue-500/20">
-            <GraduationCap class="h-7 w-7 text-white" />
-          </div>
-          <DialogTitle class="text-center text-xl font-bold">
-            Masuk ke SiPinjam
-          </DialogTitle>
-          <DialogDescription class="text-center text-sm text-muted-foreground leading-relaxed pt-2">
-            Silakan masuk dengan akun kampus Anda untuk mengakses layanan peminjaman aset. 
-            Pastikan Anda sudah terdaftar di sistem akademik STITEK Bontang.
-          </DialogDescription>
-        </DialogHeader>
-
-        <div class="mt-2 rounded-xl border border-blue-100 bg-blue-50/50 p-4">
-          <div class="flex items-start gap-3">
-            <div class="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-blue-100 text-blue-600">
-              <Info class="h-4 w-4" />
+    <!-- ── Login Dialog ────────────────────────────── -->
+    <Teleport to="body">
+      <Transition enter-active-class="transition duration-200 ease-out" enter-from-class="opacity-0" enter-to-class="opacity-100"
+        leave-active-class="transition duration-150 ease-in" leave-from-class="opacity-100" leave-to-class="opacity-0">
+        <div v-if="showLoginDialog" class="fixed inset-0 z-50 flex items-center justify-center p-4">
+          <div class="absolute inset-0 bg-black/50 backdrop-blur-sm" @click="closeDialog" />
+          <div class="relative bg-card border border-border rounded-xl shadow-soft w-full max-w-md z-10 overflow-hidden">
+            <div class="bg-primary p-6 text-white">
+              <button @click="closeDialog" class="absolute top-4 right-4 text-white/70 hover:text-white transition-colors"><X class="h-5 w-5" /></button>
+              <div class="flex items-center gap-3 mb-3">
+                <div class="w-11 h-11 bg-white/15 backdrop-blur-sm rounded-lg flex items-center justify-center">
+                  <GraduationCap class="h-6 w-6 text-white" />
+                </div>
+                <h3 class="text-xl font-bold">Masuk ke SiPinjam</h3>
+              </div>
+              <p class="text-sm text-white/80">Silakan masuk dengan akun kampus Anda untuk mengakses layanan peminjaman.</p>
             </div>
-            <div class="space-y-1">
-              <p class="text-sm font-semibold text-blue-900">Informasi Akun</p>
-              <p class="text-xs text-blue-700 leading-relaxed">
-                Gunakan email institusi <span class="font-mono font-semibold">@stitek.ac.id</span> yang telah didaftarkan oleh admin kampus.
-              </p>
+            <div class="p-6 space-y-4">
+              <div v-if="guestDateRange" class="bg-primary/5 border border-primary/20 rounded-lg p-4">
+                <p class="text-xs font-semibold text-primary mb-1">Tanggal Terpilih</p>
+                <p class="text-sm font-medium text-foreground">{{ guestDateRange.start }} — {{ guestDateRange.end }}</p>
+                <p class="text-[10px] text-muted-foreground mt-1">Tanggal akan otomatis terisi di form booking setelah login.</p>
+              </div>
+              <div class="bg-muted rounded-lg p-4 flex items-start gap-3">
+                <div class="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center bg-primary/10 rounded-md"><Info class="h-4 w-4 text-primary" /></div>
+                <div class="space-y-0.5">
+                  <p class="text-sm font-semibold text-foreground">Informasi Akun</p>
+                  <p class="text-xs text-muted-foreground">Gunakan email institusi <span class="font-mono font-semibold">@stitek.ac.id</span> yang telah didaftarkan oleh admin kampus.</p>
+                </div>
+              </div>
+            </div>
+            <div class="flex gap-3 p-6 pt-0">
+              <button @click="closeDialog" class="flex-1 px-4 py-2.5 border border-border bg-card text-foreground font-medium text-sm rounded-lg transition-all duration-200 hover:bg-muted">Kembali</button>
+              <button @click="confirmLogin" id="btn-confirm-login"
+                class="flex-1 px-4 py-2.5 bg-primary text-primary-foreground font-medium text-sm rounded-lg shadow-sm transition-all duration-200 hover:opacity-90 flex items-center justify-center gap-2">
+                <LogIn class="h-4 w-4" />Masuk Sekarang
+              </button>
             </div>
           </div>
         </div>
-
-        <DialogFooter class="mt-4 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
-          <Button 
-            variant="outline" 
-            @click="showLoginDialog = false"
-            class="w-full sm:w-auto"
-          >
-            Kembali
-          </Button>
-          <Button 
-            @click="confirmLogin"
-            id="btn-confirm-login"
-            class="w-full sm:w-auto gap-2 bg-blue-600 hover:bg-blue-500"
-          >
-            <LogIn class="h-4 w-4" />
-            Masuk Sekarang
-          </Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
+      </Transition>
+    </Teleport>
   </div>
 </template>
+
+<style scoped>
+/* ── Clean FullCalendar Overrides ──────────────────── */
+.clean-calendar :deep(.fc) { font-family: 'Inter', sans-serif; }
+.clean-calendar :deep(.fc-toolbar-title) { font-size: 1rem !important; font-weight: 700 !important; }
+.clean-calendar :deep(.fc-button) {
+  background: hsl(var(--primary)) !important; border: 1px solid transparent !important;
+  border-radius: 0.5rem !important; color: hsl(var(--primary-foreground)) !important;
+  font-weight: 600 !important; box-shadow: 0 1px 2px rgba(0,0,0,.05) !important;
+  padding: 6px 14px !important; transition: all 0.2s !important; font-size: 0.85rem !important;
+}
+.clean-calendar :deep(.fc-button:hover) { opacity: 0.9 !important; }
+.clean-calendar :deep(.fc-button-active) { background: hsl(var(--primary)) !important; opacity: 0.85 !important; }
+.clean-calendar :deep(.fc-daygrid-day) { border: 1px solid hsl(var(--border)) !important; }
+.clean-calendar :deep(.fc-col-header-cell) {
+  background: hsl(var(--muted)) !important; color: hsl(var(--muted-foreground)) !important;
+  font-weight: 600 !important; font-size: 0.8rem !important; border: 1px solid hsl(var(--border)) !important; padding: 8px 0 !important;
+}
+.clean-calendar :deep(.fc-day-today) { background: hsl(var(--primary) / 0.06) !important; }
+.clean-calendar :deep(.fc-highlight) { background: hsl(var(--primary) / 0.12) !important; }
+.clean-calendar :deep(.fc-daygrid-day-number) { font-weight: 600 !important; font-size: 0.85rem; padding: 6px 8px !important; }
+.clean-calendar :deep(.fc-scrollgrid) { border: 1px solid hsl(var(--border)) !important; border-radius: 0.5rem !important; overflow: hidden; }
+.clean-calendar :deep(th), .clean-calendar :deep(td) { border-color: hsl(var(--border)) !important; }
+</style>

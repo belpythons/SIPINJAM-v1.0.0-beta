@@ -30,6 +30,27 @@ class AdminController extends Controller
         $totalRuangan = Ruangan::count();
         $totalBarang = Barang::count();
 
+        // Peminjaman sedang berjalan (untuk tabel countdown)
+        $activePeminjamans = Peminjaman::with(['user', 'ruangan', 'barang'])
+            ->where('status', Peminjaman::STATUS_APPROVED)
+            ->orderBy('tanggal_selesai')
+            ->orderBy('jam_selesai')
+            ->get()
+            ->map(function (Peminjaman $p) {
+                return [
+                    'id'              => $p->id,
+                    'user_name'       => $p->user?->name ?? '-',
+                    'nama_item'       => $p->nama_item,
+                    'tipe'            => $p->tipe,
+                    'tanggal_mulai'   => $p->tanggal_mulai?->format('Y-m-d'),
+                    'tanggal_selesai' => $p->tanggal_selesai?->format('Y-m-d'),
+                    'jam_mulai'       => $p->jam_mulai,
+                    'jam_selesai'     => $p->jam_selesai,
+                    // Target datetime for countdown (ISO 8601)
+                    'target_datetime' => $p->tanggal_selesai?->format('Y-m-d') . 'T' . $p->jam_selesai . ':00',
+                ];
+            });
+
         return Inertia::render('Admin/Dashboard', [
             'stats' => [
                 'pending'   => $totalPending,
@@ -38,6 +59,7 @@ class AdminController extends Controller
                 'ruangan'   => $totalRuangan,
                 'barang'    => $totalBarang,
             ],
+            'activePeminjamans' => $activePeminjamans,
         ]);
     }
 
@@ -153,6 +175,20 @@ class AdminController extends Controller
             return redirect()->back()->with('error', 'Peminjaman ditolak!');
         } catch (\Throwable $e) {
             return redirect()->back()->with('error', 'Gagal menolak peminjaman: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Admin menandai peminjaman selesai (validasi pengembalian).
+     */
+    public function selesaiPeminjaman(int $id): \Illuminate\Http\RedirectResponse
+    {
+        try {
+            $peminjaman = Peminjaman::findOrFail($id);
+            $this->bookingService->completeBooking($peminjaman);
+            return redirect()->back()->with('success', 'Peminjaman berhasil diselesaikan dan stok dikembalikan!');
+        } catch (\Throwable $e) {
+            return redirect()->back()->with('error', 'Gagal menyelesaikan peminjaman: ' . $e->getMessage());
         }
     }
 
@@ -328,5 +364,129 @@ class AdminController extends Controller
         } catch (\Throwable $e) {
             return redirect()->back()->with('error', 'Gagal menghapus barang: ' . $e->getMessage());
         }
+    }
+
+    // ════════════════════════════════════════
+    // LAPOR RUANGAN BERANTAKAN
+    // ════════════════════════════════════════
+
+    /**
+     * Cari peminjaman terakhir yang selesai (check-out) pada ruangan di hari ini,
+     * lalu blokir user yang bersangkutan selama 30 hari.
+     */
+    public function laporBerantakan(Request $request, int $id): \Illuminate\Http\RedirectResponse
+    {
+        $request->validate([
+            'feedback' => 'required|string|max:500',
+        ]);
+
+        try {
+            $ruangan = Ruangan::findOrFail($id);
+
+            // Cari peminjaman "selesai" paling terakhir pada ruangan ini hari ini
+            $peminjaman = Peminjaman::where('ruangan_id', $ruangan->id)
+                ->where('status', Peminjaman::STATUS_DONE)
+                ->whereDate('tanggal_selesai', today())
+                ->latest('completed_at')
+                ->with('user')
+                ->first();
+
+            // Fallback: jika tidak ada yang selesai hari ini,
+            // cari yang masih "sedang_dipinjam" pada ruangan hari ini
+            if (!$peminjaman) {
+                $peminjaman = Peminjaman::where('ruangan_id', $ruangan->id)
+                    ->where('status', Peminjaman::STATUS_APPROVED)
+                    ->whereDate('tanggal_mulai', '<=', today())
+                    ->whereDate('tanggal_selesai', '>=', today())
+                    ->latest('created_at')
+                    ->with('user')
+                    ->first();
+            }
+
+            if (!$peminjaman || !$peminjaman->user) {
+                return redirect()->back()->with(
+                    'error',
+                    "Tidak ditemukan peminjaman terkait pada ruangan \"{$ruangan->nama}\" hari ini."
+                );
+            }
+
+            $user = $peminjaman->user;
+
+            // Jangan blokir admin
+            if ($user->hasRole('admin')) {
+                return redirect()->back()->with(
+                    'error',
+                    'Tidak dapat menerapkan sanksi ke akun admin.'
+                );
+            }
+
+            // Jika user sudah diblokir, skip
+            if ($user->isBlocked()) {
+                return redirect()->back()->with(
+                    'error',
+                    "User \"{$user->name}\" sudah dalam status blokir."
+                );
+            }
+
+            $user->blockFor(30, $request->input('feedback'));
+
+            return redirect()->back()->with(
+                'success',
+                "User \"{$user->name}\" (peminjam terakhir ruangan \"{$ruangan->nama}\") telah diblokir selama 30 hari."
+            );
+        } catch (\Throwable $e) {
+            return redirect()->back()->with('error', 'Gagal melapor: ' . $e->getMessage());
+        }
+    }
+
+    // ════════════════════════════════════════
+    // PROFILE ADMIN
+    // ════════════════════════════════════════
+
+    public function profileEdit()
+    {
+        return Inertia::render('Admin/ProfileEdit', [
+            'user' => auth()->user(),
+        ]);
+    }
+
+    public function profileUpdate(Request $request): \Illuminate\Http\RedirectResponse
+    {
+        $user = $request->user();
+
+        $request->validate([
+            'name'     => 'required|string|max:255',
+            'nickname' => 'nullable|string|max:100',
+            'email'    => 'required|email|unique:users,email,' . $user->id,
+            'password' => 'nullable|string|min:6|confirmed',
+            'avatar'   => 'nullable|image|mimes:jpg,jpeg,png,webp|max:5120',
+        ]);
+
+        $user->name = $request->name;
+        $user->nickname = $request->nickname;
+
+        if ($user->email !== $request->email) {
+            $user->email = $request->email;
+            $user->email_verified_at = null;
+        }
+
+        if ($request->filled('password')) {
+            $user->password = bcrypt($request->password);
+        }
+
+        if ($request->hasFile('avatar')) {
+            if ($user->avatar) {
+                $oldPath = str_replace('/storage/', '', $user->avatar);
+                if (Storage::disk('public')->exists($oldPath)) {
+                    Storage::disk('public')->delete($oldPath);
+                }
+            }
+            $path = $request->file('avatar')->store('avatars', 'public');
+            $user->avatar = '/storage/' . $path;
+        }
+
+        $user->save();
+
+        return redirect()->route('admin.profile.edit')->with('success', 'Profil berhasil diperbarui!');
     }
 }

@@ -16,23 +16,23 @@ class UserSeeder extends Seeder
 
         // Buat role Spatie jika belum ada
         Role::firstOrCreate(['name' => 'admin', 'guard_name' => 'web']);
-        Role::firstOrCreate(['name' => 'user',  'guard_name' => 'web']);
+        Role::firstOrCreate(['name' => 'user', 'guard_name' => 'web']);
 
         // ── 1. Admin Account ────────────────────────────
         $admin = User::create([
-            'name'     => 'Admin STITEK',
-            'email'    => 'admin@stitek.ac.id',
-            'password' => Hash::make('admin123'),
-            'role'     => 'admin',
+            'name' => 'Admin STITEK',
+            'email' => 'admin@sipinjam.test',
+            'password' => Hash::make('password'),
+            'role' => 'admin',
         ]);
         $admin->assignRole('admin');
 
         // ── 2. Mahasiswa Account ────────────────────────
         $user = User::create([
-            'name'     => 'Mahasiswa STITEK',
-            'email'    => 'mahasiswa@stitek.ac.id',
-            'password' => Hash::make('user123'),
-            'role'     => 'user',
+            'name' => 'Mahasiswa STITEK',
+            'email' => 'user@sipinjam.test',
+            'password' => Hash::make('password'),
+            'role' => 'user',
         ]);
         $user->assignRole('user');
     }

@@ -1,7 +1,7 @@
 <script setup>
 import { ref, computed } from 'vue';
 import { Head, useForm, usePage } from '@inertiajs/vue3';
-import UserLayout from '@/Layouts/UserLayout.vue';
+import AdminLayout from '@/Layouts/AdminLayout.vue';
 import {
   User, Mail, Lock, Camera, CheckCircle2, Sparkles,
 } from '@lucide/vue';
@@ -10,7 +10,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 
-defineOptions({ layout: UserLayout });
+defineOptions({ layout: AdminLayout });
 
 const page = usePage();
 const user = computed(() => page.props.auth?.user);
@@ -38,7 +38,7 @@ const handleAvatarChange = (e) => {
 };
 
 const submit = () => {
-  form.post('/profile/edit', {
+  form.post('/admin/profile', {
     preserveScroll: true,
     onSuccess: () => { form.password = ''; form.password_confirmation = ''; },
   });
@@ -51,7 +51,7 @@ const getInitials = (name) => {
 </script>
 
 <template>
-  <Head title="Pengaturan Profil" />
+  <Head title="Pengaturan Profil Admin" />
 
   <div class="px-6 py-8 lg:px-10 max-w-3xl">
     <!-- Page Header -->
@@ -60,7 +60,7 @@ const getInitials = (name) => {
         <User class="h-5 w-5 text-primary" />
         <h1 class="text-2xl font-bold tracking-tight text-foreground">Pengaturan Profil</h1>
       </div>
-      <p class="text-sm text-muted-foreground">Kelola informasi data diri dan keamanan akun Anda.</p>
+      <p class="text-sm text-muted-foreground">Kelola informasi data diri dan keamanan akun admin Anda.</p>
     </div>
 
     <!-- Success Alert -->
