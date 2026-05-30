@@ -24,6 +24,9 @@ class User extends Authenticatable
         'role',
         'google_id',
         'avatar',
+        'is_blocked',
+        'blocked_until',
+        'blocked_reason',
     ];
 
     /**
@@ -46,6 +49,42 @@ class User extends Authenticatable
         return [
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
+            'is_blocked' => 'boolean',
+            'blocked_until' => 'datetime',
         ];
+    }
+
+    // ── Sanction Methods ────────────────────────────────
+
+    /**
+     * Check if user is currently blocked.
+     */
+    public function isBlocked(): bool
+    {
+        return $this->is_blocked && $this->blocked_until && now()->lt($this->blocked_until);
+    }
+
+    /**
+     * Block user for a given number of days.
+     */
+    public function blockFor(int $days = 30, ?string $reason = null): void
+    {
+        $this->update([
+            'is_blocked' => true,
+            'blocked_until' => now()->addDays($days),
+            'blocked_reason' => $reason,
+        ]);
+    }
+
+    /**
+     * Unblock user.
+     */
+    public function unblock(): void
+    {
+        $this->update([
+            'is_blocked' => false,
+            'blocked_until' => null,
+            'blocked_reason' => null,
+        ]);
     }
 }
