@@ -27,16 +27,33 @@ class CalendarController extends Controller
      */
     public function exportPdf(): \Symfony\Component\HttpFoundation\Response
     {
-        $calendar = Calendar::where('is_active', true)->latest()->firstOrFail();
+        $calendar = Calendar::where('is_active', true)->latest()->first();
 
-        // Dapatkan path absolut gambar dan konversi ke Base64
+        if (!$calendar) {
+            return redirect()->back()->with('error', 'Tidak ada kalender akademik aktif.');
+        }
+
         $absolutePath = storage_path('app/public/' . $calendar->image_path);
-        $imageData    = base64_encode(file_get_contents($absolutePath));
-        $mimeType     = mime_content_type($absolutePath);
-        $base64Image  = "data:{$mimeType};base64,{$imageData}";
 
-        $pdf = Pdf::loadView('user.kalender.pdf', compact('calendar', 'base64Image'))
-                  ->setPaper('a4', 'portrait');
+        if (!file_exists($absolutePath)) {
+            $publicPath = public_path('storage/' . $calendar->image_path);
+            if (file_exists($publicPath)) {
+                $absolutePath = $publicPath;
+            } else {
+                return redirect()->back()->with('error', 'Berkas kalender tidak ditemukan di server.');
+            }
+        }
+
+        if (strtolower(pathinfo($absolutePath, PATHINFO_EXTENSION)) === 'pdf') {
+            return response()->download($absolutePath, "Kalender_Akademik_STITEK_{$calendar->year}.pdf", [
+                'Content-Type' => 'application/pdf',
+            ]);
+        }
+
+        $pdf = Pdf::loadView('user.kalender.pdf', [
+            'calendar' => $calendar,
+            'imagePath' => $absolutePath
+        ])->setPaper('a4', 'portrait');
 
         return $pdf->download("Kalender_Akademik_STITEK_{$calendar->year}.pdf");
     }

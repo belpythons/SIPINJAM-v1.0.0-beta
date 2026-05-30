@@ -1,10 +1,12 @@
 <script setup>
 import { Head } from '@inertiajs/vue3';
+import { ref } from 'vue';
 import UserLayout from '@/Layouts/UserLayout.vue';
 import {
   CalendarDays,
   Download,
   ImageIcon,
+  ImageOff,
 } from '@lucide/vue';
 
 defineOptions({ layout: UserLayout });
@@ -12,6 +14,24 @@ defineOptions({ layout: UserLayout });
 const props = defineProps({
   calendar: Object,
 });
+
+const imageError = ref(false);
+const handleImageError = () => {
+  imageError.value = true;
+};
+
+const getImageUrl = (path) => {
+  if (!path) return '';
+  if (path.startsWith('public/')) {
+    return '/storage/' + path.substring(7);
+  }
+  if (path.startsWith('http') || path.startsWith('/storage') || path.startsWith('storage/')) {
+    if (path.startsWith('storage/')) return '/' + path;
+    return path;
+  }
+  const cleanPath = path.startsWith('/') ? path.slice(1) : path;
+  return '/storage/' + cleanPath;
+};
 </script>
 
 <template>
@@ -53,12 +73,19 @@ const props = defineProps({
       </div>
 
       <div class="p-6">
-        <div class="relative overflow-hidden border border-border rounded-lg flex items-center justify-center bg-muted/30">
-          <img
-            :src="'/storage/' + calendar.image_path"
-            alt="Kalender Akademik"
-            class="max-w-full h-auto object-contain select-none max-h-[80vh] py-4"
-          />
+        <div class="relative overflow-hidden rounded-lg flex items-center justify-center min-h-[300px]">
+          <template v-if="!imageError">
+            <img
+              :src="getImageUrl(calendar.image_path)"
+              alt="Kalender Akademik"
+              class="max-w-full h-auto object-contain select-none max-h-[80vh] py-4"
+              @error="handleImageError"
+            />
+          </template>
+          <div v-else class="flex flex-col items-center justify-center py-20 bg-slate-50 border border-slate-200 border-dashed rounded-xl w-full mx-6 my-6 gap-3">
+            <ImageOff class="h-12 w-12 text-slate-300" />
+            <span class="text-sm font-semibold text-slate-400">Gagal memuat gambar kalender</span>
+          </div>
         </div>
       </div>
     </div>
