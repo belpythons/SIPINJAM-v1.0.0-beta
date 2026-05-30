@@ -81,7 +81,7 @@ const filteredBarangs = computed(() =>
 
   <div class="min-h-screen bg-background text-foreground font-sans antialiased">
     <!-- ── Header / Hero with Auto-Playing Carousel ── -->
-    <header class="relative py-16 px-6 sm:px-12 overflow-hidden border-b-4 border-black min-h-[420px] flex items-center">
+    <header class="relative py-16 px-6 sm:px-12 overflow-hidden border-b border-border min-h-[420px] flex items-center">
       <!-- Background Carousel Images -->
       <img
         v-for="(img, idx) in carouselImages"
@@ -96,53 +96,53 @@ const filteredBarangs = computed(() =>
 
       <div class="max-w-7xl mx-auto relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-12 w-full">
         <div class="max-w-2xl space-y-5">
-          <div class="inline-flex items-center gap-2 bg-white text-black px-4 py-2 text-xs font-black uppercase tracking-widest border-4 border-black shadow-[4px_4px_0px_rgba(0,0,0,1)]">
+          <div class="inline-flex items-center gap-2 bg-white/20 border border-white/30 backdrop-blur-sm rounded-full text-white px-3.5 py-1 text-xs font-semibold tracking-wider uppercase">
             <Sparkles class="w-3.5 h-3.5" />
             Sistem Peminjaman Aset Kampus
           </div>
           <div class="space-y-2">
-            <h1 class="text-5xl sm:text-6xl font-black tracking-tight text-white drop-shadow-[3px_3px_0px_rgba(0,0,0,0.8)]">SiPinjam</h1>
-            <p class="text-sm tracking-widest uppercase text-white/90 font-bold">STITEK Bontang — The Knowledgeable and Virtue Campus</p>
+            <h1 class="text-5xl sm:text-6xl font-bold tracking-tight text-white">SiPinjam</h1>
+            <p class="text-sm tracking-widest uppercase text-white/80 font-semibold">STITEK Bontang — The Knowledgeable and Virtue Campus</p>
           </div>
           <p class="text-lg text-white/90 font-medium leading-relaxed max-w-xl">
             Layanan peminjaman barang dan ruangan kampus secara praktis, terintegrasi, dan terpantau dalam satu platform.
           </p>
           <div class="flex flex-wrap gap-3 pt-2">
             <button @click="handlePinjam" id="btn-mulai-pinjam"
-              class="inline-flex items-center gap-2 bg-blue-600 text-white font-black text-sm uppercase tracking-wider px-6 py-3.5 border-4 border-black shadow-[4px_4px_0px_rgba(0,0,0,1)] transition-all duration-150 hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-[2px_2px_0px_rgba(0,0,0,1)] active:translate-x-[4px] active:translate-y-[4px] active:shadow-none">
+              class="inline-flex items-center gap-2 bg-primary text-primary-foreground font-semibold text-sm rounded-lg px-6 py-3 shadow-sm transition-all hover:bg-primary/90 focus:ring-2 focus:ring-ring focus:ring-offset-2">
               Mulai Peminjaman
               <ArrowRight class="w-4 h-4" />
             </button>
             <a href="#katalog"
-              class="inline-flex items-center justify-center bg-white text-black font-black text-sm uppercase tracking-wider px-6 py-3.5 border-4 border-black shadow-[4px_4px_0px_rgba(0,0,0,1)] transition-all duration-150 hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-[2px_2px_0px_rgba(0,0,0,1)]">
+              class="inline-flex items-center justify-center bg-white/10 text-white backdrop-blur-sm border border-white/20 hover:bg-white/25 font-semibold text-sm rounded-lg px-6 py-3 shadow-sm transition-all">
               Lihat Katalog Aset
             </a>
           </div>
         </div>
 
-        <!-- Stat Widget (Neo-Brutalist) -->
-        <div class="w-full md:w-80 bg-white text-black border-4 border-black shadow-[8px_8px_0px_rgba(0,0,0,1)] p-6">
+        <!-- Stat Widget (Clean Minimalist) -->
+        <div class="w-full md:w-80 bg-card border border-border rounded-2xl shadow-md p-6 text-card-foreground">
           <div class="space-y-4">
             <div class="flex items-center justify-between">
-              <span class="text-xs font-black uppercase tracking-widest">Status Operasional</span>
+              <span class="text-xs font-semibold uppercase tracking-widest text-muted-foreground">Status Operasional</span>
               <span class="flex h-3 w-3 relative">
                 <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-500 opacity-75" />
-                <span class="relative inline-flex rounded-full h-3 w-3 bg-green-500 border-2 border-black" />
+                <span class="relative inline-flex rounded-full h-3 w-3 bg-green-500 border border-white" />
               </span>
             </div>
-            <div class="h-1 bg-black" />
+            <div class="h-px bg-border" />
             <div class="grid grid-cols-2 gap-3">
-              <div class="bg-blue-100 border-4 border-black p-3 shadow-[3px_3px_0px_rgba(0,0,0,1)]">
-                <p class="text-3xl font-black text-black">{{ ruangans.length }}</p>
-                <p class="text-xs font-bold text-gray-600">Total Ruangan</p>
+              <div class="bg-blue-50/50 border border-blue-100 rounded-xl p-3 shadow-none">
+                <p class="text-3xl font-bold text-foreground">{{ ruangans.length }}</p>
+                <p class="text-xs font-medium text-muted-foreground">Total Ruangan</p>
               </div>
-              <div class="bg-orange-100 border-4 border-black p-3 shadow-[3px_3px_0px_rgba(0,0,0,1)]">
-                <p class="text-3xl font-black text-black">{{ barangs.length }}</p>
-                <p class="text-xs font-bold text-gray-600">Total Barang</p>
+              <div class="bg-orange-50/50 border border-orange-100 rounded-xl p-3 shadow-none">
+                <p class="text-3xl font-bold text-foreground">{{ barangs.length }}</p>
+                <p class="text-xs font-medium text-muted-foreground">Total Barang</p>
               </div>
             </div>
           </div>
-          <div class="mt-5 flex items-center justify-between text-[10px] font-black text-gray-500 pt-4 border-t-4 border-black uppercase tracking-widest">
+          <div class="mt-5 flex items-center justify-between text-[10px] font-semibold text-muted-foreground pt-4 border-t border-border uppercase tracking-widest">
             <span>Aksesibilitas Terjamin</span>
             <span>STITEK</span>
           </div>
@@ -156,8 +156,8 @@ const filteredBarangs = computed(() =>
           :key="'dot-' + idx"
           @click="activeSlide = idx"
           :class="[
-            'w-4 h-4 border-2 border-black transition-all duration-200',
-            activeSlide === idx ? 'bg-white shadow-[2px_2px_0px_rgba(0,0,0,1)]' : 'bg-white/40',
+            'w-2.5 h-2.5 rounded-full border border-white/50 transition-all duration-200',
+            activeSlide === idx ? 'bg-white' : 'bg-white/40',
           ]"
         />
       </div>

@@ -67,6 +67,16 @@ const validasiSelesai = (id) => {
   });
 };
 
+// ── Localized Date ────────────────────────────────
+const currentDateString = computed(() => {
+  return new Intl.DateTimeFormat('id-ID', {
+    weekday: 'long',
+    day: 'numeric',
+    month: 'long',
+    year: 'numeric'
+  }).format(new Date());
+});
+
 // ── Greeting ───────────────────────────────────────
 const greetingMessage = computed(() => {
   const hour = new Date().getHours();
@@ -81,20 +91,27 @@ const greetingMessage = computed(() => {
   <Head title="Admin Dashboard" />
   <div class="px-6 py-8 lg:px-10">
     <!-- ── Hero Banner ─────────────────────────────── -->
-    <div class="mb-8 overflow-hidden rounded-none border-4 border-black shadow-[6px_6px_0px_rgba(0,0,0,1)] text-white relative min-h-[220px] flex items-center p-6">
-      <img src="/image/hero section admin.png" alt="Admin Hero" class="absolute inset-0 w-full h-full object-cover" />
-      <div class="absolute inset-0 bg-black/60" />
+    <div class="mb-8 overflow-hidden rounded-2xl border border-border shadow-card relative min-h-[260px] flex items-center p-8 bg-slate-900">
+      <img src="/image/hero section admin.png" alt="Admin Hero" class="absolute inset-0 w-full h-full object-cover opacity-70" />
+      <div class="absolute inset-0 bg-gradient-to-r from-black/90 via-black/60 to-transparent" />
       
-      <div class="relative z-10 max-w-lg bg-yellow-400 border-4 border-black p-5 text-black shadow-[4px_4px_0px_rgba(0,0,0,1)]">
-        <h2 class="text-2xl font-black uppercase tracking-tight mb-2">
-          {{ greetingMessage }}, {{ $page.props.auth.user?.name }}!
+      <div class="relative z-10 max-w-xl text-white drop-shadow-md">
+        <p class="text-xs font-bold text-orange-400 uppercase tracking-widest mb-2">{{ currentDateString }}</p>
+        <h2 class="text-3xl font-extrabold tracking-tight mb-2 drop-shadow-md">
+          Selamat Datang, {{ $page.props.auth.user?.name }}!
         </h2>
-        <h3 class="text-lg font-black uppercase tracking-wide text-red-600 mb-1">
-          Selamat Datang di Panel Admin
+        <h3 class="text-sm font-semibold text-slate-300 uppercase tracking-widest mb-4">
+          Panel Manajemen Admin
         </h3>
-        <p class="text-sm font-bold leading-relaxed text-gray-900">
+        <p class="text-sm font-medium leading-relaxed text-slate-200 mb-6 max-w-md drop-shadow-sm">
           Kelola sistem peminjaman dengan cepat dan efisien hari ini. Pantau penggunaan ruangan, inventaris barang, serta status persetujuan secara real-time.
         </p>
+        <Link
+          href="/admin/kelola-peminjaman"
+          class="inline-flex items-center justify-center bg-orange-600 hover:bg-orange-700 text-white font-semibold text-xs rounded-lg px-5 py-3 shadow-md transition-all duration-200 hover:-translate-y-0.5"
+        >
+          Tinjau Permintaan Peminjaman
+        </Link>
       </div>
     </div>
 
