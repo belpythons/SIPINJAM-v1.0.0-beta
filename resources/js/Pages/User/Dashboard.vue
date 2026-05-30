@@ -211,16 +211,21 @@ const greetingMessage = computed(() => {
 
   <div class="px-6 py-8 lg:px-10">
     <!-- ── Adaptive Hero Banner Section ──────────────── -->
-    <div class="mb-8 overflow-hidden rounded-2xl bg-gradient-to-r from-blue-700 to-cyan-600 p-6 shadow-sm text-white relative">
-      <div class="relative z-10">
-        <h2 class="text-xl font-bold tracking-tight md:text-2xl">{{ greetingMessage }}, {{ $page.props.auth.user?.name }}!</h2>
-        <p class="text-xs text-blue-100/90 mt-1 md:text-sm">
-          Semoga hari Anda menyenangkan. Kelola peminjaman dan penggunaan aset kampus STITEK dengan mudah.
+    <div class="mb-8 overflow-hidden rounded-none border-4 border-black shadow-[6px_6px_0px_rgba(0,0,0,1)] text-white relative min-h-[220px] flex items-center p-6">
+      <img src="/image/hero section user.png" alt="User Hero" class="absolute inset-0 w-full h-full object-cover" />
+      <div class="absolute inset-0 bg-black/60" />
+      
+      <div class="relative z-10 max-w-lg bg-cyan-300 border-4 border-black p-5 text-black shadow-[4px_4px_0px_rgba(0,0,0,1)]">
+        <h2 class="text-2xl font-black uppercase tracking-tight mb-2">
+          {{ greetingMessage }}, {{ $page.props.auth.user?.name }}!
+        </h2>
+        <h3 class="text-lg font-black uppercase tracking-wide text-blue-800 mb-1">
+          Portal Peminjaman Mahasiswa
+        </h3>
+        <p class="text-sm font-bold leading-relaxed text-gray-900">
+          Temukan dan pinjam ruangan atau barang untuk kebutuhan kegiatanmu dengan mudah. Pastikan Anda membaca tata tertib peminjaman sebelum mengajukan permohonan.
         </p>
       </div>
-      <!-- Subtle visual accents -->
-      <div class="absolute -right-10 -top-10 w-40 h-40 bg-white/5 rounded-full blur-xl pointer-events-none" />
-      <div class="absolute right-20 -bottom-20 w-60 h-60 bg-cyan-500/10 rounded-full blur-2xl pointer-events-none" />
     </div>
 
     <!-- ── Quick Access Cards ────────────────────────── -->

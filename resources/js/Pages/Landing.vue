@@ -1,6 +1,6 @@
 <script setup>
 import { Head, router } from '@inertiajs/vue3';
-import { ref, computed } from 'vue';
+import { ref, computed, onMounted, onUnmounted } from 'vue';
 import FullCalendar from '@fullcalendar/vue3';
 import dayGridPlugin from '@fullcalendar/daygrid';
 import interactionPlugin from '@fullcalendar/interaction';
@@ -19,6 +19,21 @@ const searchQuery = ref('');
 const activeTab = ref('all');
 const showLoginDialog = ref(false);
 const guestDateRange = ref(null);
+
+// ── Hero Background Carousel ────────────────────────
+const carouselImages = ['/image/bg blur admin.png', '/image/bg blur user.png'];
+const activeSlide = ref(0);
+let carouselTimer = null;
+
+onMounted(() => {
+  carouselTimer = setInterval(() => {
+    activeSlide.value = (activeSlide.value + 1) % carouselImages.length;
+  }, 5000);
+});
+
+onUnmounted(() => {
+  if (carouselTimer) clearInterval(carouselTimer);
+});
 
 // ── FullCalendar Config ─────────────────────────────
 const calendarOptions = ref({
@@ -65,65 +80,86 @@ const filteredBarangs = computed(() =>
   <Head title="Katalog Aset Kampus" />
 
   <div class="min-h-screen bg-background text-foreground font-sans antialiased">
-    <!-- ── Header / Hero ──────────────────────────── -->
-    <header class="relative bg-primary py-16 px-6 sm:px-12 overflow-hidden">
-      <div class="absolute inset-0 bg-gradient-to-br from-primary to-blue-700 opacity-90" />
-      <div class="absolute -right-20 -top-20 w-72 h-72 bg-white/5 rounded-full blur-3xl" />
-      <div class="absolute right-40 -bottom-32 w-96 h-96 bg-blue-400/10 rounded-full blur-3xl" />
+    <!-- ── Header / Hero with Auto-Playing Carousel ── -->
+    <header class="relative py-16 px-6 sm:px-12 overflow-hidden border-b-4 border-black min-h-[420px] flex items-center">
+      <!-- Background Carousel Images -->
+      <img
+        v-for="(img, idx) in carouselImages"
+        :key="img"
+        :src="img"
+        alt="Background"
+        class="absolute inset-0 w-full h-full object-cover transition-opacity duration-1000 ease-in-out"
+        :class="activeSlide === idx ? 'opacity-100' : 'opacity-0'"
+      />
+      <!-- Dark Overlay -->
+      <div class="absolute inset-0 bg-black/60" />
 
-      <div class="max-w-7xl mx-auto relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-12">
+      <div class="max-w-7xl mx-auto relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-12 w-full">
         <div class="max-w-2xl space-y-5">
-          <div class="inline-flex items-center gap-2 bg-white/15 backdrop-blur-sm border border-white/20 px-4 py-1.5 rounded-full text-white text-xs font-semibold uppercase tracking-wider">
+          <div class="inline-flex items-center gap-2 bg-white text-black px-4 py-2 text-xs font-black uppercase tracking-widest border-4 border-black shadow-[4px_4px_0px_rgba(0,0,0,1)]">
             <Sparkles class="w-3.5 h-3.5" />
             Sistem Peminjaman Aset Kampus
           </div>
           <div class="space-y-2">
-            <h1 class="text-5xl sm:text-6xl font-extrabold tracking-tight text-white">SiPinjam</h1>
-            <p class="text-sm tracking-widest uppercase text-white/80 font-medium">STITEK Bontang — The Knowledgeable and Virtue Campus</p>
+            <h1 class="text-5xl sm:text-6xl font-black tracking-tight text-white drop-shadow-[3px_3px_0px_rgba(0,0,0,0.8)]">SiPinjam</h1>
+            <p class="text-sm tracking-widest uppercase text-white/90 font-bold">STITEK Bontang — The Knowledgeable and Virtue Campus</p>
           </div>
-          <p class="text-lg text-white/90 font-normal leading-relaxed max-w-xl">
+          <p class="text-lg text-white/90 font-medium leading-relaxed max-w-xl">
             Layanan peminjaman barang dan ruangan kampus secara praktis, terintegrasi, dan terpantau dalam satu platform.
           </p>
           <div class="flex flex-wrap gap-3 pt-2">
             <button @click="handlePinjam" id="btn-mulai-pinjam"
-              class="inline-flex items-center gap-2 bg-white text-primary font-semibold px-6 py-3 rounded-lg shadow-sm transition-all duration-200 hover:shadow-md hover:-translate-y-0.5 group">
+              class="inline-flex items-center gap-2 bg-blue-600 text-white font-black text-sm uppercase tracking-wider px-6 py-3.5 border-4 border-black shadow-[4px_4px_0px_rgba(0,0,0,1)] transition-all duration-150 hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-[2px_2px_0px_rgba(0,0,0,1)] active:translate-x-[4px] active:translate-y-[4px] active:shadow-none">
               Mulai Peminjaman
-              <ArrowRight class="w-4 h-4 transition-transform group-hover:translate-x-0.5" />
+              <ArrowRight class="w-4 h-4" />
             </button>
             <a href="#katalog"
-              class="inline-flex items-center justify-center border border-white/40 text-white font-semibold px-6 py-3 rounded-lg transition-all duration-200 hover:bg-white/10">
+              class="inline-flex items-center justify-center bg-white text-black font-black text-sm uppercase tracking-wider px-6 py-3.5 border-4 border-black shadow-[4px_4px_0px_rgba(0,0,0,1)] transition-all duration-150 hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-[2px_2px_0px_rgba(0,0,0,1)]">
               Lihat Katalog Aset
             </a>
           </div>
         </div>
 
-        <!-- Stat Widget -->
-        <div class="w-full md:w-80 bg-card border border-white/20 backdrop-blur-sm rounded-xl p-6 shadow-soft text-white">
+        <!-- Stat Widget (Neo-Brutalist) -->
+        <div class="w-full md:w-80 bg-white text-black border-4 border-black shadow-[8px_8px_0px_rgba(0,0,0,1)] p-6">
           <div class="space-y-4">
             <div class="flex items-center justify-between">
-              <span class="text-xs font-semibold uppercase tracking-wider text-white/80">Status Operasional</span>
-              <span class="flex h-2.5 w-2.5 relative">
-                <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
-                <span class="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-400" />
+              <span class="text-xs font-black uppercase tracking-widest">Status Operasional</span>
+              <span class="flex h-3 w-3 relative">
+                <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-500 opacity-75" />
+                <span class="relative inline-flex rounded-full h-3 w-3 bg-green-500 border-2 border-black" />
               </span>
             </div>
-            <div class="border-t border-white/15 my-3" />
+            <div class="h-1 bg-black" />
             <div class="grid grid-cols-2 gap-3">
-              <div class="bg-white/10 backdrop-blur-sm rounded-lg p-3">
-                <p class="text-2xl font-bold text-white">{{ ruangans.length }}</p>
-                <p class="text-xs font-medium text-white/70">Total Ruangan</p>
+              <div class="bg-blue-100 border-4 border-black p-3 shadow-[3px_3px_0px_rgba(0,0,0,1)]">
+                <p class="text-3xl font-black text-black">{{ ruangans.length }}</p>
+                <p class="text-xs font-bold text-gray-600">Total Ruangan</p>
               </div>
-              <div class="bg-white/10 backdrop-blur-sm rounded-lg p-3">
-                <p class="text-2xl font-bold text-white">{{ barangs.length }}</p>
-                <p class="text-xs font-medium text-white/70">Total Barang</p>
+              <div class="bg-orange-100 border-4 border-black p-3 shadow-[3px_3px_0px_rgba(0,0,0,1)]">
+                <p class="text-3xl font-black text-black">{{ barangs.length }}</p>
+                <p class="text-xs font-bold text-gray-600">Total Barang</p>
               </div>
             </div>
           </div>
-          <div class="mt-5 flex items-center justify-between text-xs font-medium text-white/60 pt-4 border-t border-white/15">
+          <div class="mt-5 flex items-center justify-between text-[10px] font-black text-gray-500 pt-4 border-t-4 border-black uppercase tracking-widest">
             <span>Aksesibilitas Terjamin</span>
             <span>STITEK</span>
           </div>
         </div>
+      </div>
+
+      <!-- Carousel Dots Indicator -->
+      <div class="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-2 z-20">
+        <button
+          v-for="(img, idx) in carouselImages"
+          :key="'dot-' + idx"
+          @click="activeSlide = idx"
+          :class="[
+            'w-4 h-4 border-2 border-black transition-all duration-200',
+            activeSlide === idx ? 'bg-white shadow-[2px_2px_0px_rgba(0,0,0,1)]' : 'bg-white/40',
+          ]"
+        />
       </div>
     </header>
 
