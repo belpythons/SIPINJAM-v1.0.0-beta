@@ -20,7 +20,7 @@ class StoreRuanganRequest extends FormRequest
             'lokasi'     => 'nullable|string|max:255',
             'deskripsi'  => 'nullable|string',
             'status'     => 'required|in:tersedia,tidak_tersedia',
-            'image_path' => 'nullable|image|mimes:png,jpg,jpeg|max:5120',
+            'image_path' => 'nullable|image|mimes:jpg,jpeg,png|max:5120',
         ];
     }
 }

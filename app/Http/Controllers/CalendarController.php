@@ -7,7 +7,7 @@ use App\Models\Calendar;
 use App\Services\ImageService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
-use Barryvdh\DomPDF\Facade\Pdf;
+use Spatie\LaravelPdf\Facades\Pdf;
 
 class CalendarController extends Controller
 {
@@ -26,7 +26,7 @@ class CalendarController extends Controller
      * Export kalender aktif ke PDF.
      * Gambar dikonversi ke Base64 agar DomPDF pasti bisa me-render-nya.
      */
-    public function exportPdf(): \Symfony\Component\HttpFoundation\Response
+    public function exportPdf()
     {
         $calendar = Calendar::where('is_active', true)->latest()->first();
 
@@ -69,10 +69,22 @@ class CalendarController extends Controller
             ]);
         }
 
-        $pdf = Pdf::loadView('user.kalender.pdf', [
+        // Convert image to base64 to ensure it renders correctly in headless Chrome
+        $type = pathinfo($absolutePath, PATHINFO_EXTENSION);
+        $data = file_get_contents($absolutePath);
+        $base64 = 'data:image/' . $type . ';base64,' . base64_encode($data);
+
+        $pdf = Pdf::view('user.kalender.pdf', [
             'calendar' => $calendar,
-            'imagePath' => $absolutePath
-        ])->setPaper('a4', 'portrait');
+            'imagePath' => $base64
+        ])
+        ->landscape()
+        ->format('a4')
+        ->withBrowsershot(fn ($browsershot) => $browsershot
+            ->noSandbox()
+            ->setNodeBinary('/home/blewah/.local/share/fnm/node-versions/v20.20.2/installation/bin/node')
+            ->setNpmBinary('/home/blewah/.local/share/fnm/node-versions/v20.20.2/installation/bin/npm')
+        );
 
         return $pdf->download("Kalender_Akademik_STITEK_{$calendar->year}.pdf");
     }

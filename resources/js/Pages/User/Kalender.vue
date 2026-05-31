@@ -41,8 +41,7 @@ const getImageUrl = (path) => {
 <template>
   <Head title="Kalender Akademik" />
 
-  <div class="px-6 py-8 lg:px-10 max-w-4xl">
-    <!-- Header -->
+  <div class="px-6 py-8 lg:px-10 w-full">
     <div class="mb-8 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
       <div>
         <div class="flex items-center gap-3 mb-2">
@@ -58,7 +57,6 @@ const getImageUrl = (path) => {
         </div>
       </div>
 
-      <!-- Export PDF Button -->
       <a
         v-if="calendar"
         href="/kalender/export-pdf"
@@ -69,7 +67,6 @@ const getImageUrl = (path) => {
       </a>
     </div>
 
-    <!-- Calendar Image Card (Static) -->
     <div v-if="calendar" class="bg-card border border-border rounded-xl shadow-card overflow-hidden">
       <div class="bg-muted px-6 py-4 border-b border-border">
         <h2 class="text-base font-bold text-foreground">Kalender Akademik Tahun {{ calendar.year }}</h2>
@@ -77,13 +74,13 @@ const getImageUrl = (path) => {
       </div>
 
       <div class="p-6 bg-slate-50/50">
-        <div class="relative overflow-hidden rounded-lg flex items-center justify-center min-h-[300px] border border-border/80 bg-white p-4">
+        <div class="relative overflow-hidden rounded-lg flex items-center justify-center min-h-[calc(100vh-18rem)] border border-border/80 bg-white p-4">
           <template v-if="!imageError">
             <img
               v-if="calendar.image_path"
               :src="getImageUrl(calendar.image_path)"
               alt="Kalender Akademik"
-              class="w-full h-auto object-contain select-none max-h-[85vh] py-2"
+              class="w-full h-full object-contain rounded-lg select-none"
               @error="handleImageError"
             />
           </template>
@@ -95,7 +92,6 @@ const getImageUrl = (path) => {
       </div>
     </div>
 
-    <!-- Empty State -->
     <div v-else class="bg-card border border-border rounded-xl shadow-card py-20 text-center">
       <div class="w-16 h-16 bg-muted rounded-full mx-auto flex items-center justify-center mb-4">
         <ImageIcon class="h-8 w-8 text-muted-foreground" />

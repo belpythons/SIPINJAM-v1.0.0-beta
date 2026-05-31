@@ -6,7 +6,7 @@ use App\Models\Peminjaman;
 use App\Models\User;
 use App\Models\Ruangan;
 use App\Models\Barang;
-use Barryvdh\DomPDF\Facade\Pdf;
+use Spatie\LaravelPdf\Facades\Pdf;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Carbon\Carbon;
@@ -97,9 +97,16 @@ class ReportController extends Controller
             'done'     => $peminjamans->where('status', Peminjaman::STATUS_DONE)->count(),
         ];
 
-        $pdf = Pdf::loadView('reports.peminjaman_pdf', compact(
+        $pdf = Pdf::view('reports.peminjaman_pdf', compact(
             'peminjamans', 'stats', 'startDate', 'endDate'
-        ))->setPaper('a4', 'landscape');
+        ))
+        ->landscape()
+        ->format('a4')
+        ->withBrowsershot(fn ($browsershot) => $browsershot
+            ->noSandbox()
+            ->setNodeBinary('/home/blewah/.local/share/fnm/node-versions/v20.20.2/installation/bin/node')
+            ->setNpmBinary('/home/blewah/.local/share/fnm/node-versions/v20.20.2/installation/bin/npm')
+        );
 
         $filename = 'Laporan_Peminjaman_' . $startDate . '_' . $endDate . '.pdf';
         return $pdf->download($filename);
@@ -207,8 +214,13 @@ class ReportController extends Controller
             ->orderBy('created_at', 'desc')
             ->get();
 
-        $pdf = Pdf::loadView('reports.user_peminjaman_pdf', compact('peminjamans', 'user'))
-            ->setPaper('a4', 'portrait');
+        $pdf = Pdf::view('reports.user_peminjaman_pdf', compact('peminjamans', 'user'))
+            ->format('a4')
+            ->withBrowsershot(fn ($browsershot) => $browsershot
+                ->noSandbox()
+                ->setNodeBinary('/home/blewah/.local/share/fnm/node-versions/v20.20.2/installation/bin/node')
+                ->setNpmBinary('/home/blewah/.local/share/fnm/node-versions/v20.20.2/installation/bin/npm')
+            );
 
         $filename = 'Riwayat_Peminjaman_' . str_replace(' ', '_', $user->name) . '.pdf';
         return $pdf->download($filename);
