@@ -105,10 +105,11 @@ class BookingService
                 }
             }
 
-            // Update status to APPROVED + stamp approval time
+            // Update status to APPROVED + stamp approval time + generate nomor_surat
             $peminjaman->update([
                 'status'      => Peminjaman::STATUS_APPROVED,
                 'approved_at' => now(),
+                'nomor_surat' => $peminjaman->nomor_surat ?: Peminjaman::generateNomorSurat(),
             ]);
 
             // ⛔ Email notification DISABLED for MVP — relying on UI only.
