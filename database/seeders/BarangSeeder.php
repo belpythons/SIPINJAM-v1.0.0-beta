@@ -35,6 +35,7 @@ class BarangSeeder extends Seeder
                 'kategori'       => $b['kategori'],
                 'deskripsi'      => $b['deskripsi'],
                 'status'         => 'tersedia',
+                'image_path'     => '/image/lab_arsikom.jpg',
             ]);
         }
     }
