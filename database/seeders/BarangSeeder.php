@@ -13,17 +13,78 @@ class BarangSeeder extends Seeder
         Barang::query()->delete();
 
         $barangs = [
-            ['nama' => 'Smart TV',           'stok' => 1,  'kategori' => 'Elektronik',        'deskripsi' => 'Smart TV 55" untuk presentasi dan media pembelajaran.'],
-            ['nama' => 'Microphone',         'stok' => 3,  'kategori' => 'Audio',              'deskripsi' => 'Mikrofon wireless untuk seminar dan perkuliahan.'],
-            ['nama' => 'Meja Tamu',          'stok' => 2,  'kategori' => 'Furnitur',            'deskripsi' => 'Meja tamu lipat untuk acara dan rapat.'],
-            ['nama' => 'Sofa Kecil',         'stok' => 2,  'kategori' => 'Furnitur',            'deskripsi' => 'Sofa kecil untuk ruang tunggu dan area diskusi.'],
-            ['nama' => 'Sofa Besar',         'stok' => 1,  'kategori' => 'Furnitur',            'deskripsi' => 'Sofa besar kapasitas 3 orang untuk ruang tamu.'],
-            ['nama' => 'Terminal Kabel',     'stok' => 7,  'kategori' => 'Kabel & Aksesoris',  'deskripsi' => 'Terminal listrik multi-colokan untuk kebutuhan praktikum.'],
-            ['nama' => 'Proyektor',          'stok' => 4,  'kategori' => 'Elektronik',          'deskripsi' => 'Proyektor LCD untuk presentasi di ruang kelas.'],
-            ['nama' => 'Mikrotik Jaringan',  'stok' => 13, 'kategori' => 'Jaringan',            'deskripsi' => 'Perangkat router Mikrotik untuk praktikum jaringan komputer.'],
-            ['nama' => 'Motherboard',        'stok' => 4,  'kategori' => 'Komputer',            'deskripsi' => 'Motherboard PC untuk praktikum arsitektur komputer.'],
-            ['nama' => 'Sound System',       'stok' => 2,  'kategori' => 'Audio',              'deskripsi' => 'Speaker aktif dan amplifier untuk acara kampus.'],
-            ['nama' => 'Kipas Turbo',        'stok' => 3,  'kategori' => 'Pendingin',           'deskripsi' => 'Kipas angin turbo portable untuk ruangan.'],
+            // Elektronik (6 items)
+            [
+                'nama'       => 'Proyektor',
+                'stok'       => 4,
+                'kategori'   => 'Elektronik',
+                'deskripsi'  => 'Proyektor LCD Epson untuk perkuliahan dan presentasi kelas.',
+                'image_path' => 'proyektor.jpeg',
+            ],
+            [
+                'nama'       => 'Smart TV',
+                'stok'       => 2,
+                'kategori'   => 'Elektronik',
+                'deskripsi'  => 'Smart TV UHD 55 inci untuk penayangan media interaktif.',
+                'image_path' => 'smart tv.jpeg',
+            ],
+            [
+                'nama'       => 'Sound System',
+                'stok'       => 3,
+                'kategori'   => 'Elektronik',
+                'deskripsi'  => 'Perangkat sound system portable + amplifier untuk acara perkuliahan besar.',
+                'image_path' => 'sound system.jpeg',
+            ],
+            [
+                'nama'       => 'Mikrotik Jaringan',
+                'stok'       => 10,
+                'kategori'   => 'Elektronik',
+                'deskripsi'  => 'Routerboard Mikrotik untuk praktikum jaringan komputer dan IoT.',
+                'image_path' => 'mikrotik jaringan.jpeg',
+            ],
+            [
+                'nama'       => 'Microphone',
+                'stok'       => 6,
+                'kategori'   => 'Elektronik',
+                'deskripsi'  => 'Microphone wireless UHF untuk pemandu seminar dan perkuliahan.',
+                'image_path' => 'microphone.jpeg',
+            ],
+            [
+                'nama'       => 'Terminal Kabel',
+                'stok'       => 15,
+                'kategori'   => 'Elektronik',
+                'deskripsi'  => 'Stop kontak terminal listrik 5 lubang dengan kabel panjang 5 meter.',
+                'image_path' => 'terminal kabel.jpeg',
+            ],
+            // Furnitur (4 items)
+            [
+                'nama'       => 'Meja Tamu',
+                'stok'       => 5,
+                'kategori'   => 'Furnitur',
+                'deskripsi'  => 'Meja tamu kayu minimalis untuk rapat senat dan ruang tunggu VIP.',
+                'image_path' => 'meja tamu.jpeg',
+            ],
+            [
+                'nama'       => 'Sofa Besar',
+                'stok'       => 2,
+                'kategori'   => 'Furnitur',
+                'deskripsi'  => 'Sofa panjang empuk kapasitas 3 orang untuk ruang transit dosen.',
+                'image_path' => 'sofa besar.jpeg',
+            ],
+            [
+                'nama'       => 'Sofa Kecil',
+                'stok'       => 4,
+                'kategori'   => 'Furnitur',
+                'deskripsi'  => 'Sofa single minimalis untuk diskusi kecil atau ruang dosen.',
+                'image_path' => 'sofa kecil.jpeg',
+            ],
+            [
+                'nama'       => 'Podium',
+                'stok'       => 2,
+                'kategori'   => 'Furnitur',
+                'deskripsi'  => 'Podium kayu jati lambang kampus untuk pidato dan seminar akademik.',
+                'image_path' => 'podium.jpeg',
+            ],
         ];
 
         foreach ($barangs as $index => $b) {
@@ -35,7 +96,7 @@ class BarangSeeder extends Seeder
                 'kategori'       => $b['kategori'],
                 'deskripsi'      => $b['deskripsi'],
                 'status'         => 'tersedia',
-                'image_path'     => '/image/lab_arsikom.jpg',
+                'image_path'     => '/storage/barang/' . $b['image_path'],
             ]);
         }
     }
