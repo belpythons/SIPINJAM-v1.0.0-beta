@@ -41,20 +41,12 @@ const openBooking = (ruangan) => {
 };
 
 const getImageUrl = (path) => {
-  if (!path) return '';
-  if (path.startsWith('/image/') || path.startsWith('image/')) {
-    if (path.startsWith('image/')) return '/' + path;
-    return path;
+  if (!path) return '/image/logo.png';
+  if (path.startsWith('http')) return path;
+  if (path.startsWith('/storage/') || path.startsWith('storage/')) {
+    return path.startsWith('/') ? path : '/' + path;
   }
-  if (path.startsWith('public/')) {
-    return '/storage/' + path.substring(7);
-  }
-  if (path.startsWith('http') || path.startsWith('/storage') || path.startsWith('storage/')) {
-    if (path.startsWith('storage/')) return '/' + path;
-    return path;
-  }
-  const cleanPath = path.startsWith('/') ? path.slice(1) : path;
-  return '/storage/' + cleanPath;
+  return '/storage/' + path;
 };
 </script>
 
@@ -103,17 +95,12 @@ const getImageUrl = (path) => {
       >
         <CardContent class="p-0">
           <!-- Image Banner -->
-          <div class="relative w-full aspect-[4/3] overflow-hidden bg-slate-100 border-b border-slate-200">
+          <div class="relative w-full h-48 overflow-hidden bg-slate-100 border-b border-slate-200 rounded-t-md">
             <img
-              v-if="ruangan.image_path"
-              :src="getImageUrl(ruangan.image_path)"
+              :src="ruangan.image_path ? getImageUrl(ruangan.image_path) : '/image/logo.png'"
               alt="Foto Ruangan"
-              class="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+              class="w-full h-48 object-cover rounded-t-md transition-transform duration-300 group-hover:scale-105"
             />
-            <div v-else class="w-full h-full flex flex-col items-center justify-center text-slate-400 gap-1.5 select-none">
-              <Building2 class="h-8 w-8 stroke-[1.5]" />
-              <span class="text-xs font-medium">No Image</span>
-            </div>
           </div>
           <div class="p-5 space-y-3">
             <!-- Header -->
@@ -121,7 +108,11 @@ const getImageUrl = (path) => {
               <Badge variant="outline" class="text-[10px] font-bold tracking-wider uppercase text-slate-500 border-slate-200">
                 {{ ruangan.kode }}
               </Badge>
-              <Badge class="bg-emerald-50 text-emerald-700 border-emerald-200 text-[10px] hover:bg-emerald-50">
+              <Badge v-if="ruangan.is_terpakai" class="bg-rose-50 text-rose-700 border-rose-200 text-[10px] hover:bg-rose-50">
+                <span class="mr-1 h-1.5 w-1.5 rounded-full bg-rose-500 inline-block animate-pulse" />
+                Sedang Terpakai
+              </Badge>
+              <Badge v-else class="bg-emerald-50 text-emerald-700 border-emerald-200 text-[10px] hover:bg-emerald-50">
                 <span class="mr-1 h-1.5 w-1.5 rounded-full bg-emerald-500 inline-block" />
                 Tersedia
               </Badge>

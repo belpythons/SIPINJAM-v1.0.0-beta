@@ -5,7 +5,7 @@ namespace App\Http\Controllers;
 use App\Http\Requests\StoreBookingRequest;
 use App\Models\Peminjaman;
 use App\Services\BookingService;
-use Barryvdh\DomPDF\Facade\Pdf;
+use Spatie\LaravelPdf\Facades\Pdf;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
@@ -79,19 +79,24 @@ class BookingController extends Controller
 
         // Ensure nomor_surat is generated
         if (empty($peminjaman->nomor_surat)) {
-            abort(400, 'Nomor surat belum di-generate untuk peminjaman ini.');
+            $peminjaman->nomor_surat = \App\Models\Peminjaman::generateNomorSurat();
+            $peminjaman->save();
         }
 
         // Render PDF
-        $pdf = Pdf::loadView('pdf.surat-peminjaman', [
+        $pdf = Pdf::view('pdf.surat-peminjaman', [
             'peminjaman' => $peminjaman,
             'user'       => $peminjaman->user,
             'asset'      => $peminjaman->tipe === 'ruangan'
                                 ? $peminjaman->ruangan
                                 : $peminjaman->barang,
-        ]);
-
-        $pdf->setPaper('A4', 'portrait');
+        ])
+        ->format('a4')
+        ->withBrowsershot(fn ($browsershot) => $browsershot
+            ->noSandbox()
+            ->setNodeBinary('/home/blewah/.local/share/fnm/node-versions/v20.20.2/installation/bin/node')
+            ->setNpmBinary('/home/blewah/.local/share/fnm/node-versions/v20.20.2/installation/bin/npm')
+        );
 
         // Slugified filename
         $safeNomor = str_replace(['/', '\\'], '-', $peminjaman->nomor_surat);
@@ -99,7 +104,7 @@ class BookingController extends Controller
 
         // Simpan fisik ke storage
         $storagePath = "public/surat/{$filename}";
-        Storage::put($storagePath, $pdf->output());
+        Storage::put($storagePath, $pdf->generatePdfContent());
 
         // Download response
         return $pdf->download($filename);

@@ -8,6 +8,9 @@ class StoreBookingRequest extends FormRequest
 {
     public function authorize(): bool
     {
+        if ($this->user()?->is_blocked) {
+            abort(403, 'Akun Anda diblokir: ' . $this->user()->blocked_reason);
+        }
         return true;
     }
 

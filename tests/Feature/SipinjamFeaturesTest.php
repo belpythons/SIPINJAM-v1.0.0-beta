@@ -32,8 +32,8 @@ test('auto sanction blocks overtime users and unblocks them when expired', funct
         'tipe' => 'ruangan',
         'ruangan_id' => $ruangan->id,
         'nama_item' => $ruangan->nama,
-        'tanggal_mulai' => now()->subDays(2),
-        'tanggal_selesai' => now()->subDays(1),
+        'tanggal_mulai' => now()->subDays(5),
+        'tanggal_selesai' => now()->subDays(3),
         'jam_mulai' => '08:00',
         'jam_selesai' => '17:00',
         'keterangan' => 'Praktikum',
@@ -102,7 +102,9 @@ test('lapor berantakan blocks the last user who used the room today', function (
     // Panggil route admin untuk melaporkan ruangan berantakan
     $response = $this->actingAs($admin)
         ->withoutMiddleware()
-        ->post(route('admin.ruangan.lapor_berantakan', $ruangan->id));
+        ->post(route('admin.ruangan.lapor_berantakan', $ruangan->id), [
+            'feedback' => 'Ruangan sangat kotor dan kursi berantakan setelah acara selesai.',
+        ]);
 
     $response->assertRedirect();
     $response->assertSessionHas('success');

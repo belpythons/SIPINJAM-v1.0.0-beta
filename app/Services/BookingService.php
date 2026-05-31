@@ -19,6 +19,10 @@ class BookingService
      */
     public function createBooking(array $data, User $user): Peminjaman
     {
+        if ($user->is_blocked) {
+            throw new \RuntimeException('Akun Anda diblokir: ' . $user->blocked_reason);
+        }
+
         return DB::transaction(function () use ($data, $user) {
             if ($data['tipe_peminjaman'] === 'barang') {
                 // Lock record barang untuk validasi stok (read-only, no decrement)

@@ -1,5 +1,8 @@
 <script setup>
 import { ref, computed, watch } from 'vue';
+defineOptions({
+  inheritAttrs: false,
+});
 import { useForm, usePage } from '@inertiajs/vue3';
 import {
   CalendarDays, Clock, User, Mail, FileText, ChevronLeft, ChevronRight,
@@ -139,7 +142,7 @@ const stepLabels = ['Jadwal', 'Aset', 'Detail'];
 
 <template>
   <Dialog :open="open" @update:open="closeModal">
-    <DialogContent class="sm:max-w-lg max-h-[90vh] overflow-y-auto p-0" style="z-index: 60;">
+    <DialogContent class="sm:max-w-lg max-h-[90vh] overflow-y-auto p-0 z-[60]">
       <form @submit.prevent="submit" class="flex flex-col">
         <!-- ── Header ─────────────────────────────────── -->
         <DialogHeader class="px-6 pt-6 pb-0">

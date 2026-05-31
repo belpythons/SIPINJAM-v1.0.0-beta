@@ -82,6 +82,12 @@ Route::middleware(['auth', 'admin'])->group(function () {
     Route::put('/admin/kelola-barang/{id}', [AdminController::class, 'updateBarang'])->name('admin.barang.update');
     Route::delete('/admin/kelola-barang/{id}', [AdminController::class, 'destroyBarang'])->name('admin.barang.destroy');
 
+    // Kelola Landing Page / Banner (CRUD)
+    Route::get('/admin/kelola-banner', [\App\Http\Controllers\Admin\BannerController::class, 'index'])->name('admin.kelola_banner');
+    Route::post('/admin/kelola-banner', [\App\Http\Controllers\Admin\BannerController::class, 'store'])->name('admin.banner.store');
+    Route::put('/admin/kelola-banner/{id}', [\App\Http\Controllers\Admin\BannerController::class, 'update'])->name('admin.banner.update');
+    Route::delete('/admin/kelola-banner/{id}', [\App\Http\Controllers\Admin\BannerController::class, 'destroy'])->name('admin.banner.destroy');
+
     // Kalender Akademik (Admin)
     Route::get('/admin/kelola-kalender', [CalendarController::class, 'adminIndex'])->name('admin.kelola_kalender');
     Route::post('/admin/kelola-kalender', [CalendarController::class, 'store'])->name('admin.kalender.store');

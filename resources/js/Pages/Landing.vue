@@ -13,6 +13,8 @@ import {
 const props = defineProps({
   ruangans: Array,
   barangs: Array,
+  banners: Array,
+  calendarEvents: Array,
 });
 
 const searchQuery = ref('');
@@ -21,13 +23,18 @@ const showLoginDialog = ref(false);
 const guestDateRange = ref(null);
 
 // ── Hero Background Carousel ────────────────────────
-const carouselImages = ['/image/bg blur admin.png', '/image/bg blur user.png'];
+const carouselImages = computed(() => {
+  if (props.banners && props.banners.length > 0) {
+    return props.banners.map(b => b.image_path);
+  }
+  return ['/image/bg blur admin.png', '/image/bg blur user.png'];
+});
 const activeSlide = ref(0);
 let carouselTimer = null;
 
 onMounted(() => {
   carouselTimer = setInterval(() => {
-    activeSlide.value = (activeSlide.value + 1) % carouselImages.length;
+    activeSlide.value = (activeSlide.value + 1) % carouselImages.value.length;
   }, 5000);
 });
 
@@ -36,9 +43,10 @@ onUnmounted(() => {
 });
 
 // ── FullCalendar Config ─────────────────────────────
-const calendarOptions = ref({
+const calendarOptions = computed(() => ({
   plugins: [dayGridPlugin, interactionPlugin],
   initialView: 'dayGridMonth',
+  events: props.calendarEvents,
   selectable: true,
   editable: false,
   headerToolbar: { left: 'prev', center: 'title', right: 'next' },
@@ -49,7 +57,7 @@ const calendarOptions = ref({
   dayHeaderFormat: { weekday: 'short' },
   slotLabelFormat: { hour: '2-digit', minute: '2-digit', hour12: false },
   eventTimeFormat: { hour: '2-digit', minute: '2-digit', hour12: false },
-});
+}));
 
 function handleDateSelect(selectInfo) {
   guestDateRange.value = { start: selectInfo.startStr, end: selectInfo.endStr };
@@ -212,10 +220,20 @@ const filteredBarangs = computed(() =>
         <div v-if="filteredRuangans.length > 0" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
           <div v-for="ruangan in filteredRuangans" :key="ruangan.id"
             class="group bg-card border border-border rounded-xl shadow-card overflow-hidden flex flex-col justify-between transition-all duration-200 hover:shadow-soft hover:-translate-y-0.5">
+            <!-- Image at the top of the card -->
+            <div class="aspect-video w-full overflow-hidden bg-slate-50 border-b border-border relative">
+              <img v-if="ruangan.image_path" :src="ruangan.image_path" :alt="ruangan.nama" class="h-full w-full object-cover group-hover:scale-105 transition-transform duration-300" />
+              <div v-else class="flex h-full w-full items-center justify-center text-slate-300">
+                <Building2 class="h-8 w-8" />
+              </div>
+            </div>
             <div class="p-5 space-y-3">
               <div class="flex items-start justify-between gap-3">
                 <span class="text-[10px] font-semibold tracking-wider uppercase bg-muted text-muted-foreground px-2.5 py-1 rounded-md">{{ ruangan.kode }}</span>
-                <span class="inline-flex items-center gap-1.5 text-[10px] font-semibold bg-emerald-50 text-emerald-700 px-2.5 py-1 rounded-md">
+                <span v-if="ruangan.is_terpakai" class="inline-flex items-center gap-1.5 text-[10px] font-semibold bg-rose-50 text-rose-700 border border-rose-200 px-2.5 py-1 rounded-md">
+                  <span class="w-1.5 h-1.5 rounded-full bg-rose-500 animate-pulse" />Sedang Terpakai
+                </span>
+                <span v-else class="inline-flex items-center gap-1.5 text-[10px] font-semibold bg-emerald-50 text-emerald-700 px-2.5 py-1 rounded-md">
                   <span class="w-1.5 h-1.5 rounded-full bg-emerald-500" />Tersedia
                 </span>
               </div>
@@ -250,6 +268,13 @@ const filteredBarangs = computed(() =>
         <div v-if="filteredBarangs.length > 0" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
           <div v-for="barang in filteredBarangs" :key="barang.id"
             class="group bg-card border border-border rounded-xl shadow-card overflow-hidden flex flex-col justify-between transition-all duration-200 hover:shadow-soft hover:-translate-y-0.5">
+            <!-- Image at the top of the card -->
+            <div class="aspect-video w-full overflow-hidden bg-slate-50 border-b border-border relative">
+              <img v-if="barang.image_path" :src="barang.image_path" :alt="barang.nama" class="h-full w-full object-cover group-hover:scale-105 transition-transform duration-300" />
+              <div v-else class="flex h-full w-full items-center justify-center text-slate-300">
+                <Package class="h-8 w-8" />
+              </div>
+            </div>
             <div class="p-5 space-y-3">
               <div class="flex items-start justify-between gap-3">
                 <span class="text-[10px] font-semibold tracking-wider uppercase bg-muted text-muted-foreground px-2.5 py-1 rounded-md">{{ barang.kode }}</span>

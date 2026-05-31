@@ -219,6 +219,15 @@ const greetingMessage = computed(() => {
   if (hour >= 15 && hour < 18.5) return 'Selamat Sore';
   return 'Selamat Malam';
 });
+
+const getImageUrl = (path) => {
+  if (!path) return '/image/logo.png';
+  if (path.startsWith('http')) return path;
+  if (path.startsWith('/storage/') || path.startsWith('storage/')) {
+    return path.startsWith('/') ? path : '/' + path;
+  }
+  return '/storage/' + path;
+};
 </script>
 
 <template>
@@ -442,13 +451,25 @@ const greetingMessage = computed(() => {
               class="group cursor-pointer overflow-hidden border-slate-200/80 transition-all duration-200 hover:shadow-lg hover:border-blue-200 hover:-translate-y-0.5"
             >
               <CardContent class="p-0">
+                <!-- Image Banner -->
+                <div class="relative w-full h-48 overflow-hidden bg-slate-100 border-b border-slate-200 rounded-t-md">
+                  <img
+                    :src="ruangan.image_path ? getImageUrl(ruangan.image_path) : '/image/logo.png'"
+                    alt="Foto Ruangan"
+                    class="w-full h-48 object-cover rounded-t-md transition-transform duration-300 group-hover:scale-105"
+                  />
+                </div>
                 <div class="p-5 space-y-3">
                   <!-- Header -->
                   <div class="flex items-start justify-between">
                     <Badge variant="outline" class="text-[10px] font-bold tracking-wider uppercase text-slate-500 border-slate-200">
                       {{ ruangan.kode }}
                     </Badge>
-                    <Badge class="bg-emerald-50 text-emerald-700 border-emerald-200 text-[10px] hover:bg-emerald-50">
+                    <Badge v-if="ruangan.is_terpakai" class="bg-rose-50 text-rose-700 border-rose-200 text-[10px] hover:bg-rose-50">
+                      <span class="mr-1 h-1.5 w-1.5 rounded-full bg-rose-500 inline-block animate-pulse" />
+                      Sedang Terpakai
+                    </Badge>
+                    <Badge v-else class="bg-emerald-50 text-emerald-700 border-emerald-200 text-[10px] hover:bg-emerald-50">
                       <span class="mr-1 h-1.5 w-1.5 rounded-full bg-emerald-500 inline-block" />
                       Tersedia
                     </Badge>
@@ -503,6 +524,14 @@ const greetingMessage = computed(() => {
               class="group cursor-pointer overflow-hidden border-slate-200/80 transition-all duration-200 hover:shadow-lg hover:border-blue-200 hover:-translate-y-0.5"
             >
               <CardContent class="p-0">
+                <!-- Image Banner -->
+                <div class="relative w-full h-48 overflow-hidden bg-slate-100 border-b border-slate-200 rounded-t-md">
+                  <img
+                    :src="barang.image_path ? getImageUrl(barang.image_path) : '/image/logo.png'"
+                    alt="Foto Barang"
+                    class="w-full h-48 object-cover rounded-t-md transition-transform duration-300 group-hover:scale-105"
+                  />
+                </div>
                 <div class="p-5 space-y-3">
                   <!-- Header -->
                   <div class="flex items-start justify-between">

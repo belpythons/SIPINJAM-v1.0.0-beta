@@ -29,7 +29,7 @@ class DashboardController extends Controller
         // ── Katalog Ruangan ──────────────────────────────────
         $ruangans = Ruangan::orderBy('lokasi')
             ->orderBy('nama')
-            ->get(['id', 'nama', 'kode', 'kapasitas', 'lokasi', 'deskripsi', 'status']);
+            ->get(['id', 'nama', 'kode', 'kapasitas', 'lokasi', 'deskripsi', 'status', 'image_path']);
 
         // ── Katalog Barang dengan stok real-time ─────────────
         $barangs = Barang::withCount(['peminjamans as sedang_dipinjam' => function ($query) {
@@ -40,7 +40,7 @@ class DashboardController extends Controller
         }])
         ->orderBy('kategori')
         ->orderBy('nama')
-        ->get(['id', 'nama', 'kode', 'stok_total', 'stok_tersedia', 'kategori', 'deskripsi', 'status'])
+        ->get(['id', 'nama', 'kode', 'stok_total', 'stok_tersedia', 'kategori', 'deskripsi', 'status', 'image_path'])
         ->map(function (Barang $barang) {
             $barang->sedang_dipinjam = $barang->sedang_dipinjam ?? 0;
             $barang->stok_tersedia   = max(0, $barang->stok_total - $barang->sedang_dipinjam);
