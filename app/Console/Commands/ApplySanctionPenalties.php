@@ -46,21 +46,11 @@ class ApplySanctionPenalties extends Command
         $blockedCount = 0;
 
         // Cari semua peminjaman yang masih berstatus "sedang_dipinjam"
-        // dan waktu selesainya sudah lewat
-        $overtimeBookings = Peminjaman::where('status', Peminjaman::STATUS_APPROVED)
-            ->where(function ($query) use ($now) {
-                // Tanggal selesai sudah lewat hari ini
-                $query->where('tanggal_selesai', '<', $now->toDateString())
-                    // ATAU tanggal selesai = hari ini tapi jam selesai sudah lewat
-                    ->orWhere(function ($q) use ($now) {
-                        $q->where('tanggal_selesai', '=', $now->toDateString())
-                          ->where('jam_selesai', '<', $now->format('H:i:s'));
-                    });
-            })
+        $activeBookings = Peminjaman::where('status', Peminjaman::STATUS_APPROVED)
             ->with('user')
             ->get();
 
-        foreach ($overtimeBookings as $booking) {
+        foreach ($activeBookings as $booking) {
             $user = $booking->user;
 
             if (!$user) {
@@ -72,10 +62,25 @@ class ApplySanctionPenalties extends Command
                 continue;
             }
 
-            $user->blockFor(30, 'Keterlambatan pengembalian barang/ruangan (Overtime otomatis oleh sistem).');
+            // Gabungkan tanggal_selesai dan jam_selesai menjadi satu Carbon instance
+            try {
+                $endDateTime = Carbon::parse($booking->tanggal_selesai->format('Y-m-d') . ' ' . $booking->jam_selesai);
+            } catch (\Throwable $e) {
+                continue;
+            }
+
+            // Tambahkan grace period 12 jam
+            $graceEndDateTime = $endDateTime->copy()->addHours(12);
+
+            // Jika waktu sekarang belum melewati batas toleransi grace period, lewati
+            if ($now->lessThan($graceEndDateTime)) {
+                continue;
+            }
+
+            $user->blockFor(30, 'Keterlambatan pengembalian barang/ruangan (Overtime otomatis oleh sistem setelah toleransi 12 jam).');
             $blockedCount++;
 
-            $this->line("  → User #{$user->id} ({$user->name}) diblokir 30 hari (overtime booking #{$booking->id}).");
+            $this->line("  → User #{$user->id} ({$user->name}) diblokir 30 hari (overtime booking #{$booking->id} setelah toleransi 12 jam).");
         }
 
         return $blockedCount;

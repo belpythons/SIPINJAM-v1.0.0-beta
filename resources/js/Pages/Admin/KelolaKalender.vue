@@ -21,7 +21,7 @@ const props = defineProps({
 });
 
 const form = useForm({
-  image: null,
+  image_path: null,
   year: new Date().getFullYear(),
 });
 
@@ -32,7 +32,7 @@ const isPdf = ref(false);
 const handleFileChange = (e) => {
   const file = e.target.files[0];
   if (file) {
-    form.image = file;
+    form.image_path = file;
     isPdf.value = file.type === 'application/pdf';
     if (!isPdf.value) {
       const reader = new FileReader();
@@ -154,13 +154,13 @@ const isImage = (path) => {
               class="hidden"
               @change="handleFileChange"
             />
-            <p v-if="form.errors.image" class="text-xs text-destructive font-medium">{{ form.errors.image }}</p>
+            <p v-if="form.errors.image_path" class="text-xs text-destructive font-medium">{{ form.errors.image_path }}</p>
 
             <!-- File Preview -->
-            <div v-if="form.image" class="mt-2 p-3 bg-muted/50 border border-border rounded-lg space-y-2">
+            <div v-if="form.image_path" class="mt-2 p-3 bg-muted/50 border border-border rounded-lg space-y-2">
               <div class="flex items-center justify-between text-xs text-foreground font-medium">
-                <span class="font-bold truncate max-w-[80%]">{{ form.image.name }}</span>
-                <span class="text-[10px] text-muted-foreground font-medium shrink-0">({{ (form.image.size / (1024*1024)).toFixed(2) }} MB)</span>
+                <span class="font-bold truncate max-w-[80%]">{{ form.image_path.name }}</span>
+                <span class="text-[10px] text-muted-foreground font-medium shrink-0">({{ (form.image_path.size / (1024*1024)).toFixed(2) }} MB)</span>
               </div>
               <div v-if="filePreview" class="relative mt-1 overflow-hidden border border-border rounded-lg max-h-24 bg-card flex items-center justify-center">
                 <img :src="filePreview" class="max-h-20 object-contain" />
@@ -176,7 +176,7 @@ const isImage = (path) => {
           <div class="w-full lg:w-auto lg:pt-6">
             <button
               type="submit"
-              :disabled="form.processing || !form.image"
+              :disabled="form.processing || !form.image_path"
               class="w-full lg:w-auto px-6 py-2.5 bg-primary text-primary-foreground font-semibold text-sm rounded-lg shadow-sm transition-all hover:bg-primary/90 focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {{ form.processing ? 'Mengunggah...' : 'Unggah' }}

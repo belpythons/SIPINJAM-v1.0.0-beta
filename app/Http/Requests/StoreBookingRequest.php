@@ -18,9 +18,33 @@ class StoreBookingRequest extends FormRequest
             'barang_id'       => ['required_if:tipe_peminjaman,barang', 'nullable', 'exists:barangs,id'],
             'ruangan_id'      => ['required_if:tipe_peminjaman,ruangan', 'nullable', 'exists:ruangans,id'],
             'tanggal_mulai'   => ['required', 'date', 'after_or_equal:today'],
-            'tanggal_selesai' => ['required', 'date', 'after:tanggal_mulai'],
-            'waktu_mulai'     => ['required', 'date_format:H:i'],
-            'waktu_selesai'   => ['required', 'date_format:H:i', 'after:waktu_mulai'],
+            'tanggal_selesai' => ['required', 'date', 'after_or_equal:tanggal_mulai'],
+            'waktu_mulai'     => ['required', 'regex:/^(?:[01]\d|2[0-3]):[0-5]\d(?::[0-5]\d)?$/'],
+            'waktu_selesai'   => [
+                'required',
+                'regex:/^(?:[01]\d|2[0-3]):[0-5]\d(?::[0-5]\d)?$/',
+                function ($attribute, $value, $fail) {
+                    $tanggalMulai = $this->input('tanggal_mulai');
+                    $tanggalSelesai = $this->input('tanggal_selesai');
+                    $waktuMulai = $this->input('waktu_mulai');
+
+                    if ($tanggalMulai && $tanggalSelesai && $waktuMulai && $value) {
+                        try {
+                            $dateMulai = \Illuminate\Support\Carbon::parse($tanggalMulai)->format('Y-m-d');
+                            $dateSelesai = \Illuminate\Support\Carbon::parse($tanggalSelesai)->format('Y-m-d');
+                            if ($dateMulai === $dateSelesai) {
+                                $timeMulai = \Illuminate\Support\Carbon::parse($waktuMulai);
+                                $timeSelesai = \Illuminate\Support\Carbon::parse($value);
+                                if ($timeSelesai->lte($timeMulai)) {
+                                    $fail('Waktu selesai harus setelah waktu mulai pada hari yang sama.');
+                                }
+                            }
+                        } catch (\Throwable $e) {
+                            // Let date validation rule handle parse errors
+                        }
+                    }
+                }
+            ],
             'keterangan'      => ['required', 'string'],
             'catatan'         => ['nullable', 'string'],
         ];

@@ -103,7 +103,7 @@ class RuanganSeeder extends Seeder
                 'lokasi'     => $r['lokasi'],
                 'deskripsi'  => $r['deskripsi'],
                 'status'     => 'tersedia',
-                'image_path' => $r['image_path'],
+                'image_path' => '/image/' . $r['image_path'],
             ]);
         }
     }

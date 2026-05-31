@@ -4,7 +4,7 @@ namespace App\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
 
-class StoreCalendarRequest extends FormRequest
+class UpdateCalendarRequest extends FormRequest
 {
     /**
      * Determine if the user is authorized to make this request.
@@ -20,7 +20,7 @@ class StoreCalendarRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'image_path' => 'nullable|image|mimes:png,jpg,jpeg|max:5120',
+            'image_path' => ['nullable', 'image', 'mimes:png,jpg,jpeg', 'max:5120'],
             'year'       => 'required|integer|min:2020|max:2100',
         ];
     }

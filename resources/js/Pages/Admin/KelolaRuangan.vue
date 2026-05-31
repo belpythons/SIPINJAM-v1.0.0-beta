@@ -12,7 +12,7 @@ const showForm = ref(false);
 const editingId = ref(null);
 
 const form = useForm({
-    nama: '', kode: '', kapasitas: '', lokasi: '', deskripsi: '', status: 'tersedia',
+    nama: '', kode: '', kapasitas: '', lokasi: '', deskripsi: '', status: 'tersedia', image_path: null,
 });
 
 const openCreate = () => { editingId.value = null; form.reset(); showForm.value = true; };
@@ -20,13 +20,17 @@ const openEdit = (r) => {
     editingId.value = r.id;
     form.nama = r.nama; form.kode = r.kode; form.kapasitas = r.kapasitas;
     form.lokasi = r.lokasi || ''; form.deskripsi = r.deskripsi || ''; form.status = r.status;
+    form.image_path = null;
     showForm.value = true;
 };
 const close = () => { showForm.value = false; form.reset(); editingId.value = null; };
 
 const submit = () => {
     if (editingId.value) {
-        form.put(`/admin/kelola-ruangan/${editingId.value}`, { onSuccess: close, preserveScroll: true });
+        form.transform((data) => ({
+            ...data,
+            _method: 'put',
+        })).post(`/admin/kelola-ruangan/${editingId.value}`, { onSuccess: close, preserveScroll: true });
     } else {
         form.post('/admin/kelola-ruangan', { onSuccess: close, preserveScroll: true });
     }
@@ -87,6 +91,11 @@ const submitLapor = () => {
                     <select v-model="form.status" class="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500">
                         <option value="tersedia">Tersedia</option><option value="tidak_tersedia">Tidak Tersedia</option>
                     </select>
+                </div>
+                <div>
+                    <label class="text-xs font-semibold text-slate-600">Unggah Foto Baru</label>
+                    <input type="file" @change="(e) => form.image_path = e.target.files[0]" class="mt-1 w-full rounded-lg border border-slate-200 px-3 py-1.5 text-sm focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 bg-white" accept="image/png, image/jpeg, image/jpg" />
+                    <p v-if="form.errors.image_path" class="text-xs text-red-500 mt-1">{{ form.errors.image_path }}</p>
                 </div>
                 <div class="flex items-end">
                     <button type="submit" :disabled="form.processing" class="rounded-lg bg-orange-600 px-6 py-2 text-sm font-semibold text-white hover:bg-orange-700 disabled:opacity-50 transition-colors">{{ form.processing ? 'Menyimpan...' : 'Simpan' }}</button>

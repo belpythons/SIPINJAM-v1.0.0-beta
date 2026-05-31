@@ -22,6 +22,10 @@ const handleImageError = () => {
 
 const getImageUrl = (path) => {
   if (!path) return '';
+  if (path.startsWith('/image/') || path.startsWith('image/')) {
+    if (path.startsWith('image/')) return '/' + path;
+    return path;
+  }
   if (path.startsWith('public/')) {
     return '/storage/' + path.substring(7);
   }
@@ -72,13 +76,14 @@ const getImageUrl = (path) => {
         <p class="text-xs text-muted-foreground mt-0.5">Sekolah Tinggi Teknologi Bontang</p>
       </div>
 
-      <div class="p-6">
-        <div class="relative overflow-hidden rounded-lg flex items-center justify-center min-h-[300px]">
+      <div class="p-6 bg-slate-50/50">
+        <div class="relative overflow-hidden rounded-lg flex items-center justify-center min-h-[300px] border border-border/80 bg-white p-4">
           <template v-if="!imageError">
             <img
+              v-if="calendar.image_path"
               :src="getImageUrl(calendar.image_path)"
               alt="Kalender Akademik"
-              class="max-w-full h-auto object-contain select-none max-h-[80vh] py-4"
+              class="w-full h-auto object-contain select-none max-h-[85vh] py-2"
               @error="handleImageError"
             />
           </template>

@@ -37,6 +37,23 @@ const openBooking = (barang) => {
   selectedAsset.value = { ...barang, tipe: 'barang' };
   showBookingModal.value = true;
 };
+
+const getImageUrl = (path) => {
+  if (!path) return '';
+  if (path.startsWith('/image/') || path.startsWith('image/')) {
+    if (path.startsWith('image/')) return '/' + path;
+    return path;
+  }
+  if (path.startsWith('public/')) {
+    return '/storage/' + path.substring(7);
+  }
+  if (path.startsWith('http') || path.startsWith('/storage') || path.startsWith('storage/')) {
+    if (path.startsWith('storage/')) return '/' + path;
+    return path;
+  }
+  const cleanPath = path.startsWith('/') ? path.slice(1) : path;
+  return '/storage/' + cleanPath;
+};
 </script>
 
 <template>
@@ -83,6 +100,19 @@ const openBooking = (barang) => {
         class="group cursor-pointer overflow-hidden border-slate-200/80 transition-all duration-200 hover:shadow-lg hover:border-blue-200 hover:-translate-y-0.5"
       >
         <CardContent class="p-0">
+          <!-- Image Banner -->
+          <div class="relative w-full aspect-[4/3] overflow-hidden bg-slate-100 border-b border-slate-200">
+            <img
+              v-if="barang.image_path"
+              :src="getImageUrl(barang.image_path)"
+              alt="Foto Barang"
+              class="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+            />
+            <div v-else class="w-full h-full flex flex-col items-center justify-center text-slate-400 gap-1.5 select-none">
+              <Package class="h-8 w-8 stroke-[1.5]" />
+              <span class="text-xs font-medium">No Image</span>
+            </div>
+          </div>
           <div class="p-5 space-y-3">
             <!-- Header -->
             <div class="flex items-start justify-between">

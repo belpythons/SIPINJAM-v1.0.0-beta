@@ -77,12 +77,9 @@ class BookingController extends Controller
             abort(403, 'Surat hanya dapat diunduh untuk peminjaman yang telah disetujui.');
         }
 
-        // Generate nomor surat jika belum ada
+        // Ensure nomor_surat is generated
         if (empty($peminjaman->nomor_surat)) {
-            $peminjaman->update([
-                'nomor_surat' => Peminjaman::generateNomorSurat(),
-            ]);
-            $peminjaman->refresh();
+            abort(400, 'Nomor surat belum di-generate untuk peminjaman ini.');
         }
 
         // Render PDF

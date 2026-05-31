@@ -1,107 +1,155 @@
-# **SIPINJAM: Sistem Informasi Peminjaman Alat & Reservasi Ruang Enterprise**
+# 🎓 SiPinjam 🚀
+### **Smart Item & Room Reservation Enterprise System**
 
-Selamat datang di repositori **SIPINJAM**\! Sistem ini dirancang sebagai solusi terpadu untuk menangani manajemen peminjaman aset institusi atau kampus dengan antarmuka yang sangat cepat, aman, dan beroperasi secara *real-time*.
+SiPinjam is a state-of-the-art, high-performance web application designed to automate and streamline the reservation process for items, assets, and rooms. Built on a powerful enterprise architecture, the system provides real-time conflict resolution, transactional numbering, automated PDF letters, and intelligent auto-sanctions for overdue checkouts.
 
-## **1\. Overview Project**
+---
 
-Aplikasi ini menargetkan efisiensi tinggi tanpa beban operasional, dan mencegah masalah yang sering terjadi seperti bentrok jadwal peminjaman.
+## 🎨 Design Philosophy: Modern Minimalist
+SiPinjam features a premium, state-of-the-art **Modern Minimalist** user interface. Designed with visual excellence and user experience in mind, it implements:
+- **Clean Typography & Ample Whitespace** using tailored high-quality font families.
+- **Harmonious Palettes** featuring smooth slate scales, elegant slate-border separations, and clean backgrounds.
+- **Micro-Animations & Hover Scaling** (built with CSS and GSAP) that bring components to life.
+- **Aspect-Constrained Banners (4:3)** coupled with elegant fallback image placeholders, completely eliminating standard browser layout shifts.
 
-**Fitur Unggulan:**
+---
 
-* **Arsitektur VILT Stack:** Menawarkan navigasi super mulus sekelas *Single Page Application* (SPA) tanpa perlu *reload* halaman.  
-* **Pessimistic Locking & Service Pattern:** Mengamankan transaksi di dalam BookingService untuk memastikan satu barang tidak dapat diklaim oleh dua orang pada detik yang bersamaan.  
-* **SLA Auto-Reject & Scheduler:** Terdapat fitur pekerjaan latar belakang (background job) yang akan otomatis membatalkan pesanan yang tertunda (pending) terlalu lama.  
-* **Omnichannel Notifications:** Setiap perubahan status akan segera diinformasikan melalui Email (SMTP Gmail) dan pesan WhatsApp (Fonnte).  
-* **Socialite Google SSO:** Cukup sekali klik untuk masuk ke aplikasi, di mana akun domain instansi akan otomatis didaftarkan.  
-* **Interactive Calendar:** Pemantauan jadwal ruangan secara interaktif dengan antarmuka kalender yang intuitif.
+## 🛡️ Core Features
 
-## **2\. Tech Stack Application**
+*   📅 **Interactive Calendar & Schedule Conflict Detection**: Fully integrated with FullCalendar Vue 3, allowing instant schedule previews and guaranteeing that no two bookings overlap on identical slots.
+*   ⏳ **Delayed Deduction Approval System**: Reservations go through a rigorous validation and verification pipeline. Admin reviews do not prematurely lock stock or rooms unless verified.
+*   📄 **Auto-Generated PDF Letters**: Approved reservations immediately generate custom-stamped letters with transactional, locked serialized serial numbers (`nomor_surat`).
+*   ⚖️ **Overtime Auto-Sanction Scheduler**: A daily cron validator combines scheduled dates and times, checks them against a strict **12-hour grace period**, and automatically locks negligent user accounts for **30 days**.
+*   🖼️ **GD Image Crop Pipeline**: Center-crops uploaded rooms and item photos to a standard `4:3` layout (800x600), preserving alpha transparency channels for PNG/WebP files.
 
-Proyek ini ditenagai oleh kombinasi ekosistem PHP dan JavaScript termodern:
+---
 
-**Bagian Backend (Core & Database):**
+## 🛠️ Tech Stack & Integrations
 
-* **Bahasa Utama & Framework:** PHP 8.2+ dengan Laravel 11\.  
-* **Database:** MySQL 8.0 / MariaDB yang dieksekusi dengan Eloquent ORM.  
-* **Sistem Autentikasi:** Laravel Breeze, Spatie Laravel Permission, dan Laravel Socialite.  
-* **Generator Laporan:** Barryvdh Laravel DOMPDF.
+![Laravel](https://img.shields.io/badge/laravel-%23FF2D20.svg?style=for-the-badge&logo=laravel&logoColor=white)
+![Vue.js](https://img.shields.io/badge/vuejs-%2335495e.svg?style=for-the-badge&logo=vuedotjs&logoColor=%234FC08D)
+![Inertia.js](https://img.shields.io/badge/inertia.js-%239575CD.svg?style=for-the-badge&logo=inertia&logoColor=white)
+![TailwindCSS](https://img.shields.io/badge/tailwindcss-%2338B2AC.svg?style=for-the-badge&logo=tailwind-css&logoColor=white)
+![MySQL](https://img.shields.io/badge/mysql-%2300f.svg?style=for-the-badge&logo=mysql&logoColor=white)
 
-**Bagian Frontend (UI/UX):**
+| Layer | Technologies & Libraries |
+| :--- | :--- |
+| **Backend Core** | Laravel 11 (PHP 8.2+), Eloquent ORM |
+| **Frontend Core** | Vue 3 (Composition API), Inertia.js |
+| **Styling & UI** | Tailwind CSS, Reka UI, Radix Vue, Lucide Icons |
+| **Integrations** | Laravel Socialite (Google SSO), SMTP Mail, Fonnte WhatsApp Gateway |
+| **PDF Reporting** | Barryvdh Laravel DOMPDF |
 
-* **Framework UI:** Vue 3 (Composition API) yang dijahit dengan Inertia.js.  
-* **Styling & Komponen:** Menggunakan Tailwind CSS, Reka UI, Radix Vue, dan Lucide Icons.  
-* **Interaktivitas:** FullCalendar Vue 3 untuk komponen kalender, dan GSAP untuk rendering animasi yang mulus.
+---
 
-## **3\. Step-by-Step Installation**
+## 🚀 Step-by-Step Installation
 
-Mari persiapkan lingkungan pengembangan agar aplikasi ini bisa berjalan lancar di perangkat lokal Anda. Lakukan langkah-langkah ini secara berurutan.
+Follow these copy-pasteable terminal commands to set up the development environment locally.
 
-**Tahap 1: Kloning & Dependensi**
+### **Step 1: Clone the Repository & Install Dependencies**
+```bash
+# 1. Clone the repository
+git clone https://github.com/your-username/sipinjam-core.git
+cd sipinjam-core
 
-1. Unduh kode sumber ke lokal mesin Anda: git clone https://github.com/your-username/SiPinjam.git lalu cd SiPinjam.  
-2. Instal pustaka backend PHP: composer install.  
-3. Instal pustaka frontend JavaScript: npm install.
+# 2. Install backend PHP packages
+composer install
 
-**Tahap 2: Manajemen Environment & Database**
+# 3. Install frontend Node modules
+npm install
+```
 
-1. Gandakan file env untuk konfigurasi sistem lokal: cp .env.example .env.  
-2. Generate kunci enkripsi dari Laravel: php artisan key:generate.  
-3. Sambungkan penyimpanan aset lokal ke ruang publik: php artisan storage:link.  
-4. Bangun tabel-tabel di database sekaligus memasukkan data awalan (Seeder): php artisan migrate:fresh \--seed.
+### **Step 2: Copy Environment Configuration**
+```bash
+cp .env.example .env
+php artisan key:generate
+```
 
-**Tahap 3: Menjalankan Multi-Service Terminal**
+### **Step 3: Connect Public Storage Symlink**
+```bash
+php artisan storage:link
+```
 
-Karena SIPINJAM memiliki arsitektur modern yang memproses tugas di balik layar, buka 4 tab terminal Anda di folder proyek untuk menjalankan perintah berikut:
+### **Step 4: Seed the Database**
+Ensure your local MySQL server is running, then populate the schema and mock seeders:
+```bash
+php artisan migrate:fresh --seed
+```
 
-* Terminal 1 (Backend): php artisan serve  
-* Terminal 2 (Frontend Vue): npm run dev  
-* Terminal 3 (Worker Notifikasi): php artisan queue:work  
-* Terminal 4 (Cron/Scheduler Status SLA): php artisan schedule:work
+---
 
-Aplikasi siap diakses di http://localhost:8000.
+## ⚙️ Environment (`.env`) Configuration Guide
 
-## **4\. Setup Environment Lengkap (Email, WA & Google SSO)**
+Configure your `.env` variables to enable all real-time mailers and notifications.
 
-**PERHATIAN KRITIKAL**: Fitur terpenting di SIPINJAM bergantung pada pihak ketiga. Buka file .env di *code editor* Anda dan perhatikan cara melengkapi variabel berikut ini:
+### **1. Database Configuration**
+```env
+DB_CONNECTION=mysql
+DB_HOST=127.0.0.1
+DB_PORT=3306
+DB_DATABASE=sipinjam
+DB_USERNAME=root
+DB_PASSWORD=o0o0 # Set your MySQL user password
+```
 
-### **Konfigurasi SMTP Email (Notifikasi Lewat Gmail)**
+### **2. SMTP / Mailer Setup (Critical for Notification Mailers)**
+This is required to dispatch mail notifications like `BookingCreatedNotification` and `BookingStatusUpdated` when booking states are created or modified.
+To configure Gmail SMTP:
+1. Enable **2-Step Verification** on your Google account.
+2. Navigate to Google Account > Security > App Passwords.
+3. Generate a new App Password (a 16-letter code).
+4. Fill in the parameters:
+```env
+MAIL_MAILER=smtp
+MAIL_HOST=smtp.gmail.com
+MAIL_PORT=465
+MAIL_USERNAME="your-gmail-account@gmail.com"
+MAIL_PASSWORD="your-sixteen-letter-app-password"
+MAIL_ENCRYPTION=smtps
+MAIL_FROM_ADDRESS="your-gmail-account@gmail.com"
+MAIL_FROM_NAME="${APP_NAME}"
+```
 
-Sistem **tidak boleh** memakai *password* akun Gmail sehari-hari Anda karena rentan diblokir.
+### **3. Third-Party Integrations**
 
-1. Pergi ke pengaturan akun Google Anda, dan pastikan fitur **Verifikasi 2 Langkah (2-Step Verification)** sudah menyala.  
-2. Cari menu **Sandi Aplikasi (App Passwords)**.  
-3. Buat konfigurasi baru, lalu Anda akan diberikan sandi unik berisikan 16 digit huruf.  
-4. Sesuaikan blok email di file .env sebagai berikut:  
-   MAIL\_MAILER=smtp  
-   MAIL\_HOST=smtp.gmail.com  
-   MAIL\_PORT=465  
-   MAIL\_USERNAME=emailkampus@gmail.com  
-   MAIL\_PASSWORD="paste\_16\_digit\_sandi\_tanpa\_spasi"  
-   MAIL\_ENCRYPTION=smtps  
-   MAIL\_FROM\_ADDRESS="emailkampus@gmail.com"  
-   MAIL\_FROM\_NAME="Admin SIPINJAM"
+#### **Google OAuth (SSO) Credentials**
+```env
+GOOGLE_CLIENT_ID="your-client-id.apps.googleusercontent.com"
+GOOGLE_CLIENT_SECRET="your-client-secret"
+GOOGLE_REDIRECT_URI="http://localhost:8000/auth/google/callback"
+```
 
-### **Konfigurasi Google SSO (Masuk Dengan Sekali Klik)**
+#### **Fonnte WhatsApp Gateway**
+```env
+FONNTE_TOKEN="your-fonnte-token-here"
+FONNTE_URL="https://api.fonnte.com/send"
+```
 
-Agar pengguna (mahasiswa/staf) bisa langsung *login* tanpa registrasi manual.
+---
 
-1. Akses menu kredensial pada **Google Cloud Console**.  
-2. Buat kredensial bertipe **OAuth Client ID** lalu pilih jenis **Web Application**.  
-3. Pada isian **Authorized redirect URIs**, wajib masukkan: http://localhost:8000/auth/google/callback.  
-4. Salin ID dan Secret tersebut ke dalam .env:  
-   GOOGLE\_CLIENT\_ID=salin\_client\_id\_dari\_google\_cloud  
-   GOOGLE\_CLIENT\_SECRET=salin\_client\_secret\_dari\_google\_cloud  
-   GOOGLE\_REDIRECT\_URI="${APP\_URL}/auth/google/callback"
+## 🚥 Running the Application
 
-### **Konfigurasi WhatsApp Gateway (Notifikasi Real-Time Fonnte)**
+For a fully automated workspace (including notifications, PDF exports, and background validations), launch the following processes in separate terminal instances:
 
-Untuk memastikan status *approved* atau *rejected* langsung dikabarkan ke WhatsApp si pengguna.
+*   **Terminal 1: Laravel Web Server**
+    ```bash
+    php artisan serve
+    ```
+*   **Terminal 2: Vite Compilation**
+    ```bash
+    npm run dev
+    ```
+*   **Terminal 3: Background Worker Queues (Mailers & WA notifications)**
+    ```bash
+    php artisan queue:work
+    ```
+*   **Terminal 4: Cron Scheduler**
+    ```bash
+    php artisan schedule:work
+    ```
 
-1. Buat akun dan lakukan *login* di platform pihak ketiga **Fonnte**.  
-2. Hubungkan nomor WhatsApp pusat (Bot) dengan melakukan *scan* QR Code di dalam *dashboard* Fonnte.  
-3. Temukan dan salin kode dari menu **API/Token**.  
-4. Sisipkan pada pengaturan .env:  
-   FONNTE\_TOKEN=salin\_token\_fonnte\_anda\_kesini  
-   VITE\_ADMIN\_WA\_NUMBER=isi\_dengan\_nomor\_wa\_administrator
+---
 
-   *(Catatan opsional dari rujukan aslinya, pastikan Anda juga menambahkan FONNTE\_URL="https://api.fonnte.com/send" jika diminta).*
+### **💡 Default Administrator Account**
+- **Email:** `admin@sipinjam.ac.id`
+- **Password:** `password`
