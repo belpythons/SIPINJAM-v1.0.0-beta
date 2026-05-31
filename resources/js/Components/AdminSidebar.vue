@@ -1,7 +1,7 @@
 <script setup>
 import { computed } from 'vue';
 import { router, usePage, Link } from '@inertiajs/vue3';
-import { Home, Users, ClipboardList, DoorOpen, Package, CalendarDays, LogOut } from '@lucide/vue';
+import { Home, Users, ClipboardList, DoorOpen, Package, CalendarDays, LogOut, Image } from '@lucide/vue';
 
 import sidebarLogo from '@images/side bar admin.png';
 
@@ -16,6 +16,7 @@ const navItems = [
     { label: 'Kelola Ruangan', icon: DoorOpen, href: '/admin/kelola-ruangan' },
     { label: 'Kelola Barang', icon: Package, href: '/admin/kelola-barang' },
     { label: 'Kelola Kalender', icon: CalendarDays, href: '/admin/kelola-kalender' },
+    { label: 'Kelola Landing Page', icon: Image, href: '/admin/kelola-banner' },
 ];
 
 const isActive = (href) => currentUrl.value === href || currentUrl.value.startsWith(href + '/');
