@@ -50,6 +50,19 @@ class LoginRequest extends FormRequest
             ]);
         }
 
+        $user = Auth::user();
+        if ($user && $user->is_blocked) {
+            Auth::logout();
+
+            $blockedUntilText = $user->blocked_until
+                ? \Carbon\Carbon::parse($user->blocked_until)->format('d-m-Y H:i')
+                : 'waktu yang belum ditentukan';
+
+            throw ValidationException::withMessages([
+                'email' => "Akun Anda diblokir hingga {$blockedUntilText}. Alasan: {$user->blocked_reason}",
+            ]);
+        }
+
         RateLimiter::clear($this->throttleKey());
     }
 
