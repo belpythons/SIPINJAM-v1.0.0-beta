@@ -8,6 +8,11 @@ use App\Models\User;
 use App\Models\Ruangan;
 use App\Models\Barang;
 use App\Services\BookingService;
+use App\Services\ImageService;
+use App\Http\Requests\StoreBarangRequest;
+use App\Http\Requests\UpdateBarangRequest;
+use App\Http\Requests\StoreRuanganRequest;
+use App\Http\Requests\UpdateRuanganRequest;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Storage;
@@ -203,23 +208,13 @@ class AdminController extends Controller
         ]);
     }
 
-    public function storeRuangan(Request $request): \Illuminate\Http\RedirectResponse
+    public function storeRuangan(StoreRuanganRequest $request): \Illuminate\Http\RedirectResponse
     {
-        $request->validate([
-            'nama'      => 'required|string|max:255',
-            'kode'      => 'required|string|max:50|unique:ruangans,kode',
-            'kapasitas' => 'required|integer|min:1',
-            'lokasi'    => 'nullable|string|max:255',
-            'deskripsi' => 'nullable|string',
-            'status'    => 'required|in:tersedia,tidak_tersedia',
-            'foto'      => 'nullable|image|mimes:jpg,jpeg,png,webp|max:2048',
-        ]);
-
         try {
             $data = $request->only(['nama', 'kode', 'kapasitas', 'lokasi', 'deskripsi', 'status']);
 
-            if ($request->hasFile('foto')) {
-                $data['foto'] = $request->file('foto')->store('ruangan', 'public');
+            if ($request->hasFile('image_path')) {
+                $data['image_path'] = ImageService::cropAndSave($request->file('image_path'), 'ruangan');
             }
 
             Ruangan::create($data);
@@ -230,27 +225,15 @@ class AdminController extends Controller
         }
     }
 
-    public function updateRuangan(Request $request, int $id): \Illuminate\Http\RedirectResponse
+    public function updateRuangan(UpdateRuanganRequest $request, int $id): \Illuminate\Http\RedirectResponse
     {
-        $request->validate([
-            'nama'      => 'required|string|max:255',
-            'kode'      => 'required|string|max:50|unique:ruangans,kode,' . $id,
-            'kapasitas' => 'required|integer|min:1',
-            'lokasi'    => 'nullable|string|max:255',
-            'deskripsi' => 'nullable|string',
-            'status'    => 'required|in:tersedia,tidak_tersedia',
-            'foto'      => 'nullable|image|mimes:jpg,jpeg,png,webp|max:2048',
-        ]);
-
         try {
             $ruangan = Ruangan::findOrFail($id);
             $data = $request->only(['nama', 'kode', 'kapasitas', 'lokasi', 'deskripsi', 'status']);
 
-            if ($request->hasFile('foto')) {
-                if ($ruangan->foto) {
-                    Storage::disk('public')->delete($ruangan->foto);
-                }
-                $data['foto'] = $request->file('foto')->store('ruangan', 'public');
+            if ($request->hasFile('image_path')) {
+                ImageService::deleteOldImage($ruangan->image_path);
+                $data['image_path'] = ImageService::cropAndSave($request->file('image_path'), 'ruangan');
             }
 
             $ruangan->update($data);
@@ -266,9 +249,7 @@ class AdminController extends Controller
         try {
             $ruangan = Ruangan::findOrFail($id);
 
-            if ($ruangan->foto) {
-                Storage::disk('public')->delete($ruangan->foto);
-            }
+            ImageService::deleteOldImage($ruangan->image_path);
 
             $ruangan->delete();
 
@@ -289,24 +270,13 @@ class AdminController extends Controller
         ]);
     }
 
-    public function storeBarang(Request $request): \Illuminate\Http\RedirectResponse
+    public function storeBarang(StoreBarangRequest $request): \Illuminate\Http\RedirectResponse
     {
-        $request->validate([
-            'nama'           => 'required|string|max:255',
-            'kode'           => 'required|string|max:50|unique:barangs,kode',
-            'stok_total'     => 'required|integer|min:0',
-            'stok_tersedia'  => 'required|integer|min:0',
-            'kategori'       => 'nullable|string|max:100',
-            'deskripsi'      => 'nullable|string',
-            'status'         => 'required|in:tersedia,tidak_tersedia',
-            'foto'           => 'nullable|image|mimes:jpg,jpeg,png,webp|max:2048',
-        ]);
-
         try {
             $data = $request->only(['nama', 'kode', 'stok_total', 'stok_tersedia', 'kategori', 'deskripsi', 'status']);
 
-            if ($request->hasFile('foto')) {
-                $data['foto'] = $request->file('foto')->store('barang', 'public');
+            if ($request->hasFile('image_path')) {
+                $data['image_path'] = ImageService::cropAndSave($request->file('image_path'), 'barang');
             }
 
             Barang::create($data);
@@ -317,28 +287,15 @@ class AdminController extends Controller
         }
     }
 
-    public function updateBarang(Request $request, int $id): \Illuminate\Http\RedirectResponse
+    public function updateBarang(UpdateBarangRequest $request, int $id): \Illuminate\Http\RedirectResponse
     {
-        $request->validate([
-            'nama'           => 'required|string|max:255',
-            'kode'           => 'required|string|max:50|unique:barangs,kode,' . $id,
-            'stok_total'     => 'required|integer|min:0',
-            'stok_tersedia'  => 'required|integer|min:0',
-            'kategori'       => 'nullable|string|max:100',
-            'deskripsi'      => 'nullable|string',
-            'status'         => 'required|in:tersedia,tidak_tersedia',
-            'foto'           => 'nullable|image|mimes:jpg,jpeg,png,webp|max:2048',
-        ]);
-
         try {
             $barang = Barang::findOrFail($id);
             $data = $request->only(['nama', 'kode', 'stok_total', 'stok_tersedia', 'kategori', 'deskripsi', 'status']);
 
-            if ($request->hasFile('foto')) {
-                if ($barang->foto) {
-                    Storage::disk('public')->delete($barang->foto);
-                }
-                $data['foto'] = $request->file('foto')->store('barang', 'public');
+            if ($request->hasFile('image_path')) {
+                ImageService::deleteOldImage($barang->image_path);
+                $data['image_path'] = ImageService::cropAndSave($request->file('image_path'), 'barang');
             }
 
             $barang->update($data);
@@ -354,9 +311,7 @@ class AdminController extends Controller
         try {
             $barang = Barang::findOrFail($id);
 
-            if ($barang->foto) {
-                Storage::disk('public')->delete($barang->foto);
-            }
+            ImageService::deleteOldImage($barang->image_path);
 
             $barang->delete();
 

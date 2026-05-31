@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\StoreCalendarRequest;
 use App\Models\Calendar;
+use App\Services\ImageService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Barryvdh\DomPDF\Facade\Pdf;
@@ -33,14 +34,32 @@ class CalendarController extends Controller
             return redirect()->back()->with('error', 'Tidak ada kalender akademik aktif.');
         }
 
-        $absolutePath = storage_path('app/public/' . $calendar->image_path);
+        $cleanPath = ltrim($calendar->image_path, '/');
+
+        if (str_starts_with($cleanPath, 'image/')) {
+            $absolutePath = public_path($cleanPath);
+        } else {
+            if (str_starts_with($cleanPath, 'storage/')) {
+                $cleanPath = substr($cleanPath, 8);
+            }
+            $absolutePath = storage_path('app/public/' . $cleanPath);
+        }
 
         if (!file_exists($absolutePath)) {
-            $publicPath = public_path('storage/' . $calendar->image_path);
-            if (file_exists($publicPath)) {
-                $absolutePath = $publicPath;
+            $fallbackPath = public_path('storage/' . $cleanPath);
+            if (file_exists($fallbackPath)) {
+                $absolutePath = $fallbackPath;
             } else {
-                return redirect()->back()->with('error', 'Berkas kalender tidak ditemukan di server.');
+                if (str_starts_with($cleanPath, 'public/')) {
+                    $fallbackPath2 = storage_path('app/' . $cleanPath);
+                    if (file_exists($fallbackPath2)) {
+                        $absolutePath = $fallbackPath2;
+                    } else {
+                        return redirect()->back()->with('error', 'Berkas kalender tidak ditemukan di server.');
+                    }
+                } else {
+                    return redirect()->back()->with('error', 'Berkas kalender tidak ditemukan di server.');
+                }
             }
         }
 
@@ -74,9 +93,11 @@ class CalendarController extends Controller
      */
     public function store(StoreCalendarRequest $request): \Illuminate\Http\RedirectResponse
     {
-
         try {
-            $path = $request->file('image')->store('calendars', 'public');
+            $path = null;
+            if ($request->hasFile('image_path')) {
+                $path = ImageService::cropAndSave($request->file('image_path'), 'calendars');
+            }
 
             Calendar::create([
                 'image_path' => $path,
@@ -117,10 +138,7 @@ class CalendarController extends Controller
         try {
             $calendar = Calendar::findOrFail($id);
 
-            // Hapus file gambar dari storage
-            if (Storage::disk('public')->exists($calendar->image_path)) {
-                Storage::disk('public')->delete($calendar->image_path);
-            }
+            ImageService::deleteOldImage($calendar->image_path);
 
             $calendar->delete();
 
