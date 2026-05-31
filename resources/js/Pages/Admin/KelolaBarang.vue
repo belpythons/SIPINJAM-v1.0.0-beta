@@ -12,7 +12,7 @@ const showForm = ref(false);
 const editingId = ref(null);
 
 const form = useForm({
-    nama: '', kode: '', stok_total: '', stok_tersedia: '', kategori: '', deskripsi: '', status: 'tersedia',
+    nama: '', kode: '', stok_total: '', stok_tersedia: '', kategori: '', deskripsi: '', status: 'tersedia', image_path: null,
 });
 
 const openCreate = () => { editingId.value = null; form.reset(); showForm.value = true; };
@@ -21,13 +21,17 @@ const openEdit = (b) => {
     form.nama = b.nama; form.kode = b.kode; form.stok_total = b.stok_total;
     form.stok_tersedia = b.stok_tersedia; form.kategori = b.kategori || '';
     form.deskripsi = b.deskripsi || ''; form.status = b.status;
+    form.image_path = null;
     showForm.value = true;
 };
 const close = () => { showForm.value = false; form.reset(); editingId.value = null; };
 
 const submit = () => {
     if (editingId.value) {
-        form.put(`/admin/kelola-barang/${editingId.value}`, { onSuccess: close, preserveScroll: true });
+        form.transform((data) => ({
+            ...data,
+            _method: 'put',
+        })).post(`/admin/kelola-barang/${editingId.value}`, { onSuccess: close, preserveScroll: true });
     } else {
         form.post('/admin/kelola-barang', { onSuccess: close, preserveScroll: true });
     }
@@ -63,6 +67,11 @@ const destroy = (id) => { if (confirm('Hapus barang ini?')) router.delete(`/admi
                     <select v-model="form.status" class="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500">
                         <option value="tersedia">Tersedia</option><option value="tidak_tersedia">Tidak Tersedia</option>
                     </select>
+                </div>
+                <div>
+                    <label class="text-xs font-semibold text-slate-600">Unggah Foto Baru</label>
+                    <input type="file" @change="(e) => form.image_path = e.target.files[0]" class="mt-1 w-full rounded-lg border border-slate-200 px-3 py-1.5 text-sm focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 bg-white" accept="image/png, image/jpeg, image/jpg" />
+                    <p v-if="form.errors.image_path" class="text-xs text-red-500 mt-1">{{ form.errors.image_path }}</p>
                 </div>
                 <div class="md:col-span-2"><label class="text-xs font-semibold text-slate-600">Deskripsi</label><textarea v-model="form.deskripsi" rows="2" class="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 resize-none" /></div>
                 <div class="flex items-end">

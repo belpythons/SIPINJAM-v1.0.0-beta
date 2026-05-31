@@ -55,10 +55,10 @@ const isRuangan = computed(() => form.tipe_peminjaman === 'ruangan');
 
 const selectedAssetName = computed(() => {
   if (isRuangan.value && form.ruangan_id) {
-    return props.ruangans.find(r => r.id === form.ruangan_id)?.nama || '';
+    return props.ruangans.find(r => String(r.id) === String(form.ruangan_id))?.nama || '';
   }
   if (!isRuangan.value && form.barang_id) {
-    return props.barangs.find(b => b.id === form.barang_id)?.nama || '';
+    return props.barangs.find(b => String(b.id) === String(form.barang_id))?.nama || '';
   }
   return '';
 });
@@ -111,8 +111,8 @@ watch(() => props.open, (isOpen) => {
     form.clearErrors();
     if (props.asset) {
       form.tipe_peminjaman = props.asset.tipe;
-      if (props.asset.tipe === 'barang') form.barang_id = props.asset.id;
-      else form.ruangan_id = props.asset.id;
+      if (props.asset.tipe === 'barang') form.barang_id = String(props.asset.id);
+      else form.ruangan_id = String(props.asset.id);
     }
     if (props.prefillDates) {
       form.tanggal_mulai = props.prefillDates.start;
@@ -272,7 +272,7 @@ const stepLabels = ['Jadwal', 'Aset', 'Detail'];
               <SelectContent>
                 <SelectGroup>
                   <SelectLabel>Daftar Ruangan</SelectLabel>
-                  <SelectItem v-for="r in ruangans" :key="r.id" :value="r.id">
+                  <SelectItem v-for="r in ruangans" :key="r.id" :value="String(r.id)">
                     {{ r.nama }} — {{ r.lokasi || 'Kampus' }}
                   </SelectItem>
                 </SelectGroup>
@@ -286,7 +286,7 @@ const stepLabels = ['Jadwal', 'Aset', 'Detail'];
               <SelectContent>
                 <SelectGroup>
                   <SelectLabel>Daftar Barang</SelectLabel>
-                  <SelectItem v-for="b in barangs" :key="b.id" :value="b.id">
+                  <SelectItem v-for="b in barangs" :key="b.id" :value="String(b.id)">
                     {{ b.nama }} (Stok: {{ b.stok_tersedia }})
                   </SelectItem>
                 </SelectGroup>
