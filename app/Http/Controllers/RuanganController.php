@@ -12,7 +12,7 @@ class RuanganController extends Controller
     {
         $ruangans = Ruangan::orderBy('lokasi')
             ->orderBy('nama')
-            ->get(['id', 'nama', 'kode', 'kapasitas', 'lokasi', 'deskripsi', 'status']);
+            ->get(['id', 'nama', 'kode', 'kapasitas', 'lokasi', 'deskripsi', 'status', 'image_path']);
 
         return Inertia::render('User/Ruangan', [
             'ruangans' => $ruangans,
