@@ -8,320 +8,299 @@ use App\Models\Ruangan;
 use App\Models\User;
 use Illuminate\Database\Seeder;
 use Carbon\Carbon;
+use Carbon\CarbonPeriod;
 
 class PeminjamanSeeder extends Seeder
 {
     public function run(): void
     {
-        // 1. Truncate / Hapus tabel peminjaman
+        // 1. Truncate existing bookings
         Peminjaman::query()->delete();
 
-        // 2. Ambil Akun Mahasiswa spesifik
-        $zulfa = User::where('email', '202312017@stitek.ac.id')->firstOrFail();
-        $miya = User::where('email', '202312023@stitek.ac.id')->firstOrFail();
-        $taliya = User::where('email', '202312030@gmail.com')->firstOrFail();
-        $salsa = User::where('email', '202312016@stitek.ac.id')->firstOrFail();
-        $elin = User::where('email', '202312028@stitek.ac.id')->firstOrFail();
-        $brama = User::where('email', '202312066@stitek.ac.id')->firstOrFail();
+        // 2. Fetch Master Data
+        $users = User::where('role', 'user')->where('is_blocked', false)->get();
+        $blockedRoomUser = User::where('email', '202312010@stitek.ac.id')->firstOrFail();
+        $blockedItemUser = User::where('email', '202312020@stitek.ac.id')->firstOrFail();
 
-        // 3. Ambil Ruangan
-        $ruang2C = Ruangan::where('nama', 'Ruang Kelas 2C')->firstOrFail();
-        $ruang3B = Ruangan::where('nama', 'Ruang Kelas 3B')->firstOrFail();
-        $ruang3C = Ruangan::where('nama', 'Ruang Kelas 3C')->firstOrFail();
-        $ruang4A = Ruangan::where('nama', 'Ruang Kelas 4A')->firstOrFail();
-        $ruang4B = Ruangan::where('nama', 'Ruang Kelas 4B')->firstOrFail();
-        $labArsikom = Ruangan::where('nama', 'Lab Arsikom')->firstOrFail();
+        $ruangs = Ruangan::all();
+        $barangs = Barang::all();
+
+        $proyektor = Barang::where('nama', 'Proyektor')->firstOrFail();
         $labMultimedia = Ruangan::where('nama', 'Lab Multimedia')->firstOrFail();
 
-        // 4. Ambil Barang
-        $proyektor = Barang::where('nama', 'Proyektor')->firstOrFail();
-        $smartTV = Barang::where('nama', 'Smart TV')->firstOrFail();
-        $soundSystem = Barang::where('nama', 'Sound System')->firstOrFail();
-        $microphone = Barang::where('nama', 'Microphone')->firstOrFail();
-        $terminalKabel = Barang::where('nama', 'Terminal Kabel')->firstOrFail();
-        $mejaTamu = Barang::where('nama', 'Meja Tamu')->firstOrFail();
-        $sofaBesar = Barang::where('nama', 'Sofa Besar')->firstOrFail();
-        $podium = Barang::where('nama', 'Podium')->firstOrFail();
+        $today = Carbon::today();
 
-        // ─────────────── BULAN LALU (APRIL) ───────────────
-        $lastMonth = Carbon::now()->subMonth();
+        // ── 3. Seed Specific Target States for Today ─────────────────
 
-        // 1. Zulfa: Ruang 3C (Selesai)
+        // Target A: Lab Multimedia active "sedang_dipinjam" spanning the entirety of today
         Peminjaman::create([
-            'user_id'         => $zulfa->id,
-            'tipe'            => 'ruangan',
-            'ruangan_id'      => $ruang3C->id,
-            'nama_item'       => $ruang3C->nama,
-            'tanggal'         => $lastMonth->copy()->setDate($lastMonth->year, 4, 5)->format('Y-m-d'),
-            'tanggal_mulai'   => $lastMonth->copy()->setDate($lastMonth->year, 4, 5)->format('Y-m-d'),
-            'tanggal_selesai' => $lastMonth->copy()->setDate($lastMonth->year, 4, 5)->format('Y-m-d'),
-            'jam_mulai'       => '08:00',
-            'jam_selesai'     => '12:00',
-            'keterangan'      => 'Rapat Kepanitiaan Bulan Bahasa',
-            'status'          => Peminjaman::STATUS_DONE,
-            'nomor_surat'     => Peminjaman::generateNomorSurat(),
-            'approved_at'     => $lastMonth->copy()->setDate($lastMonth->year, 4, 4),
-            'completed_at'    => $lastMonth->copy()->setDate($lastMonth->year, 4, 5)->setTime(12, 0),
-        ]);
-
-        // 2. Salsa: Terminal Kabel (Selesai)
-        Peminjaman::create([
-            'user_id'         => $salsa->id,
-            'tipe'            => 'barang',
-            'barang_id'       => $terminalKabel->id,
-            'nama_item'       => $terminalKabel->nama,
-            'tanggal'         => $lastMonth->copy()->setDate($lastMonth->year, 4, 10)->format('Y-m-d'),
-            'tanggal_mulai'   => $lastMonth->copy()->setDate($lastMonth->year, 4, 10)->format('Y-m-d'),
-            'tanggal_selesai' => $lastMonth->copy()->setDate($lastMonth->year, 4, 10)->format('Y-m-d'),
-            'jam_mulai'       => '13:00',
-            'jam_selesai'     => '17:00',
-            'keterangan'      => 'Kebutuhan Listrik Stand Pameran UKM',
-            'status'          => Peminjaman::STATUS_DONE,
-            'nomor_surat'     => Peminjaman::generateNomorSurat(),
-            'approved_at'     => $lastMonth->copy()->setDate($lastMonth->year, 4, 9),
-            'completed_at'    => $lastMonth->copy()->setDate($lastMonth->year, 4, 10)->setTime(17, 0),
-        ]);
-
-        // 3. Elin: Sound System (Selesai)
-        Peminjaman::create([
-            'user_id'         => $elin->id,
-            'tipe'            => 'barang',
-            'barang_id'       => $soundSystem->id,
-            'nama_item'       => $soundSystem->nama,
-            'tanggal'         => $lastMonth->copy()->setDate($lastMonth->year, 4, 15)->format('Y-m-d'),
-            'tanggal_mulai'   => $lastMonth->copy()->setDate($lastMonth->year, 4, 15)->format('Y-m-d'),
-            'tanggal_selesai' => $lastMonth->copy()->setDate($lastMonth->year, 4, 15)->format('Y-m-d'),
-            'jam_mulai'       => '08:00',
-            'jam_selesai'     => '16:00',
-            'keterangan'      => 'Seminar Regional Pemberdayaan Pemuda',
-            'status'          => Peminjaman::STATUS_DONE,
-            'nomor_surat'     => Peminjaman::generateNomorSurat(),
-            'approved_at'     => $lastMonth->copy()->setDate($lastMonth->year, 4, 14),
-            'completed_at'    => $lastMonth->copy()->setDate($lastMonth->year, 4, 15)->setTime(16, 0),
-        ]);
-
-        // 4. Brama: Microphone (Selesai)
-        Peminjaman::create([
-            'user_id'         => $brama->id,
-            'tipe'            => 'barang',
-            'barang_id'       => $microphone->id,
-            'nama_item'       => $microphone->nama,
-            'tanggal'         => $lastMonth->copy()->setDate($lastMonth->year, 4, 20)->format('Y-m-d'),
-            'tanggal_mulai'   => $lastMonth->copy()->setDate($lastMonth->year, 4, 20)->format('Y-m-d'),
-            'tanggal_selesai' => $lastMonth->copy()->setDate($lastMonth->year, 4, 20)->format('Y-m-d'),
-            'jam_mulai'       => '09:00',
-            'jam_selesai'     => '12:00',
-            'keterangan'      => 'Debat Calon Ketua Himpunan Mahasiswa',
-            'status'          => Peminjaman::STATUS_DONE,
-            'nomor_surat'     => Peminjaman::generateNomorSurat(),
-            'approved_at'     => $lastMonth->copy()->setDate($lastMonth->year, 4, 19),
-            'completed_at'    => $lastMonth->copy()->setDate($lastMonth->year, 4, 20)->setTime(12, 0),
-        ]);
-
-        // 5. Miya (Pemicu Blokir): Lab Arsikom (Selesai)
-        Peminjaman::create([
-            'user_id'         => $miya->id,
-            'tipe'            => 'ruangan',
-            'ruangan_id'      => $labArsikom->id,
-            'nama_item'       => $labArsikom->nama,
-            'tanggal'         => $lastMonth->copy()->setDate($lastMonth->year, 4, 25)->format('Y-m-d'),
-            'tanggal_mulai'   => $lastMonth->copy()->setDate($lastMonth->year, 4, 25)->format('Y-m-d'),
-            'tanggal_selesai' => $lastMonth->copy()->setDate($lastMonth->year, 4, 25)->format('Y-m-d'),
-            'jam_mulai'       => '13:00',
-            'jam_selesai'     => '16:00',
-            'keterangan'      => 'Praktikum Jaringan',
-            'status'          => Peminjaman::STATUS_DONE,
-            'nomor_surat'     => Peminjaman::generateNomorSurat(),
-            'approved_at'     => $lastMonth->copy()->setDate($lastMonth->year, 4, 24),
-            'completed_at'    => $lastMonth->copy()->setDate($lastMonth->year, 4, 25)->setTime(16, 0),
-        ]);
-
-        // ─────────────── BULAN INI (MEI) ───────────────
-        $now = Carbon::now();
-
-        // 6. Ruangan Terpakai HARI INI (Absolut): Brama (Ruang 4A, Sedang Dipinjam)
-        Peminjaman::create([
-            'user_id'         => $brama->id,
-            'tipe'            => 'ruangan',
-            'ruangan_id'      => $ruang4A->id,
-            'nama_item'       => $ruang4A->nama,
-            'tanggal'         => $now->format('Y-m-d'),
-            'tanggal_mulai'   => $now->format('Y-m-d'),
-            'tanggal_selesai' => $now->format('Y-m-d'),
-            'jam_mulai'       => '00:00',
-            'jam_selesai'     => '23:59',
-            'keterangan'      => 'Pameran Karya Seni Digital Mahasiswa Akhir',
-            'status'          => Peminjaman::STATUS_APPROVED,
-            'nomor_surat'     => Peminjaman::generateNomorSurat(),
-            'approved_at'     => $now->copy()->subDay(),
-        ]);
-
-        // 7. Salsa: Smart TV (Sedang Dipinjam, Hari ini)
-        Peminjaman::create([
-            'user_id'         => $salsa->id,
-            'tipe'            => 'barang',
-            'barang_id'       => $smartTV->id,
-            'nama_item'       => $smartTV->nama,
-            'tanggal'         => $now->format('Y-m-d'),
-            'tanggal_mulai'   => $now->format('Y-m-d'),
-            'tanggal_selesai' => $now->format('Y-m-d'),
-            'jam_mulai'       => '08:00',
-            'jam_selesai'     => '12:00',
-            'keterangan'      => 'Presentasi Projek Akhir Mata Kuliah Multimedia',
-            'status'          => Peminjaman::STATUS_APPROVED,
-            'nomor_surat'     => Peminjaman::generateNomorSurat(),
-            'approved_at'     => $now->copy()->subHours(6),
-        ]);
-
-        // 8. Elin: Smart TV (Sedang Dipinjam, Hari ini)
-        Peminjaman::create([
-            'user_id'         => $elin->id,
-            'tipe'            => 'barang',
-            'barang_id'       => $smartTV->id,
-            'nama_item'       => $smartTV->nama,
-            'tanggal'         => $now->format('Y-m-d'),
-            'tanggal_mulai'   => $now->format('Y-m-d'),
-            'tanggal_selesai' => $now->format('Y-m-d'),
-            'jam_mulai'       => '13:00',
-            'jam_selesai'     => '17:00',
-            'keterangan'      => 'Sidang Kelompok Skripsi Sistem Informasi',
-            'status'          => Peminjaman::STATUS_APPROVED,
-            'nomor_surat'     => Peminjaman::generateNomorSurat(),
-            'approved_at'     => $now->copy()->subHours(2),
-        ]);
-
-        // Update stok_tersedia menjadi 0 untuk mendemonstrasikan barang habis
-        $smartTV->update(['stok_tersedia' => 0]);
-
-        // 9. Taliya (Overdue): Proyektor (Sedang Dipinjam)
-        Peminjaman::create([
-            'user_id'         => $taliya->id,
-            'tipe'            => 'barang',
-            'barang_id'       => $proyektor->id,
-            'nama_item'       => $proyektor->nama,
-            'tanggal'         => $now->copy()->subDays(10)->format('Y-m-d'),
-            'tanggal_mulai'   => $now->copy()->subDays(10)->format('Y-m-d'),
-            'tanggal_selesai' => $now->copy()->subDays(7)->format('Y-m-d'),
-            'jam_mulai'       => '08:00',
-            'jam_selesai'     => '17:00',
-            'keterangan'      => 'Kegiatan Pameran UKM Kreatif STITEK',
-            'status'          => Peminjaman::STATUS_APPROVED,
-            'nomor_surat'     => Peminjaman::generateNomorSurat(),
-            'approved_at'     => $now->copy()->subDays(11),
-        ]);
-
-        // 10. Zulfa: Ruang 3B (Selesai, 3 hari lalu)
-        Peminjaman::create([
-            'user_id'         => $zulfa->id,
-            'tipe'            => 'ruangan',
-            'ruangan_id'      => $ruang3B->id,
-            'nama_item'       => $ruang3B->nama,
-            'tanggal'         => $now->copy()->subDays(3)->format('Y-m-d'),
-            'tanggal_mulai'   => $now->copy()->subDays(3)->format('Y-m-d'),
-            'tanggal_selesai' => $now->copy()->subDays(3)->format('Y-m-d'),
-            'jam_mulai'       => '09:00',
-            'jam_selesai'     => '12:00',
-            'keterangan'      => 'Perkuliahan Pengganti Matematika Diskrit',
-            'status'          => Peminjaman::STATUS_DONE,
-            'nomor_surat'     => Peminjaman::generateNomorSurat(),
-            'approved_at'     => $now->copy()->subDays(4),
-            'completed_at'    => $now->copy()->subDays(3)->setTime(12, 0),
-        ]);
-
-        // 11. Salsa: Meja Tamu (Selesai, 1 minggu lalu)
-        Peminjaman::create([
-            'user_id'         => $salsa->id,
-            'tipe'            => 'barang',
-            'barang_id'       => $mejaTamu->id,
-            'nama_item'       => $mejaTamu->nama,
-            'tanggal'         => $now->copy()->subWeeks(1)->format('Y-m-d'),
-            'tanggal_mulai'   => $now->copy()->subWeeks(1)->format('Y-m-d'),
-            'tanggal_selesai' => $now->copy()->subWeeks(1)->format('Y-m-d'),
-            'jam_mulai'       => '08:00',
-            'jam_selesai'     => '15:00',
-            'keterangan'      => 'Rapat Kerja Himpunan Mahasiswa Informatika',
-            'status'          => Peminjaman::STATUS_DONE,
-            'nomor_surat'     => Peminjaman::generateNomorSurat(),
-            'approved_at'     => $now->copy()->subWeeks(1)->subDay(),
-            'completed_at'    => $now->copy()->subWeeks(1)->setTime(15, 0),
-        ]);
-
-        // 12. Brama: Podium (Menunggu, untuk 2 hari ke depan)
-        Peminjaman::create([
-            'user_id'         => $brama->id,
-            'tipe'            => 'barang',
-            'barang_id'       => $podium->id,
-            'nama_item'       => $podium->nama,
-            'tanggal'         => $now->copy()->addDays(2)->format('Y-m-d'),
-            'tanggal_mulai'   => $now->copy()->addDays(2)->format('Y-m-d'),
-            'tanggal_selesai' => $now->copy()->addDays(2)->format('Y-m-d'),
-            'jam_mulai'       => '08:00',
-            'jam_selesai'     => '12:00',
-            'keterangan'      => 'Kebutuhan Lomba Pidato Bahasa Inggris STITEK',
-            'status'          => Peminjaman::STATUS_PENDING,
-        ]);
-
-        // 13. Elin: Lab Multimedia (Ditolak)
-        Peminjaman::create([
-            'user_id'         => $elin->id,
+            'user_id'         => $users->random()->id,
             'tipe'            => 'ruangan',
             'ruangan_id'      => $labMultimedia->id,
             'nama_item'       => $labMultimedia->nama,
-            'tanggal'         => $now->copy()->addDays(1)->format('Y-m-d'),
-            'tanggal_mulai'   => $now->copy()->addDays(1)->format('Y-m-d'),
-            'tanggal_selesai' => $now->copy()->addDays(1)->format('Y-m-d'),
-            'jam_mulai'       => '08:00',
-            'jam_selesai'     => '16:00',
-            'keterangan'      => 'Ditolak Admin: Ruangan sedang dipakai untuk ujian sertifikasi.',
-            'status'          => Peminjaman::STATUS_REJECTED,
+            'jumlah'          => 1,
+            'tanggal'         => $today->toDateString(),
+            'tanggal_mulai'   => $today->toDateString(),
+            'tanggal_selesai' => $today->toDateString(),
+            'jam_mulai'       => '00:00',
+            'jam_selesai'     => '23:59',
+            'keterangan'      => 'Penyelenggaraan Expo Riset dan Karya Kreatif Mahasiswa',
+            'status'          => Peminjaman::STATUS_APPROVED,
+            'nomor_surat'     => Peminjaman::generateNomorSurat(),
+            'approved_at'     => $today->copy()->subDay()->setTime(9, 0),
         ]);
 
-        // ─────────────── BULAN DEPAN (JUNI) ───────────────
-        $nextMonth = Carbon::now()->addMonth();
+        // Target B: Proyektor fully booked today (sum of jumlah = 4)
+        $proyektorBookings = [
+            [
+                'user'   => $users->get(0) ?? $users->random(),
+                'jumlah' => 1,
+                'start'  => '08:00',
+                'end'    => '12:00',
+            ],
+            [
+                'user'   => $users->get(1) ?? $users->random(),
+                'jumlah' => 1,
+                'start'  => '09:00',
+                'end'    => '13:00',
+            ],
+            [
+                'user'   => $users->get(2) ?? $users->random(),
+                'jumlah' => 2,
+                'start'  => '10:00',
+                'end'    => '14:00',
+            ],
+        ];
 
-        // 14. Zulfa: Ruang 2C (Menunggu, minggu depan)
+        foreach ($proyektorBookings as $pb) {
+            Peminjaman::create([
+                'user_id'         => $pb['user']->id,
+                'tipe'            => 'barang',
+                'barang_id'       => $proyektor->id,
+                'nama_item'       => $proyektor->nama,
+                'jumlah'          => $pb['jumlah'],
+                'tanggal'         => $today->toDateString(),
+                'tanggal_mulai'   => $today->toDateString(),
+                'tanggal_selesai' => $today->toDateString(),
+                'jam_mulai'       => $pb['start'],
+                'jam_selesai'     => $pb['end'],
+                'keterangan'      => 'Kebutuhan presentasi sidang kelompok dan praktikum terintegrasi',
+                'status'          => Peminjaman::STATUS_APPROVED,
+                'nomor_surat'     => Peminjaman::generateNomorSurat(),
+                'approved_at'     => $today->copy()->subDay()->setTime(10, 0),
+            ]);
+        }
+
+        // ── 4. Seed Blocked User History ─────────────────────────────
+
+        // User 10 (Room violation in Lab Multimedia)
         Peminjaman::create([
-            'user_id'         => $zulfa->id,
+            'user_id'         => $blockedRoomUser->id,
             'tipe'            => 'ruangan',
-            'ruangan_id'      => $ruang2C->id,
-            'nama_item'       => $ruang2C->nama,
-            'tanggal'         => $now->copy()->addWeek()->format('Y-m-d'),
-            'tanggal_mulai'   => $now->copy()->addWeek()->format('Y-m-d'),
-            'tanggal_selesai' => $now->copy()->addWeek()->format('Y-m-d'),
-            'jam_mulai'       => '09:00',
-            'jam_selesai'     => '13:00',
-            'keterangan'      => 'Kelas Tambahan Kalkulus',
-            'status'          => Peminjaman::STATUS_PENDING,
+            'ruangan_id'      => $labMultimedia->id,
+            'nama_item'       => $labMultimedia->nama,
+            'jumlah'          => 1,
+            'tanggal'         => $today->copy()->subDays(5)->toDateString(),
+            'tanggal_mulai'   => $today->copy()->subDays(5)->toDateString(),
+            'tanggal_selesai' => $today->copy()->subDays(5)->toDateString(),
+            'jam_mulai'       => '08:00',
+            'jam_selesai'     => '12:00',
+            'keterangan'      => 'Praktikum Desain Grafis Mandiri - Menyebabkan pelanggaran kebersihan/kerusakan.',
+            'status'          => Peminjaman::STATUS_DONE,
+            'nomor_surat'     => Peminjaman::generateNomorSurat(),
+            'approved_at'     => $today->copy()->subDays(6)->setTime(8, 30),
+            'completed_at'    => $today->copy()->subDays(5)->setTime(12, 0),
         ]);
 
-        // 15. Salsa: Sofa Besar (Menunggu, 2 minggu lagi)
+        // User 20 (Item violation - Proyektor returned 7 days late)
         Peminjaman::create([
-            'user_id'         => $salsa->id,
+            'user_id'         => $blockedItemUser->id,
             'tipe'            => 'barang',
-            'barang_id'       => $sofaBesar->id,
-            'nama_item'       => $sofaBesar->nama,
-            'tanggal'         => $now->copy()->addWeeks(2)->format('Y-m-d'),
-            'tanggal_mulai'   => $now->copy()->addWeeks(2)->format('Y-m-d'),
-            'tanggal_selesai' => $now->copy()->addWeeks(2)->format('Y-m-d'),
+            'barang_id'       => $proyektor->id,
+            'nama_item'       => $proyektor->nama,
+            'jumlah'          => 1,
+            'tanggal'         => $today->copy()->subDays(10)->toDateString(),
+            'tanggal_mulai'   => $today->copy()->subDays(10)->toDateString(),
+            'tanggal_selesai' => $today->copy()->subDays(8)->toDateString(),
             'jam_mulai'       => '08:00',
             'jam_selesai'     => '17:00',
-            'keterangan'      => 'Kebutuhan Ruang Transit Pembicara Talkshow Nasional',
-            'status'          => Peminjaman::STATUS_PENDING,
+            'keterangan'      => 'Peminjaman Proyektor untuk Lomba Eksternal (Dikembalikan terlambat 7 hari).',
+            'status'          => Peminjaman::STATUS_DONE,
+            'nomor_surat'     => Peminjaman::generateNomorSurat(),
+            'approved_at'     => $today->copy()->subDays(11)->setTime(14, 0),
+            'completed_at'    => $today->copy()->subDays(1)->setTime(17, 0), // 8th to 1st = 7 days late!
         ]);
 
-        // 16. Elin: Ruang 4B (Menunggu, 3 minggu lagi)
-        Peminjaman::create([
-            'user_id'         => $elin->id,
-            'tipe'            => 'ruangan',
-            'ruangan_id'      => $ruang4B->id,
-            'nama_item'       => $ruang4B->nama,
-            'tanggal'         => $now->copy()->addWeeks(3)->format('Y-m-d'),
-            'tanggal_mulai'   => $now->copy()->addWeeks(3)->format('Y-m-d'),
-            'tanggal_selesai' => $now->copy()->addWeeks(3)->format('Y-m-d'),
-            'jam_mulai'       => '10:00',
-            'jam_selesai'     => '14:00',
-            'keterangan'      => 'Diskusi Panel Antar Organisasi Kampus',
-            'status'          => Peminjaman::STATUS_PENDING,
-        ]);
+        // ── 5. Generate Massive Booking History ────────────────────────
+
+        $startDate = $today->copy()->subMonths(2);
+        $endDate = $today->copy()->addMonth();
+
+        $period = CarbonPeriod::create($startDate, $endDate);
+
+        // Keep track of room bookings by date to prevent overlap when seeding
+        $roomBookingsPerDay = [];
+
+        foreach ($period as $date) {
+            $dateString = $date->toDateString();
+
+            // Skip today to prevent conflicts with the explicit targets
+            if ($dateString === $today->toDateString()) {
+                continue;
+            }
+
+            // Skip dates of blocked histories for those specific users
+            if ($dateString === $today->copy()->subDays(5)->toDateString() ||
+                $dateString === $today->copy()->subDays(10)->toDateString()) {
+                continue;
+            }
+
+            // Seed 1-2 random bookings for this day
+            $numBookings = rand(1, 2);
+
+            for ($k = 0; $k < $numBookings; $k++) {
+                $user = $users->random();
+                $type = rand(0, 1) === 0 ? 'ruangan' : 'barang';
+
+                if ($type === 'ruangan' && $ruangs->count() > 0) {
+                    $ruang = $ruangs->random();
+
+                    $duration = rand(0, 7);
+                    $tanggalSelesai = $date->copy()->addDays($duration);
+                    $tanggalSelesaiString = $tanggalSelesai->toDateString();
+
+                    // Check for overlap within the range of dates to avoid room conflicts
+                    $hasConflict = false;
+                    $current = $date->copy();
+                    while ($current->lte($tanggalSelesai)) {
+                        $currString = $current->toDateString();
+                        if ($currString === $today->toDateString() ||
+                            $currString === $today->copy()->subDays(5)->toDateString() ||
+                            $currString === $today->copy()->subDays(10)->toDateString() ||
+                            isset($roomBookingsPerDay[$currString][$ruang->id])) {
+                            $hasConflict = true;
+                            break;
+                        }
+                        $current->addDay();
+                    }
+
+                    if ($hasConflict) {
+                        continue; // Skip overlap
+                    }
+
+                    // Mark all dates in range as booked
+                    $current = $date->copy();
+                    while ($current->lte($tanggalSelesai)) {
+                        $roomBookingsPerDay[$current->toDateString()][$ruang->id] = true;
+                        $current->addDay();
+                    }
+
+                    $isPast = $tanggalSelesai->lt($today);
+                    $isActive = $date->lt($today) && $tanggalSelesai->gte($today);
+
+                    if ($isPast) {
+                        $status = rand(1, 10) <= 8 ? Peminjaman::STATUS_DONE : Peminjaman::STATUS_REJECTED;
+                    } elseif ($isActive) {
+                        $status = Peminjaman::STATUS_APPROVED;
+                    } else {
+                        $status = Peminjaman::STATUS_PENDING;
+                    }
+
+                    $approvedAt = null;
+                    $completedAt = null;
+                    if ($status === Peminjaman::STATUS_DONE) {
+                        $approvedAt = $date->copy()->subDay()->setTime(9, 0);
+                        $completedAt = $tanggalSelesai->copy()->setTime(12, 0);
+                    } elseif ($status === Peminjaman::STATUS_APPROVED) {
+                        $approvedAt = $date->copy()->subDay()->setTime(9, 0);
+                    }
+
+                    Peminjaman::create([
+                        'user_id'         => $user->id,
+                        'tipe'            => 'ruangan',
+                        'ruangan_id'      => $ruang->id,
+                        'nama_item'       => $ruang->nama,
+                        'jumlah'          => 1,
+                        'tanggal'         => $dateString,
+                        'tanggal_mulai'   => $dateString,
+                        'tanggal_selesai' => $tanggalSelesaiString,
+                        'jam_mulai'       => '08:00',
+                        'jam_selesai'     => '12:00',
+                        'keterangan'      => 'Diskusi Kelompok dan Belajar Bersama Mahasiswa',
+                        'status'          => $status,
+                        'nomor_surat'     => in_array($status, [Peminjaman::STATUS_DONE, Peminjaman::STATUS_APPROVED]) ? Peminjaman::generateNomorSurat() : null,
+                        'approved_at'     => $approvedAt,
+                        'completed_at'    => $completedAt,
+                    ]);
+                } else if ($type === 'barang' && $barangs->count() > 0) {
+                    $barang = $barangs->random();
+
+                    $duration = rand(0, 7);
+                    $tanggalSelesai = $date->copy()->addDays($duration);
+                    $tanggalSelesaiString = $tanggalSelesai->toDateString();
+
+                    // Skip Proyektor on today (we already handled it)
+                    if ($barang->nama === 'Proyektor' && 
+                        ($dateString === $today->toDateString() || $tanggalSelesaiString === $today->toDateString())) {
+                        continue;
+                    }
+
+                    $isPast = $tanggalSelesai->lt($today);
+                    $isActive = $date->lt($today) && $tanggalSelesai->gte($today);
+
+                    if ($isPast) {
+                        $status = rand(1, 10) <= 9 ? Peminjaman::STATUS_DONE : Peminjaman::STATUS_REJECTED;
+                    } elseif ($isActive) {
+                        $status = Peminjaman::STATUS_APPROVED;
+                    } else {
+                        $status = Peminjaman::STATUS_PENDING;
+                    }
+
+                    $jumlah = rand(1, min(2, $barang->stok_total));
+
+                    $approvedAt = null;
+                    $completedAt = null;
+                    if ($status === Peminjaman::STATUS_DONE) {
+                        $approvedAt = $date->copy()->subDay()->setTime(10, 0);
+                        $completedAt = $tanggalSelesai->copy()->setTime(17, 0);
+                    } elseif ($status === Peminjaman::STATUS_APPROVED) {
+                        $approvedAt = $date->copy()->subDay()->setTime(10, 0);
+                    }
+
+                    Peminjaman::create([
+                        'user_id'         => $user->id,
+                        'tipe'            => 'barang',
+                        'barang_id'       => $barang->id,
+                        'nama_item'       => $barang->nama,
+                        'jumlah'          => $jumlah,
+                        'tanggal'         => $dateString,
+                        'tanggal_mulai'   => $dateString,
+                        'tanggal_selesai' => $tanggalSelesaiString,
+                        'jam_mulai'       => '08:00',
+                        'jam_selesai'     => '17:00',
+                        'keterangan'      => 'Penunjang kegiatan akademik dan kemahasiswaan Stitek.',
+                        'status'          => $status,
+                        'nomor_surat'     => in_array($status, [Peminjaman::STATUS_DONE, Peminjaman::STATUS_APPROVED]) ? Peminjaman::generateNomorSurat() : null,
+                        'approved_at'     => $approvedAt,
+                        'completed_at'    => $completedAt,
+                    ]);
+                }
+            }
+        }
+
+        // ── 6. Dynamically Adjust available stocks ────────────────────
+        foreach ($barangs as $b) {
+            $activeTodayCount = Peminjaman::where('barang_id', $b->id)
+                ->where('status', Peminjaman::STATUS_APPROVED)
+                ->where('tanggal_mulai', '<=', $today->toDateString())
+                ->where('tanggal_selesai', '>=', $today->toDateString())
+                ->sum('jumlah');
+
+            $newAvailable = max(0, $b->stok_total - $activeTodayCount);
+            if ($b->nama === 'Proyektor') {
+                $newAvailable = 0; // Strictly ensure Proyektor is fully booked
+            }
+            $b->update(['stok_tersedia' => $newAvailable]);
+        }
     }
 }
