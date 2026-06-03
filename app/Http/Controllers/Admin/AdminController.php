@@ -3,16 +3,17 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
-use App\Models\Peminjaman;
-use App\Models\User;
-use App\Models\Ruangan;
+use App\Http\Requests\StoreBarangRequest;
+use App\Http\Requests\StoreRuanganRequest;
+use App\Http\Requests\UpdateBarangRequest;
+use App\Http\Requests\UpdateRuanganRequest;
 use App\Models\Barang;
+use App\Models\Peminjaman;
+use App\Models\Ruangan;
+use App\Models\User;
 use App\Services\BookingService;
 use App\Services\ImageService;
-use App\Http\Requests\StoreBarangRequest;
-use App\Http\Requests\UpdateBarangRequest;
-use App\Http\Requests\StoreRuanganRequest;
-use App\Http\Requests\UpdateRuanganRequest;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Storage;
@@ -79,7 +80,7 @@ class AdminController extends Controller
         ]);
     }
 
-    public function storeUser(Request $request): \Illuminate\Http\RedirectResponse
+    public function storeUser(Request $request): RedirectResponse
     {
         $request->validate([
             'name'     => 'required|string|max:255',
@@ -103,7 +104,7 @@ class AdminController extends Controller
         }
     }
 
-    public function updateUser(Request $request, int $id): \Illuminate\Http\RedirectResponse
+    public function updateUser(Request $request, int $id): RedirectResponse
     {
         $request->validate([
             'name'  => 'required|string|max:255',
@@ -133,7 +134,7 @@ class AdminController extends Controller
         }
     }
 
-    public function destroyUser(int $id): \Illuminate\Http\RedirectResponse
+    public function destroyUser(int $id): RedirectResponse
     {
         try {
             $user = User::findOrFail($id);
@@ -161,7 +162,7 @@ class AdminController extends Controller
         ]);
     }
 
-    public function setujuiPeminjaman(int $id): \Illuminate\Http\RedirectResponse
+    public function setujuiPeminjaman(int $id): RedirectResponse
     {
         try {
             $peminjaman = Peminjaman::findOrFail($id);
@@ -172,7 +173,7 @@ class AdminController extends Controller
         }
     }
 
-    public function tolakPeminjaman(int $id): \Illuminate\Http\RedirectResponse
+    public function tolakPeminjaman(int $id): RedirectResponse
     {
         try {
             $peminjaman = Peminjaman::findOrFail($id);
@@ -186,7 +187,7 @@ class AdminController extends Controller
     /**
      * Admin menandai peminjaman selesai (validasi pengembalian).
      */
-    public function selesaiPeminjaman(int $id): \Illuminate\Http\RedirectResponse
+    public function selesaiPeminjaman(int $id): RedirectResponse
     {
         try {
             $peminjaman = Peminjaman::findOrFail($id);
@@ -208,7 +209,7 @@ class AdminController extends Controller
         ]);
     }
 
-    public function storeRuangan(StoreRuanganRequest $request): \Illuminate\Http\RedirectResponse
+    public function storeRuangan(StoreRuanganRequest $request): RedirectResponse
     {
         try {
             $data = $request->only(['nama', 'kode', 'kapasitas', 'lokasi', 'deskripsi', 'status']);
@@ -225,7 +226,7 @@ class AdminController extends Controller
         }
     }
 
-    public function updateRuangan(UpdateRuanganRequest $request, int $id): \Illuminate\Http\RedirectResponse
+    public function updateRuangan(UpdateRuanganRequest $request, int $id): RedirectResponse
     {
         try {
             $ruangan = Ruangan::findOrFail($id);
@@ -244,7 +245,7 @@ class AdminController extends Controller
         }
     }
 
-    public function destroyRuangan(int $id): \Illuminate\Http\RedirectResponse
+    public function destroyRuangan(int $id): RedirectResponse
     {
         try {
             $ruangan = Ruangan::findOrFail($id);
@@ -270,7 +271,7 @@ class AdminController extends Controller
         ]);
     }
 
-    public function storeBarang(StoreBarangRequest $request): \Illuminate\Http\RedirectResponse
+    public function storeBarang(StoreBarangRequest $request): RedirectResponse
     {
         try {
             $data = $request->only(['nama', 'kode', 'stok_total', 'stok_tersedia', 'kategori', 'deskripsi', 'status']);
@@ -287,7 +288,7 @@ class AdminController extends Controller
         }
     }
 
-    public function updateBarang(UpdateBarangRequest $request, int $id): \Illuminate\Http\RedirectResponse
+    public function updateBarang(UpdateBarangRequest $request, int $id): RedirectResponse
     {
         try {
             $barang = Barang::findOrFail($id);
@@ -306,7 +307,7 @@ class AdminController extends Controller
         }
     }
 
-    public function destroyBarang(int $id): \Illuminate\Http\RedirectResponse
+    public function destroyBarang(int $id): RedirectResponse
     {
         try {
             $barang = Barang::findOrFail($id);
@@ -329,7 +330,7 @@ class AdminController extends Controller
      * Cari peminjaman terakhir yang selesai (check-out) pada ruangan di hari ini,
      * lalu blokir user yang bersangkutan selama 30 hari.
      */
-    public function laporBerantakan(Request $request, int $id): \Illuminate\Http\RedirectResponse
+    public function laporBerantakan(Request $request, int $id): RedirectResponse
     {
         $request->validate([
             'feedback' => 'required|string|max:500',
@@ -405,7 +406,7 @@ class AdminController extends Controller
         ]);
     }
 
-    public function profileUpdate(Request $request): \Illuminate\Http\RedirectResponse
+    public function profileUpdate(Request $request): RedirectResponse
     {
         $user = $request->user();
 

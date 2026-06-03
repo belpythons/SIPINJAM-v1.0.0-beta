@@ -49,6 +49,7 @@ Route::middleware(['auth', 'verified', 'blocked'])->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::get('/profile/edit', fn () => redirect('/profile'));
     Route::post('/profile/edit', [ProfileController::class, 'update'])->name('profile.update');
+    Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 });
 
 // ==========================================
