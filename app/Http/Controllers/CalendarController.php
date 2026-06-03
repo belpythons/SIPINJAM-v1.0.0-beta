@@ -5,8 +5,8 @@ namespace App\Http\Controllers;
 use App\Http\Requests\StoreCalendarRequest;
 use App\Models\Calendar;
 use App\Services\ImageService;
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Storage;
+use Illuminate\Http\RedirectResponse;
+use Inertia\Inertia;
 use Spatie\LaravelPdf\Facades\Pdf;
 
 class CalendarController extends Controller
@@ -17,7 +17,7 @@ class CalendarController extends Controller
     {
         $calendar = Calendar::where('is_active', true)->latest()->first();
 
-        return \Inertia\Inertia::render('User/Kalender', [
+        return Inertia::render('User/Kalender', [
             'calendar' => $calendar,
         ]);
     }
@@ -74,17 +74,35 @@ class CalendarController extends Controller
         $data = file_get_contents($absolutePath);
         $base64 = 'data:image/' . $type . ';base64,' . base64_encode($data);
 
+        $nodeBinary = env('NODE_BINARY_PATH');
+        $npmBinary = env('NPM_BINARY_PATH');
+
+        if (empty($nodeBinary) || empty($npmBinary)) {
+            $isWindows = PHP_OS_FAMILY === 'Windows' || stristr(PHP_OS, 'WIN');
+            if ($isWindows) {
+                $nodeBinary = $nodeBinary ?: 'C:\\Program Files\\nodejs\\node.exe';
+                $npmBinary = $npmBinary ?: 'C:\\Program Files\\nodejs\\npm.cmd';
+            } else {
+                $nodeBinary = $nodeBinary ?: '/usr/bin/node';
+                $npmBinary = $npmBinary ?: '/usr/bin/npm';
+            }
+        }
+
         $pdf = Pdf::view('user.kalender.pdf', [
             'calendar' => $calendar,
             'imagePath' => $base64
         ])
         ->landscape()
         ->format('a4')
-        ->withBrowsershot(fn ($browsershot) => $browsershot
-            ->noSandbox()
-            ->setNodeBinary('/home/blewah/.local/share/fnm/node-versions/v20.20.2/installation/bin/node')
-            ->setNpmBinary('/home/blewah/.local/share/fnm/node-versions/v20.20.2/installation/bin/npm')
-        );
+        ->withBrowsershot(function ($browsershot) use ($nodeBinary, $npmBinary) {
+            $browsershot->noSandbox();
+            if (!empty($nodeBinary)) {
+                $browsershot->setNodeBinary($nodeBinary);
+            }
+            if (!empty($npmBinary)) {
+                $browsershot->setNpmBinary($npmBinary);
+            }
+        });
 
         return $pdf->download("Kalender_Akademik_STITEK_{$calendar->year}.pdf");
     }
@@ -95,7 +113,7 @@ class CalendarController extends Controller
     {
         $calendars = Calendar::orderByDesc('year')->get();
 
-        return \Inertia\Inertia::render('Admin/KelolaKalender', [
+        return Inertia::render('Admin/KelolaKalender', [
             'calendars' => $calendars,
         ]);
     }
@@ -103,7 +121,7 @@ class CalendarController extends Controller
     /**
      * Upload gambar/PDF kalender baru.
      */
-    public function store(StoreCalendarRequest $request): \Illuminate\Http\RedirectResponse
+    public function store(StoreCalendarRequest $request): RedirectResponse
     {
         try {
             $path = null;
@@ -126,7 +144,7 @@ class CalendarController extends Controller
     /**
      * Set kalender sebagai aktif (hanya satu yang aktif pada satu waktu).
      */
-    public function setActive(int $id): \Illuminate\Http\RedirectResponse
+    public function setActive(int $id): RedirectResponse
     {
         try {
             // Non-aktifkan semua kalender terlebih dahulu
@@ -145,7 +163,7 @@ class CalendarController extends Controller
     /**
      * Hapus kalender.
      */
-    public function destroy(int $id): \Illuminate\Http\RedirectResponse
+    public function destroy(int $id): RedirectResponse
     {
         try {
             $calendar = Calendar::findOrFail($id);
