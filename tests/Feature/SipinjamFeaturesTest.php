@@ -174,8 +174,8 @@ test('generate PDF generates nomor surat and stores it physically for approved b
     expect($bookingApproved->nomor_surat)->not->toBeEmpty();
     expect($bookingApproved->nomor_surat)->toContain('/INT/SIPINJAM/' . now()->year);
 
-    // Verify physical file was saved in storage/app/public/surat on the local disk
+    // Verify physical file was NOT saved in storage/app/public/surat to prevent leaks
     $safeNomor = str_replace(['/', '\\'], '-', $bookingApproved->nomor_surat);
     $filename = "surat-peminjaman-{$safeNomor}.pdf";
-    Storage::disk('local')->assertExists("public/surat/{$filename}");
+    Storage::disk('local')->assertMissing("public/surat/{$filename}");
 });
