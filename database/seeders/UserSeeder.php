@@ -46,61 +46,29 @@ class UserSeeder extends Seeder
         ]);
         $demo->assignRole('user');
 
-        // ── 4. Additional Student Accounts (Blocked / Active) ──
-        $zulfa = User::create([
-            'name' => 'Zulfa',
-            'email' => '202312017@stitek.ac.id',
-            'password' => Hash::make('202312017'),
-            'role' => 'user',
-            'is_blocked' => false,
-        ]);
-        $zulfa->assignRole('user');
+        // ── 4. Additional 45 Student Accounts (including 2 Blocked Accounts) ──
+        for ($i = 1; $i <= 45; $i++) {
+            $nim = str_pad(202312000 + $i, 9, '0', STR_PAD_LEFT);
+            $isBlocked = false;
+            $blockedReason = null;
 
-        $miya = User::create([
-            'name' => 'Miya',
-            'email' => '202312023@stitek.ac.id',
-            'password' => Hash::make('202312023'),
-            'role' => 'user',
-            'is_blocked' => true,
-            'blocked_reason' => 'Merusak fasilitas Lab Arsikom',
-        ]);
-        $miya->assignRole('user');
+            if ($i === 10) {
+                $isBlocked = true;
+                $blockedReason = 'Melanggar tata tertib ruangan: Meninggalkan sampah makanan dan mengotori Lab Multimedia setelah peminjaman.';
+            } elseif ($i === 20) {
+                $isBlocked = true;
+                $blockedReason = 'Melanggar tata tertib barang: Terlambat mengembalikan Proyektor Epson selama lebih dari 7 hari.';
+            }
 
-        $taliya = User::create([
-            'name' => 'Taliya',
-            'email' => '202312030@gmail.com',
-            'password' => Hash::make('202312030'),
-            'role' => 'user',
-            'is_blocked' => true,
-            'blocked_reason' => 'Terlambat mengembalikan Proyektor selama 7 hari',
-        ]);
-        $taliya->assignRole('user');
-
-        $salsa = User::create([
-            'name' => 'Salsa',
-            'email' => '202312016@stitek.ac.id',
-            'password' => Hash::make('202312016'),
-            'role' => 'user',
-            'is_blocked' => false,
-        ]);
-        $salsa->assignRole('user');
-
-        $elin = User::create([
-            'name' => 'Elin',
-            'email' => '202312028@stitek.ac.id',
-            'password' => Hash::make('202312028'),
-            'role' => 'user',
-            'is_blocked' => false,
-        ]);
-        $elin->assignRole('user');
-
-        $brama = User::create([
-            'name' => 'Bella Novia Aulia',
-            'email' => '202312066@stitek.ac.id',
-            'password' => Hash::make('202312066'),
-            'role' => 'user',
-            'is_blocked' => false,
-        ]);
-        $brama->assignRole('user');
+            $dummyUser = User::create([
+                'name' => 'Dummy Student ' . $i,
+                'email' => "{$nim}@stitek.ac.id",
+                'password' => Hash::make($nim),
+                'role' => 'user',
+                'is_blocked' => $isBlocked,
+                'blocked_reason' => $blockedReason,
+            ]);
+            $dummyUser->assignRole('user');
+        }
     }
 }
