@@ -5,11 +5,11 @@ namespace App\Http\Controllers;
 use App\Http\Requests\StoreBookingRequest;
 use App\Models\Peminjaman;
 use App\Services\BookingService;
-use Spatie\LaravelPdf\Facades\Pdf;
-use Illuminate\Http\Request;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Storage;
 use Inertia\Inertia;
+use Inertia\Response;
+use Spatie\LaravelPdf\Facades\Pdf;
 
 class BookingController extends Controller
 {
@@ -17,7 +17,7 @@ class BookingController extends Controller
         private readonly BookingService $bookingService
     ) {}
 
-    public function index(): \Inertia\Response
+    public function index(): Response
     {
         // Fix N+1 — eager-load relasi barang & ruangan
         $bookings = Peminjaman::with(['barang', 'ruangan'])
@@ -38,7 +38,7 @@ class BookingController extends Controller
         ]);
     }
 
-    public function store(StoreBookingRequest $request): \Illuminate\Http\RedirectResponse
+    public function store(StoreBookingRequest $request): RedirectResponse
     {
         try {
             $this->bookingService->createBooking($request->validated(), $request->user());
@@ -79,8 +79,22 @@ class BookingController extends Controller
 
         // Ensure nomor_surat is generated
         if (empty($peminjaman->nomor_surat)) {
-            $peminjaman->nomor_surat = \App\Models\Peminjaman::generateNomorSurat();
+            $peminjaman->nomor_surat = Peminjaman::generateNomorSurat();
             $peminjaman->save();
+        }
+
+        $nodeBinary = env('NODE_BINARY_PATH');
+        $npmBinary = env('NPM_BINARY_PATH');
+
+        if (empty($nodeBinary) || empty($npmBinary)) {
+            $isWindows = PHP_OS_FAMILY === 'Windows' || stristr(PHP_OS, 'WIN');
+            if ($isWindows) {
+                $nodeBinary = $nodeBinary ?: 'C:\\Program Files\\nodejs\\node.exe';
+                $npmBinary = $npmBinary ?: 'C:\\Program Files\\nodejs\\npm.cmd';
+            } else {
+                $nodeBinary = $nodeBinary ?: '/usr/bin/node';
+                $npmBinary = $npmBinary ?: '/usr/bin/npm';
+            }
         }
 
         // Render PDF
@@ -92,19 +106,19 @@ class BookingController extends Controller
                                 : $peminjaman->barang,
         ])
         ->format('a4')
-        ->withBrowsershot(fn ($browsershot) => $browsershot
-            ->noSandbox()
-            ->setNodeBinary('/home/blewah/.local/share/fnm/node-versions/v20.20.2/installation/bin/node')
-            ->setNpmBinary('/home/blewah/.local/share/fnm/node-versions/v20.20.2/installation/bin/npm')
-        );
+        ->withBrowsershot(function ($browsershot) use ($nodeBinary, $npmBinary) {
+            $browsershot->noSandbox();
+            if (!empty($nodeBinary)) {
+                $browsershot->setNodeBinary($nodeBinary);
+            }
+            if (!empty($npmBinary)) {
+                $browsershot->setNpmBinary($npmBinary);
+            }
+        });
 
         // Slugified filename
         $safeNomor = str_replace(['/', '\\'], '-', $peminjaman->nomor_surat);
         $filename = "surat-peminjaman-{$safeNomor}.pdf";
-
-        // Simpan fisik ke storage
-        $storagePath = "public/surat/{$filename}";
-        Storage::put($storagePath, $pdf->generatePdfContent());
 
         // Download response
         return $pdf->download($filename);

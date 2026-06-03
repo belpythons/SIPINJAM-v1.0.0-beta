@@ -2,14 +2,14 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Peminjaman;
-use App\Models\User;
-use App\Models\Ruangan;
 use App\Models\Barang;
-use Spatie\LaravelPdf\Facades\Pdf;
+use App\Models\Peminjaman;
+use App\Models\Ruangan;
+use App\Models\User;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Carbon\Carbon;
+use Spatie\LaravelPdf\Facades\Pdf;
 
 class ReportController extends Controller
 {
@@ -97,16 +97,34 @@ class ReportController extends Controller
             'done'     => $peminjamans->where('status', Peminjaman::STATUS_DONE)->count(),
         ];
 
+        $nodeBinary = env('NODE_BINARY_PATH');
+        $npmBinary = env('NPM_BINARY_PATH');
+
+        if (empty($nodeBinary) || empty($npmBinary)) {
+            $isWindows = PHP_OS_FAMILY === 'Windows' || stristr(PHP_OS, 'WIN');
+            if ($isWindows) {
+                $nodeBinary = $nodeBinary ?: 'C:\\Program Files\\nodejs\\node.exe';
+                $npmBinary = $npmBinary ?: 'C:\\Program Files\\nodejs\\npm.cmd';
+            } else {
+                $nodeBinary = $nodeBinary ?: '/usr/bin/node';
+                $npmBinary = $npmBinary ?: '/usr/bin/npm';
+            }
+        }
+
         $pdf = Pdf::view('reports.peminjaman_pdf', compact(
             'peminjamans', 'stats', 'startDate', 'endDate'
         ))
         ->landscape()
         ->format('a4')
-        ->withBrowsershot(fn ($browsershot) => $browsershot
-            ->noSandbox()
-            ->setNodeBinary('/home/blewah/.local/share/fnm/node-versions/v20.20.2/installation/bin/node')
-            ->setNpmBinary('/home/blewah/.local/share/fnm/node-versions/v20.20.2/installation/bin/npm')
-        );
+        ->withBrowsershot(function ($browsershot) use ($nodeBinary, $npmBinary) {
+            $browsershot->noSandbox();
+            if (!empty($nodeBinary)) {
+                $browsershot->setNodeBinary($nodeBinary);
+            }
+            if (!empty($npmBinary)) {
+                $browsershot->setNpmBinary($npmBinary);
+            }
+        });
 
         $filename = 'Laporan_Peminjaman_' . $startDate . '_' . $endDate . '.pdf';
         return $pdf->download($filename);
@@ -214,13 +232,31 @@ class ReportController extends Controller
             ->orderBy('created_at', 'desc')
             ->get();
 
+        $nodeBinary = env('NODE_BINARY_PATH');
+        $npmBinary = env('NPM_BINARY_PATH');
+
+        if (empty($nodeBinary) || empty($npmBinary)) {
+            $isWindows = PHP_OS_FAMILY === 'Windows' || stristr(PHP_OS, 'WIN');
+            if ($isWindows) {
+                $nodeBinary = $nodeBinary ?: 'C:\\Program Files\\nodejs\\node.exe';
+                $npmBinary = $npmBinary ?: 'C:\\Program Files\\nodejs\\npm.cmd';
+            } else {
+                $nodeBinary = $nodeBinary ?: '/usr/bin/node';
+                $npmBinary = $npmBinary ?: '/usr/bin/npm';
+            }
+        }
+
         $pdf = Pdf::view('reports.user_peminjaman_pdf', compact('peminjamans', 'user'))
             ->format('a4')
-            ->withBrowsershot(fn ($browsershot) => $browsershot
-                ->noSandbox()
-                ->setNodeBinary('/home/blewah/.local/share/fnm/node-versions/v20.20.2/installation/bin/node')
-                ->setNpmBinary('/home/blewah/.local/share/fnm/node-versions/v20.20.2/installation/bin/npm')
-            );
+            ->withBrowsershot(function ($browsershot) use ($nodeBinary, $npmBinary) {
+                $browsershot->noSandbox();
+                if (!empty($nodeBinary)) {
+                    $browsershot->setNodeBinary($nodeBinary);
+                }
+                if (!empty($npmBinary)) {
+                    $browsershot->setNpmBinary($npmBinary);
+                }
+            });
 
         $filename = 'Riwayat_Peminjaman_' . str_replace(' ', '_', $user->name) . '.pdf';
         return $pdf->download($filename);

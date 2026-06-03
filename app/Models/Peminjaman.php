@@ -35,6 +35,7 @@ class Peminjaman extends Model
         'barang_id',
         'ruangan_id',
         'nama_item',
+        'jumlah',
         'tanggal',
         'tanggal_mulai',
         'tanggal_selesai',
@@ -54,6 +55,7 @@ class Peminjaman extends Model
             'tanggal_selesai' => 'date',
             'approved_at'     => 'datetime',
             'completed_at'    => 'datetime',
+            'jumlah'          => 'integer',
         ];
     }
 

@@ -12,8 +12,6 @@ use Illuminate\Support\Facades\Route;
 
 Route::middleware('guest')->group(function () {
     // Registrasi dinonaktifkan — user baru hanya melalui Google Login atau panel Admin.
-    // Route::get('register', ...);
-    // Route::post('register', ...);
 
     Route::get('login', [AuthenticatedSessionController::class, 'create'])
         ->name('login');

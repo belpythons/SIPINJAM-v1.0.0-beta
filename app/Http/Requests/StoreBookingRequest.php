@@ -20,6 +20,7 @@ class StoreBookingRequest extends FormRequest
             'tipe_peminjaman' => ['required', 'in:barang,ruangan'],
             'barang_id'       => ['required_if:tipe_peminjaman,barang', 'nullable', 'exists:barangs,id'],
             'ruangan_id'      => ['required_if:tipe_peminjaman,ruangan', 'nullable', 'exists:ruangans,id'],
+            'jumlah'          => ['nullable', 'integer', 'min:1'],
             'tanggal_mulai'   => ['required', 'date', 'after_or_equal:today'],
             'tanggal_selesai' => ['required', 'date', 'after_or_equal:tanggal_mulai'],
             'waktu_mulai'     => ['required', 'regex:/^(?:[01]\d|2[0-3]):[0-5]\d(?::[0-5]\d)?$/'],
