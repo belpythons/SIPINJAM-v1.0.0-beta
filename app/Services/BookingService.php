@@ -24,12 +24,14 @@ class BookingService
         }
 
         return DB::transaction(function () use ($data, $user) {
+            $jumlah = $data['jumlah'] ?? 1;
+
             if ($data['tipe_peminjaman'] === 'barang') {
                 // Lock record barang untuk validasi stok (read-only, no decrement)
                 $barang = Barang::lockForUpdate()->findOrFail($data['barang_id']);
 
-                if ($barang->stok_tersedia < 1) {
-                    throw new \RuntimeException('Stok barang "' . $barang->nama . '" sudah habis.');
+                if ($barang->stok_tersedia < $jumlah) {
+                    throw new \RuntimeException('Stok barang "' . $barang->nama . '" tidak mencukupi.');
                 }
 
                 // ⛔ TIDAK ada $barang->decrement() di sini.
@@ -39,6 +41,7 @@ class BookingService
                     'tipe'       => 'barang',
                     'barang_id'  => $barang->id,
                     'nama_item'  => $barang->nama,
+                    'jumlah'     => $jumlah,
                 ]);
             } else {
                 // Lock record ruangan lalu cek apakah jadwal bentrok
@@ -50,6 +53,7 @@ class BookingService
                     'tipe'       => 'ruangan',
                     'ruangan_id' => $ruangan->id,
                     'nama_item'  => $ruangan->nama,
+                    'jumlah'     => $jumlah,
                 ]);
             }
 
@@ -86,7 +90,8 @@ class BookingService
                     ->lockForUpdate()
                     ->firstOrFail();
 
-                $newStock = $barang->stok_tersedia - 1;
+                $jumlah = $peminjaman->jumlah ?? 1;
+                $newStock = $barang->stok_tersedia - $jumlah;
 
                 if ($newStock < 0) {
                     throw new \RuntimeException(
@@ -152,17 +157,21 @@ class BookingService
      */
     private function assertNoScheduleConflict(Ruangan $ruangan, array $data): void
     {
+        $reqStart = \Illuminate\Support\Carbon::parse($data['tanggal_mulai'] . ' ' . $data['waktu_mulai'])->format('Y-m-d H:i:s');
+        $reqEnd = \Illuminate\Support\Carbon::parse($data['tanggal_selesai'] . ' ' . $data['waktu_selesai'])->format('Y-m-d H:i:s');
+
+        $driver = DB::connection()->getDriverName();
+
         $conflict = Peminjaman::where('ruangan_id', $ruangan->id)
             ->whereNotIn('status', [Peminjaman::STATUS_REJECTED, Peminjaman::STATUS_DONE])
-            ->where(function ($q) use ($data) {
-                // Overlap: mulai_A < selesai_B DAN mulai_B < selesai_A
-                $q->where('tanggal_mulai', '<=', $data['tanggal_selesai'])
-                  ->where('tanggal_selesai', '>=', $data['tanggal_mulai']);
-            })
-            ->where(function ($q) use ($data) {
-                // Cek overlap jam pada hari yang beririsan
-                $q->where('jam_mulai', '<', $data['waktu_selesai'])
-                  ->where('jam_selesai', '>', $data['waktu_mulai']);
+            ->where(function ($q) use ($reqStart, $reqEnd, $driver) {
+                if ($driver === 'sqlite') {
+                    $q->where(DB::raw("tanggal_mulai || ' ' || jam_mulai"), '<', $reqEnd)
+                      ->where(DB::raw("tanggal_selesai || ' ' || jam_selesai"), '>', $reqStart);
+                } else {
+                    $q->where(DB::raw("CONCAT(tanggal_mulai, ' ', jam_mulai)"), '<', $reqEnd)
+                      ->where(DB::raw("CONCAT(tanggal_selesai, ' ', jam_selesai)"), '>', $reqStart);
+                }
             })
             ->exists();
 
@@ -197,8 +206,10 @@ class BookingService
                     ->lockForUpdate()
                     ->firstOrFail();
 
+                $jumlah = $peminjaman->jumlah ?? 1;
+
                 $barang->update([
-                    'stok_tersedia' => $barang->stok_tersedia + 1,
+                    'stok_tersedia' => $barang->stok_tersedia + $jumlah,
                 ]);
             }
 
