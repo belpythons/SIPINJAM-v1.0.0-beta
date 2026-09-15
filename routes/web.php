@@ -3,6 +3,7 @@
 use App\Http\Controllers\Admin\AdminController;
 use App\Http\Controllers\Admin\BannerController;
 use App\Http\Controllers\Admin\LaporanPelanggaranController as AdminLaporanPelanggaranController;
+use App\Http\Controllers\Admin\TataTertibController as AdminTataTertibController;
 use App\Http\Controllers\Auth\SocialiteController;
 use App\Http\Controllers\BarangController;
 use App\Http\Controllers\BookingController;
@@ -110,6 +111,10 @@ Route::middleware(['auth', 'admin'])->group(function () {
     Route::get('/admin/pelanggaran', [AdminLaporanPelanggaranController::class, 'index'])->name('admin.pelanggaran.index');
     Route::patch('/admin/pelanggaran/{laporan}/sanksi', [AdminLaporanPelanggaranController::class, 'putuskanSanksi'])->name('admin.pelanggaran.sanksi');
     Route::patch('/admin/pelanggaran/{laporan}/tolak', [AdminLaporanPelanggaranController::class, 'tolak'])->name('admin.pelanggaran.tolak');
+
+    // Kelola Tata Tertib (Admin)
+    Route::get('/admin/kelola-tata-tertib', [AdminTataTertibController::class, 'index'])->name('admin.tata_tertib.index');
+    Route::post('/admin/kelola-tata-tertib', [AdminTataTertibController::class, 'store'])->name('admin.tata_tertib.store');
 
     // Profile Edit (Admin — renders Admin/ProfileEdit with AdminLayout)
     Route::get('/admin/profile', [AdminController::class, 'profileEdit'])->name('admin.profile.edit');

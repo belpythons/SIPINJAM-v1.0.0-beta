@@ -1,7 +1,7 @@
 <script setup>
 import { computed } from 'vue';
 import { router, usePage, Link } from '@inertiajs/vue3';
-import { Home, Users, ClipboardList, DoorOpen, Package, CalendarDays, LogOut, Image, ShieldAlert } from '@lucide/vue';
+import { Home, Users, ClipboardList, DoorOpen, Package, CalendarDays, LogOut, Image, ShieldAlert, ShieldCheck } from '@lucide/vue';
 
 import sidebarLogo from '@images/side bar admin.png';
 
@@ -17,6 +17,7 @@ const navItems = [
     { label: 'Kelola Ruangan', icon: DoorOpen, href: '/admin/kelola-ruangan' },
     { label: 'Kelola Barang', icon: Package, href: '/admin/kelola-barang' },
     { label: 'Kelola Kalender', icon: CalendarDays, href: '/admin/kelola-kalender' },
+    { label: 'Kelola Tata Tertib', icon: ShieldCheck, href: '/admin/kelola-tata-tertib' },
     { label: 'Kelola Landing Page', icon: Image, href: '/admin/kelola-banner' },
 ];
 
