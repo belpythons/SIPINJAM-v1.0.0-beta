@@ -242,7 +242,7 @@ class AdminController extends Controller
     // ════════════════════════════════════════
     public function kelolaRuangan()
     {
-        $ruangans = Ruangan::orderBy('created_at', 'desc')->get();
+        $ruangans = Ruangan::orderBy('created_at', 'desc')->paginate(20)->withQueryString();
 
         return Inertia::render('Admin/KelolaRuangan', [
             'ruangans' => $ruangans,
@@ -305,7 +305,7 @@ class AdminController extends Controller
     // ════════════════════════════════════════
     public function kelolaBarang()
     {
-        $barangs = Barang::orderBy('created_at', 'desc')->get();
+        $barangs = Barang::orderBy('created_at', 'desc')->paginate(20)->withQueryString();
 
         return Inertia::render('Admin/KelolaBarang', [
             'barangs' => $barangs,

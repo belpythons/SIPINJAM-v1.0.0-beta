@@ -2,11 +2,12 @@
 import { Head, useForm, router } from '@inertiajs/vue3';
 import { ref } from 'vue';
 import AdminLayout from '@/Layouts/AdminLayout.vue';
+import Pagination from '@/Components/Pagination.vue';
 import { Package, Plus, Pencil, Trash2, X, Image as ImageIcon } from '@lucide/vue';
 
 defineOptions({ layout: AdminLayout });
 
-const props = defineProps({ barangs: Array });
+const props = defineProps({ barangs: Object });
 
 const showForm = ref(false);
 const editingId = ref(null);
@@ -130,7 +131,7 @@ const destroy = (id) => { if (confirm('Hapus barang ini?')) router.delete(`/admi
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-slate-100">
-                    <tr v-for="b in barangs" :key="b.id" class="hover:bg-slate-50/60 transition-colors">
+                    <tr v-for="b in barangs.data" :key="b.id" class="hover:bg-slate-50/60 transition-colors">
                         <td class="px-5 py-3.5 font-mono text-xs text-slate-500">{{ b.kode }}</td>
                         <td class="px-5 py-3.5">
                             <div class="h-10 w-16 overflow-hidden rounded-lg border border-slate-100 bg-slate-50">
@@ -155,9 +156,11 @@ const destroy = (id) => { if (confirm('Hapus barang ini?')) router.delete(`/admi
                             </div>
                         </td>
                     </tr>
-                    <tr v-if="!barangs.length"><td colspan="7" class="px-5 py-12 text-center text-slate-400">Belum ada data barang.</td></tr>
+                    <tr v-if="!barangs.data.length"><td colspan="7" class="px-5 py-12 text-center text-slate-400">Belum ada data barang.</td></tr>
                 </tbody>
             </table>
+
+            <Pagination :meta="barangs" />
         </div>
     </div>
 </template>
