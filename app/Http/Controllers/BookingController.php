@@ -52,12 +52,14 @@ class BookingController extends Controller
     public function store(StoreBookingRequest $request): RedirectResponse
     {
         try {
-            $this->bookingService->createBooking($request->validated(), $request->user());
+            $peminjaman = $this->bookingService->createBooking($request->validated(), $request->user());
         } catch (\RuntimeException $e) {
             return redirect()->back()->withErrors(['booking' => $e->getMessage()]);
         }
 
-        return redirect()->route('dashboard')->with('success', 'Peminjaman berhasil diajukan!');
+        return redirect()->route('dashboard')
+            ->with('success', 'Peminjaman berhasil diajukan!')
+            ->with('booking_created_id', $peminjaman->id);
     }
 
     /**
@@ -65,7 +67,7 @@ class BookingController extends Controller
      *
      * Validasi:
      * - Hanya user pemilik booking yang bisa download
-     * - Status harus "sedang_dipinjam" (Approved)
+     * - Bisa diunduh sejak status "menunggu" (self-service), kecuali sudah "ditolak"
      *
      * Alur:
      * 1. Jika nomor_surat belum ada → generate & simpan
@@ -83,9 +85,9 @@ class BookingController extends Controller
             abort(403, 'Anda tidak memiliki akses ke surat ini.');
         }
 
-        // Guard: hanya status "Approved" (sedang_dipinjam) yang bisa cetak surat
-        if ($peminjaman->status !== Peminjaman::STATUS_APPROVED) {
-            abort(403, 'Surat hanya dapat diunduh untuk peminjaman yang telah disetujui.');
+        // Guard: surat bisa diunduh sejak diajukan (self-service), kecuali sudah ditolak
+        if ($peminjaman->status === Peminjaman::STATUS_REJECTED) {
+            abort(403, 'Surat tidak tersedia karena peminjaman ini telah ditolak.');
         }
 
         // Ensure nomor_surat is generated
