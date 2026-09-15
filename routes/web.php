@@ -33,12 +33,6 @@ Route::middleware(['auth', 'verified', 'blocked'])->group(function () {
     Route::post('/bookings', [BookingController::class, 'store'])->middleware('throttle:5,1')->name('bookings.store');
     Route::get('/bookings/{id}/pdf', [BookingController::class, 'generatePDF'])->name('bookings.pdf');
 
-    // Ajukan Pengajuan (5 langkah) — P3
-    Route::middleware(['auth', 'verified', 'blocked'])->group(function () {
-        Route::get('/pengajuan', [PengajuanController::class, 'create'])->name('pengajuan.create');
-        Route::post('/pengajuan', [PengajuanController::class, 'store'])->name('pengajuan.store');
-    });
-
     // Menu Lainnya
     Route::get('/ruangan', [RuanganController::class, 'index'])->name('ruangan.index');
     Route::get('/barang', [BarangController::class, 'index'])->name('barang.index');
