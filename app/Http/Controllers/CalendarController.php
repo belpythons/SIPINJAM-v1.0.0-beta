@@ -5,9 +5,9 @@ namespace App\Http\Controllers;
 use App\Http\Requests\StoreCalendarRequest;
 use App\Models\Calendar;
 use App\Services\ImageService;
+use App\Services\PdfRenderer;
 use Illuminate\Http\RedirectResponse;
 use Inertia\Inertia;
-use Spatie\LaravelPdf\Facades\Pdf;
 
 class CalendarController extends Controller
 {
@@ -30,7 +30,7 @@ class CalendarController extends Controller
     {
         $calendar = Calendar::where('is_active', true)->latest()->first();
 
-        if (!$calendar) {
+        if (! $calendar) {
             return redirect()->back()->with('error', 'Tidak ada kalender akademik aktif.');
         }
 
@@ -42,16 +42,16 @@ class CalendarController extends Controller
             if (str_starts_with($cleanPath, 'storage/')) {
                 $cleanPath = substr($cleanPath, 8);
             }
-            $absolutePath = storage_path('app/public/' . $cleanPath);
+            $absolutePath = storage_path('app/public/'.$cleanPath);
         }
 
-        if (!file_exists($absolutePath)) {
-            $fallbackPath = public_path('storage/' . $cleanPath);
+        if (! file_exists($absolutePath)) {
+            $fallbackPath = public_path('storage/'.$cleanPath);
             if (file_exists($fallbackPath)) {
                 $absolutePath = $fallbackPath;
             } else {
                 if (str_starts_with($cleanPath, 'public/')) {
-                    $fallbackPath2 = storage_path('app/' . $cleanPath);
+                    $fallbackPath2 = storage_path('app/'.$cleanPath);
                     if (file_exists($fallbackPath2)) {
                         $absolutePath = $fallbackPath2;
                     } else {
@@ -72,37 +72,12 @@ class CalendarController extends Controller
         // Convert image to base64 to ensure it renders correctly in headless Chrome
         $type = pathinfo($absolutePath, PATHINFO_EXTENSION);
         $data = file_get_contents($absolutePath);
-        $base64 = 'data:image/' . $type . ';base64,' . base64_encode($data);
+        $base64 = 'data:image/'.$type.';base64,'.base64_encode($data);
 
-        $nodeBinary = env('NODE_BINARY_PATH');
-        $npmBinary = env('NPM_BINARY_PATH');
-
-        if (empty($nodeBinary) || empty($npmBinary)) {
-            $isWindows = PHP_OS_FAMILY === 'Windows' || stristr(PHP_OS, 'WIN');
-            if ($isWindows) {
-                $nodeBinary = $nodeBinary ?: 'C:\\Program Files\\nodejs\\node.exe';
-                $npmBinary = $npmBinary ?: 'C:\\Program Files\\nodejs\\npm.cmd';
-            } else {
-                $nodeBinary = $nodeBinary ?: '/usr/bin/node';
-                $npmBinary = $npmBinary ?: '/usr/bin/npm';
-            }
-        }
-
-        $pdf = Pdf::view('user.kalender.pdf', [
+        $pdf = app(PdfRenderer::class)->render('user.kalender.pdf', [
             'calendar' => $calendar,
-            'imagePath' => $base64
-        ])
-        ->landscape()
-        ->format('a4')
-        ->withBrowsershot(function ($browsershot) use ($nodeBinary, $npmBinary) {
-            $browsershot->noSandbox();
-            if (!empty($nodeBinary)) {
-                $browsershot->setNodeBinary($nodeBinary);
-            }
-            if (!empty($npmBinary)) {
-                $browsershot->setNpmBinary($npmBinary);
-            }
-        });
+            'imagePath' => $base64,
+        ])->landscape();
 
         return $pdf->download("Kalender_Akademik_STITEK_{$calendar->year}.pdf");
     }
@@ -131,13 +106,13 @@ class CalendarController extends Controller
 
             Calendar::create([
                 'image_path' => $path,
-                'year'       => $request->year,
-                'is_active'  => false,
+                'year' => $request->year,
+                'is_active' => false,
             ]);
 
             return redirect()->back()->with('success', 'Kalender berhasil diunggah!');
         } catch (\Throwable $e) {
-            return redirect()->back()->with('error', 'Gagal mengunggah kalender: ' . $e->getMessage());
+            return redirect()->back()->with('error', 'Gagal mengunggah kalender: '.$e->getMessage());
         }
     }
 
@@ -156,7 +131,7 @@ class CalendarController extends Controller
 
             return redirect()->back()->with('success', "Kalender tahun {$calendar->year} berhasil diaktifkan!");
         } catch (\Throwable $e) {
-            return redirect()->back()->with('error', 'Gagal mengaktifkan kalender: ' . $e->getMessage());
+            return redirect()->back()->with('error', 'Gagal mengaktifkan kalender: '.$e->getMessage());
         }
     }
 
@@ -174,7 +149,7 @@ class CalendarController extends Controller
 
             return redirect()->back()->with('success', 'Kalender berhasil dihapus!');
         } catch (\Throwable $e) {
-            return redirect()->back()->with('error', 'Gagal menghapus kalender: ' . $e->getMessage());
+            return redirect()->back()->with('error', 'Gagal menghapus kalender: '.$e->getMessage());
         }
     }
 }

@@ -1,12 +1,33 @@
 <script setup>
 import { Head, useForm, router } from '@inertiajs/vue3';
-import { ref } from 'vue';
+import { ref, watch } from 'vue';
 import AdminLayout from '@/Layouts/AdminLayout.vue';
+import Pagination from '@/Components/Pagination.vue';
 import { Users, Plus, Pencil, Trash2, X } from '@lucide/vue';
 
 defineOptions({ layout: AdminLayout });
 
-const props = defineProps({ users: Array });
+// Peran dibaca dari relasi Spatie `roles`, bukan lagi kolom users.role yang
+// sudah dihapus. AdminController meng-eager-load relasi ini.
+const namaPeran = (u) => u.roles?.[0]?.name ?? 'user';
+
+const props = defineProps({
+    users: { type: Object, required: true },
+    filters: { type: Object, default: () => ({}) },
+});
+
+const search = ref(props.filters?.search ?? '');
+
+// Debounce agar tidak mengirim request tiap ketukan tombol.
+let searchTimer = null;
+watch(search, (value) => {
+    clearTimeout(searchTimer);
+    searchTimer = setTimeout(() => {
+        router.get('/admin/kelola-user', { search: value || undefined }, {
+            preserveState: true, preserveScroll: true, replace: true,
+        });
+    }, 350);
+});
 
 const showForm = ref(false);
 const editingId = ref(null);
@@ -18,7 +39,7 @@ const form = useForm({
 const openCreate = () => { editingId.value = null; form.reset(); showForm.value = true; };
 const openEdit = (u) => {
     editingId.value = u.id;
-    form.name = u.name; form.email = u.email; form.password = ''; form.role = u.role;
+    form.name = u.name; form.email = u.email; form.password = ''; form.role = namaPeran(u);
     showForm.value = true;
 };
 const close = () => { showForm.value = false; form.reset(); editingId.value = null; };
@@ -68,6 +89,17 @@ const formatDate = (d) => d ? new Date(d).toLocaleDateString('id-ID', { day: 'nu
             </form>
         </div>
 
+        <div class="mb-4">
+            <label for="cari" class="sr-only">Cari</label>
+            <input
+                id="cari"
+                v-model="search"
+                type="search"
+                placeholder="Cari nama atau email pengguna…"
+                class="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-base text-slate-900 placeholder:text-slate-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 sm:w-80"
+            />
+        </div>
+
         <div class="overflow-x-auto rounded-2xl border border-slate-200 bg-white shadow-sm">
             <table class="w-full text-sm">
                 <thead class="border-b border-slate-100 bg-slate-50/80">
@@ -80,12 +112,12 @@ const formatDate = (d) => d ? new Date(d).toLocaleDateString('id-ID', { day: 'nu
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-slate-100">
-                    <tr v-for="u in users" :key="u.id" class="hover:bg-slate-50/60 transition-colors">
+                    <tr v-for="u in users.data" :key="u.id" class="hover:bg-slate-50/60 transition-colors">
                         <td class="px-5 py-3.5 font-semibold text-slate-800">{{ u.name }}</td>
                         <td class="px-5 py-3.5 text-slate-600">{{ u.email }}</td>
                         <td class="px-5 py-3.5">
-                            <span :class="['inline-flex items-center rounded-full border px-2.5 py-0.5 text-[10px] font-semibold', u.role === 'admin' ? 'bg-orange-50 text-orange-700 border-orange-200' : 'bg-blue-50 text-blue-700 border-blue-200']">
-                                {{ u.role === 'admin' ? 'Admin' : 'User' }}
+                            <span :class="['inline-flex items-center rounded-full border px-2.5 py-0.5 text-[10px] font-semibold', namaPeran(u) === 'admin' ? 'bg-orange-50 text-orange-700 border-orange-200' : 'bg-blue-50 text-blue-700 border-blue-200']">
+                                {{ namaPeran(u) === 'admin' ? 'Admin' : 'User' }}
                             </span>
                         </td>
                         <td class="px-5 py-3.5 text-slate-500 text-xs">{{ formatDate(u.created_at) }}</td>
@@ -96,9 +128,11 @@ const formatDate = (d) => d ? new Date(d).toLocaleDateString('id-ID', { day: 'nu
                             </div>
                         </td>
                     </tr>
-                    <tr v-if="!users.length"><td colspan="5" class="px-5 py-12 text-center text-slate-400">Belum ada data user.</td></tr>
+                    <tr v-if="!users.data.length"><td colspan="5" class="px-5 py-12 text-center text-slate-400">Belum ada data user.</td></tr>
                 </tbody>
             </table>
+
+            <Pagination :meta="users" />
         </div>
     </div>
 </template>

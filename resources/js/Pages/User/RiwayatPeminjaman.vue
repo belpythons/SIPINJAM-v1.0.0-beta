@@ -2,6 +2,7 @@
 import { computed } from 'vue';
 import { Head, usePage } from '@inertiajs/vue3';
 import UserLayout from '@/Layouts/UserLayout.vue';
+import Pagination from '@/Components/Pagination.vue';
 import {
   ClipboardList,
   Clock,
@@ -21,7 +22,7 @@ import { Card, CardContent } from '@/components/ui/card';
 defineOptions({ layout: UserLayout });
 
 const props = defineProps({
-  bookings: Array,
+  bookings: { type: Object, required: true },
   stats: Object,
 });
 
@@ -123,9 +124,9 @@ const timelineSteps = [
     </div>
 
     <!-- Booking Cards -->
-    <div v-if="bookings.length > 0" class="space-y-4">
+    <div v-if="bookings.data.length > 0" class="space-y-4">
       <Card
-        v-for="booking in bookings"
+        v-for="booking in bookings.data"
         :key="booking.id"
         :class="[
           'overflow-hidden transition-all duration-200 hover:shadow-md',
@@ -287,6 +288,12 @@ const timelineSteps = [
         </CardContent>
       </Card>
     </div>
+
+    <Pagination
+      v-if="bookings.data.length > 0"
+      :meta="bookings"
+      class="mt-4 rounded-2xl border border-slate-200 bg-white"
+    />
 
     <!-- Empty State -->
     <div v-else class="rounded-2xl border-2 border-dashed border-slate-200 bg-white py-20 text-center">

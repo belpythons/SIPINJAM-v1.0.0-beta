@@ -5,7 +5,6 @@ namespace Database\Seeders;
 use App\Models\User;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Hash;
-use Spatie\Permission\Models\Role;
 
 class UserSeeder extends Seeder
 {
@@ -14,16 +13,14 @@ class UserSeeder extends Seeder
         // Truncate — fresh start
         User::query()->delete();
 
-        // Buat role Spatie jika belum ada
-        Role::firstOrCreate(['name' => 'admin', 'guard_name' => 'web']);
-        Role::firstOrCreate(['name' => 'user', 'guard_name' => 'web']);
+        // Peran & permission dibuat di RolePermissionSeeder (dipanggil lebih dulu
+        // oleh DatabaseSeeder) — satu tempat saja.
 
         // ── 1. Admin Account ────────────────────────────
         $admin = User::create([
             'name' => 'Admin STITEK',
             'email' => 'admin@sipinjam.test',
             'password' => Hash::make('password'),
-            'role' => 'admin',
         ]);
         $admin->assignRole('admin');
 
@@ -32,9 +29,8 @@ class UserSeeder extends Seeder
             'name' => 'Mahasiswa STITEK',
             'email' => 'user@sipinjam.test',
             'password' => Hash::make('password'),
-            'role' => 'user',
         ]);
-        $user->assignRole('user');
+        $user->assignRole('mahasiswa');
 
         // ── 3. Demo Account ────────────────────────────
         $demo = User::create([
@@ -42,9 +38,8 @@ class UserSeeder extends Seeder
             'nickname' => 'Belva',
             'email' => 'belvapranamasriwibowo@gmail.com',
             'password' => Hash::make('belva123'),
-            'role' => 'user',
         ]);
-        $demo->assignRole('user');
+        $demo->assignRole('mahasiswa');
 
         // ── 4. Additional 45 Student Accounts (including 2 Blocked Accounts) ──
         for ($i = 1; $i <= 45; $i++) {
@@ -61,14 +56,13 @@ class UserSeeder extends Seeder
             }
 
             $dummyUser = User::create([
-                'name' => 'Dummy Student ' . $i,
+                'name' => 'Dummy Student '.$i,
                 'email' => "{$nim}@stitek.ac.id",
                 'password' => Hash::make($nim),
-                'role' => 'user',
                 'is_blocked' => $isBlocked,
                 'blocked_reason' => $blockedReason,
             ]);
-            $dummyUser->assignRole('user');
+            $dummyUser->assignRole('mahasiswa');
         }
     }
 }

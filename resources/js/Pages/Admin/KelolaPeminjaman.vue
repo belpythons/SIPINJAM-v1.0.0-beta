@@ -1,11 +1,28 @@
 <script setup>
 import { Head, router } from '@inertiajs/vue3';
+import { ref, watch } from 'vue';
 import AdminLayout from '@/Layouts/AdminLayout.vue';
+import Pagination from '@/Components/Pagination.vue';
 import { ClipboardList, CheckCircle2, XCircle } from '@lucide/vue';
 
 defineOptions({ layout: AdminLayout });
 
-const props = defineProps({ peminjamans: Array });
+const props = defineProps({
+    peminjamans: { type: Object, required: true },
+    filters: { type: Object, default: () => ({}) },
+});
+
+const search = ref(props.filters?.search ?? '');
+
+let searchTimer = null;
+watch(search, (value) => {
+    clearTimeout(searchTimer);
+    searchTimer = setTimeout(() => {
+        router.get('/admin/kelola-peminjaman', { search: value || undefined }, {
+            preserveState: true, preserveScroll: true, replace: true,
+        });
+    }, 350);
+});
 
 const statusMap = {
     menunggu: { label: 'Menunggu', cls: 'bg-amber-50 text-amber-700 border-amber-200' },
@@ -32,6 +49,17 @@ const formatDate = (d) => d ? new Date(d).toLocaleDateString('id-ID', { day: 'nu
             <h1 class="text-2xl font-bold tracking-tight text-slate-900">Kelola Peminjaman</h1>
         </div>
 
+        <div class="mb-4">
+            <label for="cari" class="sr-only">Cari</label>
+            <input
+                id="cari"
+                v-model="search"
+                type="search"
+                placeholder="Cari nama peminjam, item, atau nomor surat…"
+                class="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-base text-slate-900 placeholder:text-slate-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 sm:w-80"
+            />
+        </div>
+
         <div class="overflow-x-auto rounded-2xl border border-slate-200 bg-white shadow-sm">
             <table class="w-full text-sm">
                 <thead class="border-b border-slate-100 bg-slate-50/80">
@@ -46,7 +74,7 @@ const formatDate = (d) => d ? new Date(d).toLocaleDateString('id-ID', { day: 'nu
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-slate-100">
-                    <tr v-for="p in peminjamans" :key="p.id" class="hover:bg-slate-50/60 transition-colors">
+                    <tr v-for="p in peminjamans.data" :key="p.id" class="hover:bg-slate-50/60 transition-colors">
                         <td class="px-5 py-3.5">
                             <p class="font-semibold text-slate-800">{{ p.user?.name || '-' }}</p>
                             <p class="text-[11px] text-slate-400">{{ p.user?.email || '' }}</p>
@@ -78,11 +106,13 @@ const formatDate = (d) => d ? new Date(d).toLocaleDateString('id-ID', { day: 'nu
                             <span v-else class="text-xs text-slate-400">—</span>
                         </td>
                     </tr>
-                    <tr v-if="!peminjamans.length">
+                    <tr v-if="!peminjamans.data.length">
                         <td colspan="7" class="px-5 py-12 text-center text-slate-400">Belum ada data peminjaman.</td>
                     </tr>
                 </tbody>
             </table>
+
+            <Pagination :meta="peminjamans" />
         </div>
     </div>
 </template>

@@ -11,7 +11,10 @@ class StoreCalendarRequest extends FormRequest
      */
     public function authorize(): bool
     {
-        return $this->user() && $this->user()->role === 'admin';
+        // Otorisasi berbasis permission Spatie — satu-satunya sumber kebenaran.
+        // Saat P1 menambah peran staf_aset, cukup beri 'master.manage' di seeder;
+        // kedelapan FormRequest ini tidak perlu disentuh lagi.
+        return $this->user()?->can('master.konten.manage') ?? false;
     }
 
     /**
@@ -21,7 +24,7 @@ class StoreCalendarRequest extends FormRequest
     {
         return [
             'image_path' => 'nullable|image|mimes:png,jpg,jpeg|max:5120',
-            'year'       => 'required|integer|min:2020|max:2100',
+            'year' => 'required|integer|min:2020|max:2100',
         ];
     }
 }

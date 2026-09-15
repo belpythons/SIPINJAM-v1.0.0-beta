@@ -16,7 +16,7 @@ class Calendar extends Model
     {
         return [
             'is_active' => 'boolean',
-            'year'      => 'integer',
+            'year' => 'integer',
         ];
     }
 }

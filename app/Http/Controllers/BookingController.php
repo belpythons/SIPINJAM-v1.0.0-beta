@@ -3,38 +3,49 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\StoreBookingRequest;
+use App\Models\Dokumen;
 use App\Models\Peminjaman;
 use App\Services\BookingService;
+use App\Services\NomorSuratService;
+use App\Services\PdfRenderer;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Auth;
 use Inertia\Inertia;
 use Inertia\Response;
-use Spatie\LaravelPdf\Facades\Pdf;
 
 class BookingController extends Controller
 {
     public function __construct(
-        private readonly BookingService $bookingService
+        private readonly BookingService $bookingService,
+        private readonly PdfRenderer $pdfRenderer
     ) {}
 
     public function index(): Response
     {
         // Fix N+1 — eager-load relasi barang & ruangan
+        // B-20: dipaginasi agar tidak memuat seluruh riwayat ke memori.
         $bookings = Peminjaman::with(['barang', 'ruangan'])
             ->where('user_id', Auth::id())
             ->latest()
-            ->get();
+            ->paginate(20)
+            ->withQueryString();
+
+        // Statistik dihitung lewat kueri agregat, bukan dari koleksi halaman
+        // saat ini — kalau tidak, angkanya hanya mencerminkan 20 baris teratas.
+        $hitung = fn (?string $status) => Peminjaman::where('user_id', Auth::id())
+            ->when($status !== null, fn ($q) => $q->where('status', $status))
+            ->count();
 
         $stats = [
-            'total'     => $bookings->count(),
-            'pending'   => $bookings->where('status', Peminjaman::STATUS_PENDING)->count(),
-            'approved'  => $bookings->where('status', Peminjaman::STATUS_APPROVED)->count(),
-            'completed' => $bookings->where('status', Peminjaman::STATUS_DONE)->count(),
+            'total' => $hitung(null),
+            'pending' => $hitung(Peminjaman::STATUS_PENDING),
+            'approved' => $hitung(Peminjaman::STATUS_APPROVED),
+            'completed' => $hitung(Peminjaman::STATUS_DONE),
         ];
 
         return Inertia::render('User/RiwayatPeminjaman', [
             'bookings' => $bookings,
-            'stats'    => $stats,
+            'stats' => $stats,
         ]);
     }
 
@@ -79,42 +90,18 @@ class BookingController extends Controller
 
         // Ensure nomor_surat is generated
         if (empty($peminjaman->nomor_surat)) {
-            $peminjaman->nomor_surat = Peminjaman::generateNomorSurat();
+            $peminjaman->nomor_surat = app(NomorSuratService::class)->terbitkan(Dokumen::JENIS_SURAT_IZIN);
             $peminjaman->save();
         }
 
-        $nodeBinary = env('NODE_BINARY_PATH');
-        $npmBinary = env('NPM_BINARY_PATH');
-
-        if (empty($nodeBinary) || empty($npmBinary)) {
-            $isWindows = PHP_OS_FAMILY === 'Windows' || stristr(PHP_OS, 'WIN');
-            if ($isWindows) {
-                $nodeBinary = $nodeBinary ?: 'C:\\Program Files\\nodejs\\node.exe';
-                $npmBinary = $npmBinary ?: 'C:\\Program Files\\nodejs\\npm.cmd';
-            } else {
-                $nodeBinary = $nodeBinary ?: '/usr/bin/node';
-                $npmBinary = $npmBinary ?: '/usr/bin/npm';
-            }
-        }
-
         // Render PDF
-        $pdf = Pdf::view('pdf.surat-peminjaman', [
+        $pdf = $this->pdfRenderer->renderDokumenResmi('pdf.surat-peminjaman', [
             'peminjaman' => $peminjaman,
-            'user'       => $peminjaman->user,
-            'asset'      => $peminjaman->tipe === 'ruangan'
+            'user' => $peminjaman->user,
+            'asset' => $peminjaman->tipe === 'ruangan'
                                 ? $peminjaman->ruangan
                                 : $peminjaman->barang,
-        ])
-        ->format('a4')
-        ->withBrowsershot(function ($browsershot) use ($nodeBinary, $npmBinary) {
-            $browsershot->noSandbox();
-            if (!empty($nodeBinary)) {
-                $browsershot->setNodeBinary($nodeBinary);
-            }
-            if (!empty($npmBinary)) {
-                $browsershot->setNpmBinary($npmBinary);
-            }
-        });
+        ]);
 
         // Slugified filename
         $safeNomor = str_replace(['/', '\\'], '-', $peminjaman->nomor_surat);

@@ -1,167 +1,289 @@
+@php
+    // B-08: TIDAK ADA sumber daya eksternal (CDN/Google Fonts) di berkas ini.
+    // Seluruh gaya di-inline dan font memakai yang tersedia di sistem, supaya
+    // PDF tetap benar saat server tidak punya akses internet keluar.
+    //
+    // B-09: seluruh identitas surat dibaca dari config/sipinjam.php.
+    $kop      = config('sipinjam.kop');
+    $pejabat  = config('sipinjam.penandatangan.pejabat');
+    $pengelola = config('sipinjam.penandatangan.pengelola_aset');
+    $penerima = config('sipinjam.penandatangan.penerima_surat');
+    $kota     = config('sipinjam.surat.kota');
+    $zona     = config('sipinjam.surat.zona_waktu');
+
+    // Logo di-embed sebagai data URI agar tidak perlu permintaan jaringan.
+    $logoData = null;
+    $logoPath = public_path($kop['logo_path'] ?? '');
+    if (! empty($kop['logo_path']) && is_file($logoPath)) {
+        $logoData = 'data:image/' . pathinfo($logoPath, PATHINFO_EXTENSION)
+            . ';base64,' . base64_encode(file_get_contents($logoPath));
+    }
+
+    $tanggalSurat = $peminjaman->approved_at ?? now();
+@endphp
 <!DOCTYPE html>
 <html lang="id">
 
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Surat Peminjaman - {{ $peminjaman->nomor_surat }}</title>
-    <!-- Tailwind CSS Play CDN -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap"
-        rel="stylesheet">
+    <title>Surat Izin Peminjaman - {{ $peminjaman->nomor_surat }}</title>
     <style>
+        @page {
+            size: A4;
+            margin: 2.5cm 2.5cm 2cm 2.5cm;
+        }
+
+        * { box-sizing: border-box; }
+
         body {
-            font-family: 'Inter', sans-serif;
+            margin: 0;
+            font-family: "Times New Roman", Times, serif;
+            font-size: 12pt;
+            line-height: 1.5;
+            color: #000;
+        }
+
+        /* ── Kop Surat ────────────────────────────────── */
+        .kop {
+            border-bottom: 3px double #000;
+            padding-bottom: 8px;
+            margin-bottom: 18px;
+        }
+
+        .kop-table { width: 100%; border-collapse: collapse; }
+        .kop-logo { width: 80px; vertical-align: middle; }
+        .kop-logo img { width: 72px; height: auto; }
+        .kop-teks { text-align: center; vertical-align: middle; }
+
+        .kop-yayasan {
+            margin: 0;
+            font-size: 11pt;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .kop-institusi {
+            margin: 2px 0;
+            font-size: 16pt;
+            font-weight: bold;
+            text-transform: uppercase;
+        }
+
+        .kop-alamat { margin: 0; font-size: 9pt; }
+
+        /* ── Identitas surat ──────────────────────────── */
+        .tanggal { text-align: right; margin-bottom: 14px; }
+
+        .meta { border-collapse: collapse; margin-bottom: 16px; }
+        .meta td { padding: 1px 0; vertical-align: top; }
+        .meta .label { width: 80px; }
+        .meta .sep { width: 14px; }
+
+        .tujuan { margin-bottom: 16px; }
+        .tujuan p { margin: 0; }
+        .tujuan .nama { font-weight: bold; }
+
+        p.isi { text-align: justify; margin: 0 0 10px 0; }
+        p.isi.indent { text-indent: 2.5em; }
+
+        /* ── Tabel rincian ────────────────────────────── */
+        table.rincian {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 14px 0 18px 0;
+            font-size: 11pt;
+        }
+
+        table.rincian th,
+        table.rincian td {
+            border: 1px solid #000;
+            padding: 6px 8px;
+            text-align: left;
+            vertical-align: top;
+        }
+
+        table.rincian th {
+            background: #eee;
+            font-size: 10pt;
+            text-transform: uppercase;
+        }
+
+        table.rincian .baris-label { width: 32%; font-weight: bold; }
+
+        /* ── Tanda tangan ─────────────────────────────── */
+        .ttd {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 28px;
+        }
+
+        .ttd td {
+            width: 50%;
+            text-align: center;
+            vertical-align: top;
+        }
+
+        .ttd .jabatan { margin: 0 0 70px 0; }
+        .ttd .nama { margin: 0; font-weight: bold; text-decoration: underline; }
+        .ttd .nip { margin: 2px 0 0 0; font-size: 10pt; }
+
+        .footer {
+            margin-top: 28px;
+            padding-top: 6px;
+            border-top: 1px solid #999;
+            font-size: 8pt;
+            text-align: center;
+            color: #444;
         }
     </style>
 </head>
 
-<body class="bg-white text-slate-850 px-12 py-10 leading-relaxed text-sm">
-    <!-- Kop Surat Resmi -->
-    <div class="flex items-center justify-between border-b-4 border-double border-slate-900 pb-3 mb-6">
-        <div class="text-center w-full">
-            <h2 class="text-xs font-bold tracking-widest uppercase text-slate-600 mb-0.5">Yayasan Pendidikan Bessai
-                Berinta</h2>
-            <h1 class="text-xl font-extrabold tracking-wide uppercase text-slate-900">Sekolah Tinggi Teknologi Bontang
-            </h1>
-            <p class="text-[10px] text-slate-500 font-medium mt-1">Jl. Brigjend Katamso No.40, Bontang Utara, Kota
-                Bontang, Kalimantan Timur 75313</p>
-            <p class="text-[10px] text-slate-400 font-medium">Website: <a href="https://stitek.ac.id"
-                    class="text-blue-600 underline">stitek.ac.id</a> | Telp: (0548) 22212</p>
-        </div>
-    </div>
+<body>
 
-    <!-- Tanggal Kanan Atas -->
-    <div class="flex justify-end mb-6">
-        <div class="font-medium text-slate-800">
-            Bontang, {{ \Carbon\Carbon::parse($peminjaman->approved_at)->translatedFormat('d F Y') }}
-        </div>
-    </div>
-
-    <!-- Nomor, Lampiran, Perihal -->
-    <div class="grid grid-cols-2 gap-4 mb-6">
-        <div>
-            <table class="w-full text-slate-800">
-                <tr>
-                    <td class="w-20 valign-top font-semibold text-slate-600">Nomor</td>
-                    <td class="w-4 valign-top text-slate-400">:</td>
-                    <td class="text-slate-900 font-medium">{{ $peminjaman->nomor_surat }}</td>
-                </tr>
-                <tr>
-                    <td class="valign-top font-semibold text-slate-600">Lampiran</td>
-                    <td class="valign-top text-slate-400">:</td>
-                    <td class="text-slate-900 font-medium">-</td>
-                </tr>
-                <tr>
-                    <td class="valign-top font-semibold text-slate-600 text-nowrap">Perihal</td>
-                    <td class="valign-top text-slate-400">:</td>
-                    <td class="font-bold text-slate-900">Surat Izin Peminjaman Aset ({{ ucfirst($peminjaman->tipe) }})
-                    </td>
-                </tr>
-            </table>
-        </div>
-    </div>
-
-    <!-- Tujuan Surat -->
-    <div class="mb-6 space-y-1">
-        <p class="text-slate-700">Kepada Yth.</p>
-        <p class="font-bold text-slate-950">Ketua STITEK Bontang</p>
-        <p class="font-semibold text-slate-800">(Bapak Hardianto, S.T., M.Eng.)</p>
-        <p class="text-slate-700">di -</p>
-        <p class="pl-4 text-slate-700">Tempat</p>
-    </div>
-
-    <!-- Salam Pembuka & Pengantar -->
-    <div class="text-justify mb-6 space-y-3">
-        <p class="text-slate-800">Dengan hormat,</p>
-        <p class="indent-8 text-slate-800">
-            Sehubungan dengan kebutuhan sarana penunjang kegiatan akademis/kemahasiswaan di lingkungan Sekolah Tinggi
-            Teknologi Bontang, dengan ini diajukan permohonan peminjaman aset kampus dengan rincian pemohon dan aset
-            sebagai berikut:
-        </p>
-    </div>
-
-    <!-- Tabel Detail Peminjam & Aset (Tailwind border-slate-300) -->
-    <table class="w-full border-collapse border border-slate-300 text-slate-800 mb-8 rounded-lg overflow-hidden">
-        <thead>
-            <tr class="bg-slate-50 text-slate-700 border-b border-slate-300">
-                <th class="border border-slate-300 px-4 py-3 text-left font-bold text-xs uppercase tracking-wider">
-                    Detail Peminjam</th>
-                <th class="border border-slate-300 px-4 py-3 text-left font-bold text-xs uppercase tracking-wider">Aset
-                    yang Dipinjam</th>
-                <th class="border border-slate-300 px-4 py-3 text-left font-bold text-xs uppercase tracking-wider">Waktu
-                    Penggunaan</th>
+    <div class="kop">
+        <table class="kop-table">
+            <tr>
+                @if ($logoData)
+                    <td class="kop-logo"><img src="{{ $logoData }}" alt="Logo {{ $kop['institusi'] }}"></td>
+                @endif
+                <td class="kop-teks">
+                    <p class="kop-yayasan">{{ $kop['yayasan'] }}</p>
+                    <p class="kop-institusi">{{ $kop['institusi'] }}</p>
+                    <p class="kop-alamat">{{ $kop['alamat'] }}</p>
+                    <p class="kop-alamat">Website: {{ $kop['website'] }} &nbsp;|&nbsp; Telp: {{ $kop['telepon'] }}</p>
+                </td>
+                @if ($logoData)
+                    <td class="kop-logo"></td>
+                @endif
             </tr>
-        </thead>
-        <tbody>
-            <tr class="align-top hover:bg-slate-50/50 transition-colors">
-                <td class="border border-slate-300 px-4 py-3.5 space-y-1">
-                    <p class="font-bold text-slate-950">{{ $user->name }}</p>
-                    <p class="text-xs text-slate-500 font-medium">NIM / Email:</p>
-                    <p class="text-xs text-slate-600 font-mono">{{ $user->email }}</p>
-                </td>
-                <td class="border border-slate-300 px-4 py-3.5 space-y-1">
-                    <p class="font-bold text-slate-950">{{ $asset->nama ?? $peminjaman->nama_item }}</p>
-                    <p class="text-xs text-slate-500 font-medium">Kode Aset: <span
-                            class="font-mono bg-slate-100 px-1.5 py-0.5 rounded text-slate-700">{{ $asset->kode ?? '-' }}</span>
-                    </p>
-                    @if($peminjaman->tipe === 'ruangan')
-                        <p class="text-xs text-slate-600">Lokasi: {{ $asset->lokasi ?? '-' }}</p>
-                        <p class="text-xs text-slate-600 font-medium">Kapasitas: {{ $asset->kapasitas ?? '-' }} Orang</p>
-                    @else
-                        <p class="text-xs text-slate-600">Kategori: {{ $asset->kategori ?? '-' }}</p>
-                        <p class="text-xs text-slate-600 font-medium">Jumlah: 1 Unit</p>
-                    @endif
-                </td>
-                <td class="border border-slate-300 px-4 py-3.5 space-y-1">
-                    <p class="font-bold text-slate-950">
-                        {{ \Carbon\Carbon::parse($peminjaman->tanggal_mulai)->translatedFormat('d M Y') }}
-                        @if($peminjaman->tanggal_mulai != $peminjaman->tanggal_selesai)
-                            s/d {{ \Carbon\Carbon::parse($peminjaman->tanggal_selesai)->translatedFormat('d M Y') }}
-                        @endif
-                    </p>
-                    <p class="text-xs text-slate-600 font-semibold">Pukul: {{ $peminjaman->jam_mulai }} -
-                        {{ $peminjaman->jam_selesai }} WITA</p>
-                    <p class="text-xs text-slate-500 italic mt-1.5">Keperluan: {{ $peminjaman->keterangan }}</p>
-                </td>
-            </tr>
-        </tbody>
+        </table>
+    </div>
+
+    <p class="tanggal">{{ $kota }}, {{ \Carbon\Carbon::parse($tanggalSurat)->translatedFormat('d F Y') }}</p>
+
+    <table class="meta">
+        <tr>
+            <td class="label">Nomor</td>
+            <td class="sep">:</td>
+            <td>{{ $peminjaman->nomor_surat }}</td>
+        </tr>
+        <tr>
+            <td class="label">Lampiran</td>
+            <td class="sep">:</td>
+            <td>-</td>
+        </tr>
+        <tr>
+            <td class="label">Perihal</td>
+            <td class="sep">:</td>
+            <td><strong>Surat Izin Peminjaman Aset ({{ ucfirst($peminjaman->tipe) }})</strong></td>
+        </tr>
     </table>
 
-    <!-- Ketentuan / Penutup -->
-    <div class="text-justify mb-8 space-y-3">
-        <p class="text-slate-800">
-            Dengan disetujuinya surat permohonan ini, kami selaku peminjam menyatakan berkomitmen penuh untuk mematuhi
-            segala peraturan dan tata tertib peminjaman aset di STITEK Bontang. Kami bertanggung jawab penuh atas
-            kebersihan, keamanan, serta pengembalian aset dalam kondisi baik dan tepat waktu.
-        </p>
-        <p class="text-slate-800">
-            Demikian surat izin peminjaman ini dibuat, atas perhatian dan kerja sama Bapak, kami ucapkan terima kasih.
-        </p>
+    <div class="tujuan">
+        <p>Kepada Yth.</p>
+        <p class="nama">{{ $penerima['jabatan'] }}</p>
+        <p>{{ $penerima['nama'] }}</p>
+        <p>di -</p>
+        <p style="padding-left: 2em;">Tempat</p>
     </div>
 
-    <!-- Tanda Tangan Sejajar di Bawah (Ketua Panitia kiri, Sekretaris Panitia kanan) -->
-    <div class="grid grid-cols-2 gap-8 text-center text-slate-800 mt-12">
-        <div>
-            <p class="text-slate-500 font-medium">Hormat Kami,</p>
-            <p class="font-bold text-slate-900 mt-1 mb-20">Ketua Panitia</p>
-            <p class="font-extrabold underline text-slate-950">{{ $user->name }}</p>
-            <p class="text-xs text-slate-500 font-medium mt-1">NIM / ID: {{ $user->id }}</p>
-        </div>
-        <div>
-            <p class="text-slate-500 font-medium">Mengetahui,</p>
-            <p class="font-bold text-slate-900 mt-1 mb-20">Sekretaris Panitia</p>
-            <p class="font-extrabold underline text-slate-950">Aisyah Rahmawati, S.Kom.</p>
-            <p class="text-xs text-slate-500 font-medium mt-1">NIP: 2024090123</p>
-        </div>
+    <p class="isi">Dengan hormat,</p>
+
+    <p class="isi indent">
+        Sehubungan dengan kebutuhan sarana penunjang kegiatan akademis/kemahasiswaan di lingkungan
+        {{ $kop['institusi'] }}, dengan ini disampaikan bahwa permohonan peminjaman aset kampus berikut
+        <strong>disetujui</strong> dengan rincian sebagai berikut:
+    </p>
+
+    <table class="rincian">
+        <tr>
+            <td class="baris-label">Nama Peminjam</td>
+            <td>{{ $user->name }}</td>
+        </tr>
+        <tr>
+            <td class="baris-label">Email</td>
+            <td>{{ $user->email }}</td>
+        </tr>
+        <tr>
+            <td class="baris-label">Aset yang Dipinjam</td>
+            <td>
+                {{ $asset->nama ?? $peminjaman->nama_item }}
+                @if (! empty($asset?->kode))
+                    ({{ $asset->kode }})
+                @endif
+            </td>
+        </tr>
+        @if ($peminjaman->tipe === 'ruangan')
+            <tr>
+                <td class="baris-label">Lokasi</td>
+                <td>{{ $asset->lokasi ?? '-' }}</td>
+            </tr>
+            <tr>
+                <td class="baris-label">Kapasitas</td>
+                <td>{{ $asset->kapasitas ?? '-' }} orang</td>
+            </tr>
+        @else
+            <tr>
+                <td class="baris-label">Kategori</td>
+                <td>{{ $asset->kategori ?? '-' }}</td>
+            </tr>
+            <tr>
+                {{-- B-09c: sebelumnya tertulis "1 Unit" secara statis. --}}
+                <td class="baris-label">Jumlah</td>
+                <td>{{ $peminjaman->jumlah ?? 1 }} unit</td>
+            </tr>
+        @endif
+        <tr>
+            <td class="baris-label">Waktu Penggunaan</td>
+            <td>
+                {{ \Carbon\Carbon::parse($peminjaman->tanggal_mulai)->translatedFormat('d F Y') }}
+                @if ($peminjaman->tanggal_mulai != $peminjaman->tanggal_selesai)
+                    s/d {{ \Carbon\Carbon::parse($peminjaman->tanggal_selesai)->translatedFormat('d F Y') }}
+                @endif
+                <br>
+                Pukul {{ \Illuminate\Support\Str::of($peminjaman->jam_mulai)->substr(0, 5) }} –
+                {{ \Illuminate\Support\Str::of($peminjaman->jam_selesai)->substr(0, 5) }} {{ $zona }}
+            </td>
+        </tr>
+        <tr>
+            <td class="baris-label">Keperluan</td>
+            <td>{{ $peminjaman->keterangan ?: '-' }}</td>
+        </tr>
+    </table>
+
+    <p class="isi indent">
+        Dengan diterbitkannya surat izin ini, peminjam menyatakan bersedia mematuhi seluruh peraturan dan
+        tata tertib peminjaman aset di {{ $kop['institusi'] }}, serta bertanggung jawab penuh atas kebersihan,
+        keamanan, dan pengembalian aset dalam kondisi baik dan tepat waktu.
+    </p>
+
+    <p class="isi indent">
+        Demikian surat izin peminjaman ini dibuat untuk dipergunakan sebagaimana mestinya. Atas perhatian
+        dan kerja samanya, kami ucapkan terima kasih.
+    </p>
+
+    <table class="ttd">
+        <tr>
+            <td>
+                <p style="margin:0;">Mengetahui,</p>
+                <p class="jabatan">{{ $pengelola['jabatan'] }}</p>
+                <p class="nama">{{ $pengelola['nama'] }}</p>
+                <p class="nip">NIP: {{ $pengelola['nip'] }}</p>
+            </td>
+            <td>
+                <p style="margin:0;">Menyetujui,</p>
+                <p class="jabatan">{{ $pejabat['jabatan'] }}</p>
+                <p class="nama">{{ $pejabat['nama'] }}</p>
+                <p class="nip">NIP: {{ $pejabat['nip'] }}</p>
+            </td>
+        </tr>
+    </table>
+
+    <div class="footer">
+        Sistem SiPinjam {{ $kop['institusi'] }} &bull; Dokumen diterbitkan secara elektronik
+        &bull; Dicetak: {{ now()->translatedFormat('d/m/Y H:i') }} {{ $zona }}
     </div>
 
-    <!-- Footer Otomatis -->
-    <div
-        class="fixed bottom-4 left-12 right-12 text-center text-[10px] text-slate-400 border-t border-slate-200 pt-2.5">
-        Sistem SiPinjam STITEK Bontang &bull; Dokumen digital ini sah dan diterbitkan secara elektronik &bull; Dicetak:
-        {{ now()->translatedFormat('d/m/Y H:i') }} WITA
-    </div>
 </body>
 
 </html>

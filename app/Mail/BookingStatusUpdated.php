@@ -24,7 +24,7 @@ class BookingStatusUpdated extends Mailable implements ShouldQueue
         $label = $this->statusBaru === 'disetujui' ? 'Disetujui ✅' : 'Ditolak ❌';
 
         return new Envelope(
-            subject: '[SIPINJAM] Peminjaman #' . $this->peminjaman->id . ' — ' . $label,
+            subject: '[SIPINJAM] Peminjaman #'.$this->peminjaman->id.' — '.$label,
         );
     }
 

@@ -3,12 +3,14 @@
 namespace Database\Seeders;
 
 use App\Models\Barang;
+use App\Models\Dokumen;
 use App\Models\Peminjaman;
 use App\Models\Ruangan;
 use App\Models\User;
-use Illuminate\Database\Seeder;
+use App\Services\NomorSuratService;
 use Carbon\Carbon;
 use Carbon\CarbonPeriod;
+use Illuminate\Database\Seeder;
 
 class PeminjamanSeeder extends Seeder
 {
@@ -18,7 +20,7 @@ class PeminjamanSeeder extends Seeder
         Peminjaman::query()->delete();
 
         // 2. Fetch Master Data
-        $users = User::where('role', 'user')->where('is_blocked', false)->get();
+        $users = User::role(config('sipinjam.peran.peminjam'))->where('is_blocked', false)->get();
         $blockedRoomUser = User::where('email', '202312010@stitek.ac.id')->firstOrFail();
         $blockedItemUser = User::where('email', '202312020@stitek.ac.id')->firstOrFail();
 
@@ -34,60 +36,60 @@ class PeminjamanSeeder extends Seeder
 
         // Target A: Lab Multimedia active "sedang_dipinjam" spanning the entirety of today
         Peminjaman::create([
-            'user_id'         => $users->random()->id,
-            'tipe'            => 'ruangan',
-            'ruangan_id'      => $labMultimedia->id,
-            'nama_item'       => $labMultimedia->nama,
-            'jumlah'          => 1,
-            'tanggal'         => $today->toDateString(),
-            'tanggal_mulai'   => $today->toDateString(),
+            'user_id' => $users->random()->id,
+            'tipe' => 'ruangan',
+            'ruangan_id' => $labMultimedia->id,
+            'nama_item' => $labMultimedia->nama,
+            'jumlah' => 1,
+            'tanggal' => $today->toDateString(),
+            'tanggal_mulai' => $today->toDateString(),
             'tanggal_selesai' => $today->toDateString(),
-            'jam_mulai'       => '00:00',
-            'jam_selesai'     => '23:59',
-            'keterangan'      => 'Penyelenggaraan Expo Riset dan Karya Kreatif Mahasiswa',
-            'status'          => Peminjaman::STATUS_APPROVED,
-            'nomor_surat'     => Peminjaman::generateNomorSurat(),
-            'approved_at'     => $today->copy()->subDay()->setTime(9, 0),
+            'jam_mulai' => '00:00',
+            'jam_selesai' => '23:59',
+            'keterangan' => 'Penyelenggaraan Expo Riset dan Karya Kreatif Mahasiswa',
+            'status' => Peminjaman::STATUS_APPROVED,
+            'nomor_surat' => app(NomorSuratService::class)->terbitkan(Dokumen::JENIS_SURAT_IZIN),
+            'approved_at' => $today->copy()->subDay()->setTime(9, 0),
         ]);
 
         // Target B: Proyektor fully booked today (sum of jumlah = 4)
         $proyektorBookings = [
             [
-                'user'   => $users->get(0) ?? $users->random(),
+                'user' => $users->get(0) ?? $users->random(),
                 'jumlah' => 1,
-                'start'  => '08:00',
-                'end'    => '12:00',
+                'start' => '08:00',
+                'end' => '12:00',
             ],
             [
-                'user'   => $users->get(1) ?? $users->random(),
+                'user' => $users->get(1) ?? $users->random(),
                 'jumlah' => 1,
-                'start'  => '09:00',
-                'end'    => '13:00',
+                'start' => '09:00',
+                'end' => '13:00',
             ],
             [
-                'user'   => $users->get(2) ?? $users->random(),
+                'user' => $users->get(2) ?? $users->random(),
                 'jumlah' => 2,
-                'start'  => '10:00',
-                'end'    => '14:00',
+                'start' => '10:00',
+                'end' => '14:00',
             ],
         ];
 
         foreach ($proyektorBookings as $pb) {
             Peminjaman::create([
-                'user_id'         => $pb['user']->id,
-                'tipe'            => 'barang',
-                'barang_id'       => $proyektor->id,
-                'nama_item'       => $proyektor->nama,
-                'jumlah'          => $pb['jumlah'],
-                'tanggal'         => $today->toDateString(),
-                'tanggal_mulai'   => $today->toDateString(),
+                'user_id' => $pb['user']->id,
+                'tipe' => 'barang',
+                'barang_id' => $proyektor->id,
+                'nama_item' => $proyektor->nama,
+                'jumlah' => $pb['jumlah'],
+                'tanggal' => $today->toDateString(),
+                'tanggal_mulai' => $today->toDateString(),
                 'tanggal_selesai' => $today->toDateString(),
-                'jam_mulai'       => $pb['start'],
-                'jam_selesai'     => $pb['end'],
-                'keterangan'      => 'Kebutuhan presentasi sidang kelompok dan praktikum terintegrasi',
-                'status'          => Peminjaman::STATUS_APPROVED,
-                'nomor_surat'     => Peminjaman::generateNomorSurat(),
-                'approved_at'     => $today->copy()->subDay()->setTime(10, 0),
+                'jam_mulai' => $pb['start'],
+                'jam_selesai' => $pb['end'],
+                'keterangan' => 'Kebutuhan presentasi sidang kelompok dan praktikum terintegrasi',
+                'status' => Peminjaman::STATUS_APPROVED,
+                'nomor_surat' => app(NomorSuratService::class)->terbitkan(Dokumen::JENIS_SURAT_IZIN),
+                'approved_at' => $today->copy()->subDay()->setTime(10, 0),
             ]);
         }
 
@@ -95,40 +97,40 @@ class PeminjamanSeeder extends Seeder
 
         // User 10 (Room violation in Lab Multimedia)
         Peminjaman::create([
-            'user_id'         => $blockedRoomUser->id,
-            'tipe'            => 'ruangan',
-            'ruangan_id'      => $labMultimedia->id,
-            'nama_item'       => $labMultimedia->nama,
-            'jumlah'          => 1,
-            'tanggal'         => $today->copy()->subDays(5)->toDateString(),
-            'tanggal_mulai'   => $today->copy()->subDays(5)->toDateString(),
+            'user_id' => $blockedRoomUser->id,
+            'tipe' => 'ruangan',
+            'ruangan_id' => $labMultimedia->id,
+            'nama_item' => $labMultimedia->nama,
+            'jumlah' => 1,
+            'tanggal' => $today->copy()->subDays(5)->toDateString(),
+            'tanggal_mulai' => $today->copy()->subDays(5)->toDateString(),
             'tanggal_selesai' => $today->copy()->subDays(5)->toDateString(),
-            'jam_mulai'       => '08:00',
-            'jam_selesai'     => '12:00',
-            'keterangan'      => 'Praktikum Desain Grafis Mandiri - Menyebabkan pelanggaran kebersihan/kerusakan.',
-            'status'          => Peminjaman::STATUS_DONE,
-            'nomor_surat'     => Peminjaman::generateNomorSurat(),
-            'approved_at'     => $today->copy()->subDays(6)->setTime(8, 30),
-            'completed_at'    => $today->copy()->subDays(5)->setTime(12, 0),
+            'jam_mulai' => '08:00',
+            'jam_selesai' => '12:00',
+            'keterangan' => 'Praktikum Desain Grafis Mandiri - Menyebabkan pelanggaran kebersihan/kerusakan.',
+            'status' => Peminjaman::STATUS_DONE,
+            'nomor_surat' => app(NomorSuratService::class)->terbitkan(Dokumen::JENIS_SURAT_IZIN),
+            'approved_at' => $today->copy()->subDays(6)->setTime(8, 30),
+            'completed_at' => $today->copy()->subDays(5)->setTime(12, 0),
         ]);
 
         // User 20 (Item violation - Proyektor returned 7 days late)
         Peminjaman::create([
-            'user_id'         => $blockedItemUser->id,
-            'tipe'            => 'barang',
-            'barang_id'       => $proyektor->id,
-            'nama_item'       => $proyektor->nama,
-            'jumlah'          => 1,
-            'tanggal'         => $today->copy()->subDays(10)->toDateString(),
-            'tanggal_mulai'   => $today->copy()->subDays(10)->toDateString(),
+            'user_id' => $blockedItemUser->id,
+            'tipe' => 'barang',
+            'barang_id' => $proyektor->id,
+            'nama_item' => $proyektor->nama,
+            'jumlah' => 1,
+            'tanggal' => $today->copy()->subDays(10)->toDateString(),
+            'tanggal_mulai' => $today->copy()->subDays(10)->toDateString(),
             'tanggal_selesai' => $today->copy()->subDays(8)->toDateString(),
-            'jam_mulai'       => '08:00',
-            'jam_selesai'     => '17:00',
-            'keterangan'      => 'Peminjaman Proyektor untuk Lomba Eksternal (Dikembalikan terlambat 7 hari).',
-            'status'          => Peminjaman::STATUS_DONE,
-            'nomor_surat'     => Peminjaman::generateNomorSurat(),
-            'approved_at'     => $today->copy()->subDays(11)->setTime(14, 0),
-            'completed_at'    => $today->copy()->subDays(1)->setTime(17, 0), // 8th to 1st = 7 days late!
+            'jam_mulai' => '08:00',
+            'jam_selesai' => '17:00',
+            'keterangan' => 'Peminjaman Proyektor untuk Lomba Eksternal (Dikembalikan terlambat 7 hari).',
+            'status' => Peminjaman::STATUS_DONE,
+            'nomor_surat' => app(NomorSuratService::class)->terbitkan(Dokumen::JENIS_SURAT_IZIN),
+            'approved_at' => $today->copy()->subDays(11)->setTime(14, 0),
+            'completed_at' => $today->copy()->subDays(1)->setTime(17, 0), // 8th to 1st = 7 days late!
         ]);
 
         // ── 5. Generate Massive Booking History ────────────────────────
@@ -216,23 +218,23 @@ class PeminjamanSeeder extends Seeder
                     }
 
                     Peminjaman::create([
-                        'user_id'         => $user->id,
-                        'tipe'            => 'ruangan',
-                        'ruangan_id'      => $ruang->id,
-                        'nama_item'       => $ruang->nama,
-                        'jumlah'          => 1,
-                        'tanggal'         => $dateString,
-                        'tanggal_mulai'   => $dateString,
+                        'user_id' => $user->id,
+                        'tipe' => 'ruangan',
+                        'ruangan_id' => $ruang->id,
+                        'nama_item' => $ruang->nama,
+                        'jumlah' => 1,
+                        'tanggal' => $dateString,
+                        'tanggal_mulai' => $dateString,
                         'tanggal_selesai' => $tanggalSelesaiString,
-                        'jam_mulai'       => '08:00',
-                        'jam_selesai'     => '12:00',
-                        'keterangan'      => 'Diskusi Kelompok dan Belajar Bersama Mahasiswa',
-                        'status'          => $status,
-                        'nomor_surat'     => in_array($status, [Peminjaman::STATUS_DONE, Peminjaman::STATUS_APPROVED]) ? Peminjaman::generateNomorSurat() : null,
-                        'approved_at'     => $approvedAt,
-                        'completed_at'    => $completedAt,
+                        'jam_mulai' => '08:00',
+                        'jam_selesai' => '12:00',
+                        'keterangan' => 'Diskusi Kelompok dan Belajar Bersama Mahasiswa',
+                        'status' => $status,
+                        'nomor_surat' => in_array($status, [Peminjaman::STATUS_DONE, Peminjaman::STATUS_APPROVED]) ? app(NomorSuratService::class)->terbitkan(Dokumen::JENIS_SURAT_IZIN) : null,
+                        'approved_at' => $approvedAt,
+                        'completed_at' => $completedAt,
                     ]);
-                } else if ($type === 'barang' && $barangs->count() > 0) {
+                } elseif ($type === 'barang' && $barangs->count() > 0) {
                     $barang = $barangs->random();
 
                     $duration = rand(0, 7);
@@ -240,7 +242,7 @@ class PeminjamanSeeder extends Seeder
                     $tanggalSelesaiString = $tanggalSelesai->toDateString();
 
                     // Skip Proyektor on today (we already handled it)
-                    if ($barang->nama === 'Proyektor' && 
+                    if ($barang->nama === 'Proyektor' &&
                         ($dateString === $today->toDateString() || $tanggalSelesaiString === $today->toDateString())) {
                         continue;
                     }
@@ -268,21 +270,21 @@ class PeminjamanSeeder extends Seeder
                     }
 
                     Peminjaman::create([
-                        'user_id'         => $user->id,
-                        'tipe'            => 'barang',
-                        'barang_id'       => $barang->id,
-                        'nama_item'       => $barang->nama,
-                        'jumlah'          => $jumlah,
-                        'tanggal'         => $dateString,
-                        'tanggal_mulai'   => $dateString,
+                        'user_id' => $user->id,
+                        'tipe' => 'barang',
+                        'barang_id' => $barang->id,
+                        'nama_item' => $barang->nama,
+                        'jumlah' => $jumlah,
+                        'tanggal' => $dateString,
+                        'tanggal_mulai' => $dateString,
                         'tanggal_selesai' => $tanggalSelesaiString,
-                        'jam_mulai'       => '08:00',
-                        'jam_selesai'     => '17:00',
-                        'keterangan'      => 'Penunjang kegiatan akademik dan kemahasiswaan Stitek.',
-                        'status'          => $status,
-                        'nomor_surat'     => in_array($status, [Peminjaman::STATUS_DONE, Peminjaman::STATUS_APPROVED]) ? Peminjaman::generateNomorSurat() : null,
-                        'approved_at'     => $approvedAt,
-                        'completed_at'    => $completedAt,
+                        'jam_mulai' => '08:00',
+                        'jam_selesai' => '17:00',
+                        'keterangan' => 'Penunjang kegiatan akademik dan kemahasiswaan Stitek.',
+                        'status' => $status,
+                        'nomor_surat' => in_array($status, [Peminjaman::STATUS_DONE, Peminjaman::STATUS_APPROVED]) ? app(NomorSuratService::class)->terbitkan(Dokumen::JENIS_SURAT_IZIN) : null,
+                        'approved_at' => $approvedAt,
+                        'completed_at' => $completedAt,
                     ]);
                 }
             }

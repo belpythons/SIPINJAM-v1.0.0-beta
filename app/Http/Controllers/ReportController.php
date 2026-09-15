@@ -6,10 +6,11 @@ use App\Models\Barang;
 use App\Models\Peminjaman;
 use App\Models\Ruangan;
 use App\Models\User;
+use App\Services\PdfRenderer;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Spatie\LaravelPdf\Facades\Pdf;
+use Inertia\Inertia;
 
 class ReportController extends Controller
 {
@@ -19,7 +20,7 @@ class ReportController extends Controller
     public function adminIndex(Request $request)
     {
         $startDate = $request->input('start_date', Carbon::now()->startOfMonth()->toDateString());
-        $endDate   = $request->input('end_date', Carbon::now()->toDateString());
+        $endDate = $request->input('end_date', Carbon::now()->toDateString());
 
         $query = Peminjaman::with(['user', 'barang', 'ruangan'])
             ->whereBetween('created_at', [
@@ -29,14 +30,15 @@ class ReportController extends Controller
 
         // Statistik ringkasan
         $stats = [
-            'total'          => (clone $query)->count(),
-            'pending'        => (clone $query)->where('status', Peminjaman::STATUS_PENDING)->count(),
-            'approved'       => (clone $query)->where('status', Peminjaman::STATUS_APPROVED)->count(),
-            'rejected'       => (clone $query)->where('status', Peminjaman::STATUS_REJECTED)->count(),
-            'done'           => (clone $query)->where('status', Peminjaman::STATUS_DONE)->count(),
-            'total_users'    => User::where('role', 'user')->count(),
-            'total_ruangan'  => Ruangan::count(),
-            'total_barang'   => Barang::count(),
+            'total' => (clone $query)->count(),
+            'pending' => (clone $query)->where('status', Peminjaman::STATUS_PENDING)->count(),
+            'approved' => (clone $query)->where('status', Peminjaman::STATUS_APPROVED)->count(),
+            'rejected' => (clone $query)->where('status', Peminjaman::STATUS_REJECTED)->count(),
+            'done' => (clone $query)->where('status', Peminjaman::STATUS_DONE)->count(),
+            // Dihitung dari peran Spatie, bukan kolom `role` yang sudah dihapus.
+            'total_users' => User::role(config('sipinjam.peran.peminjam'))->count(),
+            'total_ruangan' => Ruangan::count(),
+            'total_barang' => Barang::count(),
         ];
 
         // Utilisasi ruangan (top 5)
@@ -65,12 +67,22 @@ class ReportController extends Controller
             ->with('barang')
             ->get();
 
-        $peminjamans = $query->orderBy('created_at', 'desc')->get();
+        $peminjamans = $query->orderBy('created_at', 'desc')
+            ->paginate(20)
+            ->withQueryString();
 
-        return view('admin.laporan', compact(
-            'stats', 'peminjamans', 'topRuangan', 'topBarang',
-            'startDate', 'endDate'
-        ));
+        // B-01: sebelumnya me-render Blade `admin.laporan` — satu-satunya
+        // halaman layar non-Inertia di aplikasi ini.
+        return Inertia::render('Admin/Laporan', [
+            'stats' => $stats,
+            'peminjamans' => $peminjamans,
+            'topRuangan' => $topRuangan,
+            'topBarang' => $topBarang,
+            'filters' => [
+                'start_date' => $startDate,
+                'end_date' => $endDate,
+            ],
+        ]);
     }
 
     /**
@@ -79,7 +91,7 @@ class ReportController extends Controller
     public function adminExportPdf(Request $request)
     {
         $startDate = $request->input('start_date', Carbon::now()->startOfMonth()->toDateString());
-        $endDate   = $request->input('end_date', Carbon::now()->toDateString());
+        $endDate = $request->input('end_date', Carbon::now()->toDateString());
 
         $peminjamans = Peminjaman::with(['user', 'barang', 'ruangan'])
             ->whereBetween('created_at', [
@@ -90,43 +102,19 @@ class ReportController extends Controller
             ->get();
 
         $stats = [
-            'total'    => $peminjamans->count(),
-            'pending'  => $peminjamans->where('status', Peminjaman::STATUS_PENDING)->count(),
+            'total' => $peminjamans->count(),
+            'pending' => $peminjamans->where('status', Peminjaman::STATUS_PENDING)->count(),
             'approved' => $peminjamans->where('status', Peminjaman::STATUS_APPROVED)->count(),
             'rejected' => $peminjamans->where('status', Peminjaman::STATUS_REJECTED)->count(),
-            'done'     => $peminjamans->where('status', Peminjaman::STATUS_DONE)->count(),
+            'done' => $peminjamans->where('status', Peminjaman::STATUS_DONE)->count(),
         ];
 
-        $nodeBinary = env('NODE_BINARY_PATH');
-        $npmBinary = env('NPM_BINARY_PATH');
-
-        if (empty($nodeBinary) || empty($npmBinary)) {
-            $isWindows = PHP_OS_FAMILY === 'Windows' || stristr(PHP_OS, 'WIN');
-            if ($isWindows) {
-                $nodeBinary = $nodeBinary ?: 'C:\\Program Files\\nodejs\\node.exe';
-                $npmBinary = $npmBinary ?: 'C:\\Program Files\\nodejs\\npm.cmd';
-            } else {
-                $nodeBinary = $nodeBinary ?: '/usr/bin/node';
-                $npmBinary = $npmBinary ?: '/usr/bin/npm';
-            }
-        }
-
-        $pdf = Pdf::view('reports.peminjaman_pdf', compact(
+        $pdf = app(PdfRenderer::class)->render('reports.peminjaman_pdf', compact(
             'peminjamans', 'stats', 'startDate', 'endDate'
-        ))
-        ->landscape()
-        ->format('a4')
-        ->withBrowsershot(function ($browsershot) use ($nodeBinary, $npmBinary) {
-            $browsershot->noSandbox();
-            if (!empty($nodeBinary)) {
-                $browsershot->setNodeBinary($nodeBinary);
-            }
-            if (!empty($npmBinary)) {
-                $browsershot->setNpmBinary($npmBinary);
-            }
-        });
+        ))->landscape();
 
-        $filename = 'Laporan_Peminjaman_' . $startDate . '_' . $endDate . '.pdf';
+        $filename = 'Laporan_Peminjaman_'.$startDate.'_'.$endDate.'.pdf';
+
         return $pdf->download($filename);
     }
 
@@ -137,7 +125,7 @@ class ReportController extends Controller
     public function adminExportExcel(Request $request)
     {
         $startDate = $request->input('start_date', Carbon::now()->startOfMonth()->toDateString());
-        $endDate   = $request->input('end_date', Carbon::now()->toDateString());
+        $endDate = $request->input('end_date', Carbon::now()->toDateString());
 
         $peminjamans = Peminjaman::with(['user', 'barang', 'ruangan'])
             ->whereBetween('created_at', [
@@ -147,10 +135,10 @@ class ReportController extends Controller
             ->orderBy('created_at', 'desc')
             ->get();
 
-        $filename = 'Laporan_Peminjaman_' . $startDate . '_' . $endDate . '.csv';
+        $filename = 'Laporan_Peminjaman_'.$startDate.'_'.$endDate.'.csv';
 
         $headers = [
-            'Content-Type'        => 'text/csv; charset=UTF-8',
+            'Content-Type' => 'text/csv; charset=UTF-8',
             'Content-Disposition' => "attachment; filename=\"{$filename}\"",
         ];
 
@@ -158,7 +146,7 @@ class ReportController extends Controller
             $file = fopen('php://output', 'w');
 
             // BOM for UTF-8 support in Excel
-            fprintf($file, chr(0xEF) . chr(0xBB) . chr(0xBF));
+            fprintf($file, chr(0xEF).chr(0xBB).chr(0xBF));
 
             // Header Row
             fputcsv($file, [
@@ -208,16 +196,24 @@ class ReportController extends Controller
             $query->where('status', $request->input('status'));
         }
 
-        $peminjamans = $query->get();
+        $peminjamans = $query->paginate(20)->withQueryString();
 
         $stats = [
-            'total'    => Peminjaman::where('user_id', $user->id)->count(),
-            'pending'  => Peminjaman::where('user_id', $user->id)->where('status', Peminjaman::STATUS_PENDING)->count(),
+            'total' => Peminjaman::where('user_id', $user->id)->count(),
+            'pending' => Peminjaman::where('user_id', $user->id)->where('status', Peminjaman::STATUS_PENDING)->count(),
             'approved' => Peminjaman::where('user_id', $user->id)->where('status', Peminjaman::STATUS_APPROVED)->count(),
-            'done'     => Peminjaman::where('user_id', $user->id)->where('status', Peminjaman::STATUS_DONE)->count(),
+            'done' => Peminjaman::where('user_id', $user->id)->where('status', Peminjaman::STATUS_DONE)->count(),
         ];
 
-        return view('user.laporan', compact('peminjamans', 'stats', 'user'));
+        // B-01: `view('user.laporan')` menunjuk berkas Blade yang TIDAK PERNAH
+        // ada, sehingga rute /laporan di sidebar user selalu error 500.
+        return Inertia::render('User/Laporan', [
+            'peminjamans' => $peminjamans,
+            'stats' => $stats,
+            'filters' => [
+                'status' => $request->input('status'),
+            ],
+        ]);
     }
 
     /**
@@ -232,33 +228,10 @@ class ReportController extends Controller
             ->orderBy('created_at', 'desc')
             ->get();
 
-        $nodeBinary = env('NODE_BINARY_PATH');
-        $npmBinary = env('NPM_BINARY_PATH');
+        $pdf = app(PdfRenderer::class)->render('reports.user_peminjaman_pdf', compact('peminjamans', 'user'));
 
-        if (empty($nodeBinary) || empty($npmBinary)) {
-            $isWindows = PHP_OS_FAMILY === 'Windows' || stristr(PHP_OS, 'WIN');
-            if ($isWindows) {
-                $nodeBinary = $nodeBinary ?: 'C:\\Program Files\\nodejs\\node.exe';
-                $npmBinary = $npmBinary ?: 'C:\\Program Files\\nodejs\\npm.cmd';
-            } else {
-                $nodeBinary = $nodeBinary ?: '/usr/bin/node';
-                $npmBinary = $npmBinary ?: '/usr/bin/npm';
-            }
-        }
+        $filename = 'Riwayat_Peminjaman_'.str_replace(' ', '_', $user->name).'.pdf';
 
-        $pdf = Pdf::view('reports.user_peminjaman_pdf', compact('peminjamans', 'user'))
-            ->format('a4')
-            ->withBrowsershot(function ($browsershot) use ($nodeBinary, $npmBinary) {
-                $browsershot->noSandbox();
-                if (!empty($nodeBinary)) {
-                    $browsershot->setNodeBinary($nodeBinary);
-                }
-                if (!empty($npmBinary)) {
-                    $browsershot->setNpmBinary($npmBinary);
-                }
-            });
-
-        $filename = 'Riwayat_Peminjaman_' . str_replace(' ', '_', $user->name) . '.pdf';
         return $pdf->download($filename);
     }
 }

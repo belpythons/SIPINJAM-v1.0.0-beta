@@ -1,33 +1,24 @@
 <?php
 
-use App\Models\Barang;
 use App\Models\Peminjaman;
 use App\Models\Ruangan;
 use App\Models\User;
-use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Storage;
-use Spatie\Permission\Models\Role;
 
 beforeEach(function () {
     // Pastikan role Spatie terdaftar
-    Role::findOrCreate('user');
-    Role::findOrCreate('admin');
 });
 
-test('auto sanction blocks overtime users and unblocks them when expired', function () {
-    // 1. Create a user with approved booking that is overtime
-    $user = User::factory()->create(['role' => 'user']);
-    $user->assignRole('user');
-
+function bookingTerlambat(User $user, array $attr = []): Peminjaman
+{
     $ruangan = Ruangan::create([
         'nama' => 'Lab Komputer',
-        'kode' => 'LAB-KOMP',
+        'kode' => 'LAB-'.fake()->unique()->numerify('###'),
         'kapasitas' => 30,
         'status' => 'tersedia',
     ]);
 
-    // Booking overtime (selesai kemarin)
-    $booking = Peminjaman::create([
+    return Peminjaman::create(array_merge([
         'user_id' => $user->id,
         'tipe' => 'ruangan',
         'ruangan_id' => $ruangan->id,
@@ -38,89 +29,113 @@ test('auto sanction blocks overtime users and unblocks them when expired', funct
         'jam_selesai' => '17:00',
         'keterangan' => 'Praktikum',
         'status' => Peminjaman::STATUS_APPROVED,
-    ]);
+    ], $attr));
+}
 
-    // Jalankan artisan command untuk memblokir
+test('B-04: peminjaman terlambat DITANDAI, bukan diblokir otomatis', function () {
+    $user = User::factory()->peminjam()->create();
+    bookingTerlambat($user);
+
     $this->artisan('sanction:apply')
+        ->expectsOutputToContain('menunggu pemeriksaan')
         ->assertSuccessful();
 
-    // Verify user is blocked
+    // Inti perbaikan B-04: barang mungkin sudah dikembalikan dan admin hanya
+    // belum menekan "Selesai". Menghukum atas dasar waktu berlalu saja berarti
+    // menghukum kelambatan admin, bukan kelalaian peminjam.
     $user->refresh();
-    expect($user->is_blocked)->toBeTrue();
-    expect($user->blocked_until)->not->toBeNull();
 
-    // Mark booking as done so it's no longer overtime, allowing unblock to succeed
-    $booking->update(['status' => Peminjaman::STATUS_DONE]);
-
-    // 2. Set user's block expiration to the past to test unblocking
-    $user->update([
-        'blocked_until' => now()->subDay(),
-    ]);
-
-    // Jalankan artisan command untuk unblock
-    $this->artisan('sanction:apply')
-        ->assertSuccessful();
-
-    // Verify user is unblocked
-    $user->refresh();
-    expect($user->is_blocked)->toBeFalse();
-    expect($user->blocked_until)->toBeNull();
+    expect($user->is_blocked)->toBeFalse()
+        ->and($user->blocked_until)->toBeNull();
 });
 
-test('lapor berantakan blocks the last user who used the room today', function () {
-    Storage::fake('public');
-
-    // Create admin & user
-    $admin = User::factory()->create(['role' => 'admin']);
-    $admin->assignRole('admin');
-
-    $user = User::factory()->create(['role' => 'user']);
-    $user->assignRole('user');
-
-    $ruangan = Ruangan::create([
-        'nama' => 'Aula Utama',
-        'kode' => 'AULA-01',
-        'kapasitas' => 100,
-        'status' => 'tersedia',
-    ]);
-
-    // Booking yang selesai hari ini
-    $booking = Peminjaman::create([
-        'user_id' => $user->id,
-        'tipe' => 'ruangan',
-        'ruangan_id' => $ruangan->id,
-        'nama_item' => $ruangan->nama,
-        'tanggal_mulai' => now(),
-        'tanggal_selesai' => now(),
-        'jam_mulai' => '08:00',
+test('B-04: peminjaman yang belum lewat toleransi tidak ikut ditandai', function () {
+    $user = User::factory()->peminjam()->create();
+    bookingTerlambat($user, [
+        'tanggal_selesai' => now()->addDay(),
         'jam_selesai' => '10:00',
-        'keterangan' => 'Seminar',
-        'status' => Peminjaman::STATUS_DONE,
-        'completed_at' => now(),
     ]);
 
-    // Panggil route admin untuk melaporkan ruangan berantakan
-    $response = $this->actingAs($admin)
-        ->withoutMiddleware()
-        ->post(route('admin.ruangan.lapor_berantakan', $ruangan->id), [
-            'feedback' => 'Ruangan sangat kotor dan kursi berantakan setelah acara selesai.',
-        ]);
-
-    $response->assertRedirect();
-    $response->assertSessionHas('success');
-
-    // Verify user is blocked
-    $user->refresh();
-    expect($user->is_blocked)->toBeTrue();
-    expect($user->blocked_until)->not->toBeNull();
+    $this->artisan('sanction:apply')
+        ->doesntExpectOutputToContain('menunggu pemeriksaan')
+        ->assertSuccessful();
 });
+
+test('pembebasan blokir yang sudah berakhir tetap berjalan', function () {
+    $user = User::factory()->peminjam()->create([
+        'is_blocked' => true,
+        'blocked_until' => now()->subDay(),
+        'blocked_reason' => 'Sanksi lama',
+    ]);
+
+    $this->artisan('sanction:apply')->assertSuccessful();
+
+    $user->refresh();
+
+    expect($user->is_blocked)->toBeFalse()
+        ->and($user->blocked_until)->toBeNull();
+});
+
+test('blokir yang masih berlaku tidak ikut dibebaskan', function () {
+    $user = User::factory()->peminjam()->create([
+        'is_blocked' => true,
+        'blocked_until' => now()->addDays(5),
+        'blocked_reason' => 'Sanksi berjalan',
+    ]);
+
+    $this->artisan('sanction:apply')->assertSuccessful();
+
+    expect($user->fresh()->is_blocked)->toBeTrue();
+});
+
+test('B-15: jatuh tempo diambil dari selesai_at, bukan dirakit ulang dari tanggal+jam', function () {
+    $user = User::factory()->peminjam()->create();
+    $booking = bookingTerlambat($user);
+
+    // Kolom lama menunjuk masa lalu, kolom baru menunjuk masa depan.
+    // Versi lama membaca tanggal_selesai+jam_selesai dan akan menandainya
+    // terlambat; versi sekarang menghormati selesai_at.
+    $booking->forceFill([
+        'selesai_at' => now()->addDays(3),
+    ])->saveQuietly();
+
+    $this->artisan('sanction:apply')
+        ->doesntExpectOutputToContain('menunggu pemeriksaan')
+        ->assertSuccessful();
+});
+
+test('B-04: memakai chunkById, bukan memuat seluruh tabel ke memori', function () {
+    $user = User::factory()->peminjam()->create();
+
+    foreach (range(1, 5) as $i) {
+        bookingTerlambat($user);
+    }
+
+    // Yang diuji di sini perilakunya: seluruh baris tetap terproses walau
+    // dibaca per potongan.
+    $this->artisan('sanction:apply')
+        ->expectsOutputToContain('Terlambat: 5')
+        ->assertSuccessful();
+});
+
+/*
+ * Test "lapor berantakan blocks the last user who used the room today" DIHAPUS.
+ *
+ * Test itu mengunci perilaku B-05: menetapkan pelaku lewat tebakan kueri
+ * ("peminjaman selesai terakhir di ruangan ini hari ini") lalu memblokirnya 30
+ * hari. Fiturnya sudah dihapus; menyimpan testnya berarti mempertahankan
+ * tekanan untuk menghidupkannya kembali.
+ *
+ * P5 menggantinya dengan test "Catat Temuan" yang membuktikan pelaku SELALU
+ * diambil dari pengajuan.user_id — diuji dengan beberapa pengajuan berbeda di
+ * ruangan yang sama pada hari yang sama, yaitu kasus yang dulu salah.
+ */
 
 test('generate PDF generates nomor surat and stores it physically for approved bookings only', function () {
     Storage::fake('local');
     Storage::fake('public');
 
-    $user = User::factory()->create(['role' => 'user']);
-    $user->assignRole('user');
+    $user = User::factory()->peminjam()->create();
 
     $ruangan = Ruangan::create([
         'nama' => 'Lab Bahasa',
@@ -172,7 +187,7 @@ test('generate PDF generates nomor surat and stores it physically for approved b
     // Verify nomor_surat generated
     $bookingApproved->refresh();
     expect($bookingApproved->nomor_surat)->not->toBeEmpty();
-    expect($bookingApproved->nomor_surat)->toContain('/INT/SIPINJAM/' . now()->year);
+    expect($bookingApproved->nomor_surat)->toContain('/INT/SIPINJAM/'.now()->year);
 
     // Verify physical file was NOT saved in storage/app/public/surat to prevent leaks
     $safeNomor = str_replace(['/', '\\'], '-', $bookingApproved->nomor_surat);

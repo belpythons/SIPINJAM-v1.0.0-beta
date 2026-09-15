@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\ProfileUpdateRequest;
+use App\Models\User;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -18,8 +19,16 @@ class ProfileController extends Controller
      */
     public function edit(Request $request): Response
     {
+        $user = $request->user();
+
         return Inertia::render('Profile/Edit', [
-            'user' => $request->user(),
+            // `phone` disembunyikan pada model demi UU PDP, jadi dikirim
+            // eksplisit — pemilik selalu boleh melihat nomornya sendiri.
+            'user' => array_merge($user->toArray(), [
+                'phone' => $user->phone,
+                'phone_verified' => $user->phoneTerverifikasi(),
+            ]),
+            'tipeSivitas' => User::TIPE,
         ]);
     }
 
@@ -39,8 +48,26 @@ class ProfileController extends Controller
             $user->email_verified_at = null;
         }
 
-        if (!empty($validated['password'])) {
+        if (! empty($validated['password'])) {
             $user->password = bcrypt($validated['password']);
+        }
+
+        // ── Identitas sivitas (P2) ──
+        foreach (['identity_number', 'user_type', 'program_studi', 'unit_kerja', 'jabatan', 'angkatan'] as $kolom) {
+            if (array_key_exists($kolom, $validated)) {
+                $user->{$kolom} = $validated[$kolom] ?: null;
+            }
+        }
+
+        // Mengganti nomor membatalkan verifikasi sebelumnya — nomor baru harus
+        // dibuktikan lagi lewat OTP, kalau tidak verifikasi kehilangan artinya.
+        if (array_key_exists('phone', $validated)) {
+            $nomorBaru = $validated['phone'] ?: null;
+
+            if ($nomorBaru !== $user->phone) {
+                $user->phone = $nomorBaru;
+                $user->phone_verified_at = null;
+            }
         }
 
         if ($request->hasFile('avatar')) {
@@ -53,7 +80,7 @@ class ProfileController extends Controller
             }
 
             $path = $request->file('avatar')->store('avatars', 'public');
-            $user->avatar = '/storage/' . $path;
+            $user->avatar = '/storage/'.$path;
         }
 
         $user->save();
