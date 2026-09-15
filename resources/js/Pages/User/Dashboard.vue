@@ -24,11 +24,17 @@ import {
   Plus,
   History,
   CalendarDays,
+  FileText,
+  MessageCircle,
 } from '@lucide/vue';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
+import {
+  Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle,
+} from '@/components/ui/dialog';
+import { Button } from '@/components/ui/button';
 
 defineOptions({ layout: UserLayout });
 
@@ -104,6 +110,21 @@ const filteredBarangs = computed(() => {
 const showBookingModal = ref(false);
 const selectedAsset = ref(null);
 const prefillDates = ref(null);
+
+// ── Himbauan Pasca-Pengajuan ─────────────────────────
+const adminWaNumber = import.meta.env.VITE_ADMIN_WA_NUMBER || '628123456789';
+const newBookingId = ref(null);
+const showHimbauanModal = ref(false);
+const waLink = computed(() =>
+  `https://wa.me/${adminWaNumber}?text=Halo%20Admin%2C%20saya%20sudah%20mengajukan%20peminjaman%20%23${newBookingId.value}%20dan%20ingin%20konfirmasi.`
+);
+
+watch(() => flash.value?.booking_created_id, (id) => {
+  if (id) {
+    newBookingId.value = id;
+    showHimbauanModal.value = true;
+  }
+}, { immediate: true });
 
 const openBooking = (asset, type) => {
   selectedAsset.value = { ...asset, tipe: type };
@@ -597,4 +618,48 @@ const getImageUrl = (path) => {
     :ruangans="ruangans"
     :barangs="barangs"
   />
+
+  <!-- ── Himbauan Pasca-Pengajuan ──────────────────────── -->
+  <Dialog :open="showHimbauanModal" @update:open="showHimbauanModal = $event">
+    <DialogContent class="sm:max-w-md">
+      <DialogHeader>
+        <div class="flex items-center gap-3 mb-1">
+          <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-emerald-50 text-emerald-600">
+            <CheckCircle2 class="h-5 w-5" />
+          </div>
+          <DialogTitle class="text-base font-bold text-slate-900">Peminjaman Berhasil Diajukan</DialogTitle>
+        </div>
+        <DialogDescription class="text-sm text-slate-600 space-y-2 pt-2">
+          <p>Langkah selanjutnya:</p>
+          <ol class="list-decimal list-inside space-y-1 text-slate-700">
+            <li>Unduh surat peminjaman di bawah ini.</li>
+            <li>Tanda tangani surat tersebut.</li>
+            <li>Hubungi admin setelah surat ditandatangani, dan sekali lagi setelah aset dikembalikan.</li>
+          </ol>
+          <p class="rounded-lg bg-amber-50 border border-amber-200 px-3 py-2 text-xs text-amber-800">
+            Bila tidak ada konfirmasi ke admin dalam <strong>7 hari</strong>, peminjaman akan otomatis ditolak sistem.
+          </p>
+        </DialogDescription>
+      </DialogHeader>
+      <DialogFooter class="flex-col gap-2 sm:flex-col">
+        <a
+          :href="`/bookings/${newBookingId}/pdf`"
+          target="_blank"
+          class="inline-flex w-full h-9 items-center justify-center gap-2 bg-primary text-primary-foreground rounded-lg text-sm font-semibold shadow-sm hover:opacity-90 transition-all"
+        >
+          <FileText class="h-4 w-4" /> Unduh Surat Peminjaman
+        </a>
+        <a
+          :href="waLink"
+          target="_blank"
+          class="inline-flex w-full h-9 items-center justify-center gap-2 rounded-lg border border-emerald-200 bg-emerald-50 text-emerald-700 text-sm font-semibold hover:bg-emerald-100 transition-colors"
+        >
+          <MessageCircle class="h-4 w-4" /> Hubungi Admin via WhatsApp
+        </a>
+        <Button variant="ghost" size="sm" class="w-full text-slate-500" @click="showHimbauanModal = false">
+          Tutup
+        </Button>
+      </DialogFooter>
+    </DialogContent>
+  </Dialog>
 </template>

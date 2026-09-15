@@ -160,9 +160,9 @@ const timelineSteps = [
             </div>
             
             <div class="flex items-center gap-2">
-              <!-- Download Surat PDF (Only if APPROVED — before event starts) -->
+              <!-- Download Surat PDF (self-service: sejak diajukan, kecuali ditolak) -->
               <a
-                v-if="booking.status === 'sedang_dipinjam'"
+                v-if="booking.status !== 'ditolak'"
                 :href="'/bookings/' + booking.id + '/pdf'"
                 target="_blank"
                 class="inline-flex h-8 items-center gap-1.5 bg-primary px-3 text-[11px] font-semibold text-primary-foreground rounded-lg shadow-sm transition-all duration-200 hover:opacity-90"
@@ -172,9 +172,9 @@ const timelineSteps = [
                 Download Surat
               </a>
 
-              <!-- Cetak Bukti (Approved or Done) -->
+              <!-- Cetak Bukti (sejak diajukan, kecuali ditolak) -->
               <a
-                v-if="booking.status === 'sedang_dipinjam' || booking.status === 'selesai'"
+                v-if="booking.status !== 'ditolak'"
                 :href="'/bookings/' + booking.id + '/pdf'"
                 target="_blank"
                 class="inline-flex h-8 items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3 text-xs font-semibold text-slate-600 hover:bg-slate-50 hover:text-slate-900 transition-colors"
