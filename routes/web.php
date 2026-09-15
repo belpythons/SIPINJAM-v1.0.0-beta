@@ -34,7 +34,7 @@ Route::middleware(['auth', 'verified', 'blocked'])->group(function () {
     // Peminjaman
     Route::get('/bookings', [BookingController::class, 'index'])->name('bookings.index');
     Route::post('/bookings', [BookingController::class, 'store'])->middleware('throttle:5,1')->name('bookings.store');
-    Route::get('/bookings/{id}/pdf', [BookingController::class, 'generatePDF'])->name('bookings.pdf');
+    Route::get('/bookings/{id}/pdf', [BookingController::class, 'generatePDF'])->middleware('throttle:20,1')->name('bookings.pdf');
 
     // Menu Lainnya
     Route::get('/ruangan', [RuanganController::class, 'index'])->name('ruangan.index');
@@ -43,11 +43,11 @@ Route::middleware(['auth', 'verified', 'blocked'])->group(function () {
 
     // Kalender Akademik (User)
     Route::get('/kalender', [CalendarController::class, 'index'])->name('kalender.index');
-    Route::get('/kalender/export-pdf', [CalendarController::class, 'exportPdf'])->name('kalender.export_pdf');
+    Route::get('/kalender/export-pdf', [CalendarController::class, 'exportPdf'])->middleware('throttle:20,1')->name('kalender.export_pdf');
 
     // Laporan Pribadi (User)
     Route::get('/laporan', [ReportController::class, 'userIndex'])->name('laporan.index');
-    Route::get('/laporan/export-pdf', [ReportController::class, 'userExportPdf'])->name('laporan.export_pdf');
+    Route::get('/laporan/export-pdf', [ReportController::class, 'userExportPdf'])->middleware('throttle:20,1')->name('laporan.export_pdf');
 
     // Lapor Pelanggaran (User)
     Route::get('/lapor-pelanggaran', [LaporanPelanggaranController::class, 'create'])->name('lapor_pelanggaran.create');
@@ -104,8 +104,8 @@ Route::middleware(['auth', 'admin'])->group(function () {
 
     // Laporan Admin
     Route::get('/admin/laporan', [ReportController::class, 'adminIndex'])->name('admin.laporan');
-    Route::get('/admin/laporan/export-pdf', [ReportController::class, 'adminExportPdf'])->name('admin.laporan.export_pdf');
-    Route::get('/admin/laporan/export-excel', [ReportController::class, 'adminExportExcel'])->name('admin.laporan.export_excel');
+    Route::get('/admin/laporan/export-pdf', [ReportController::class, 'adminExportPdf'])->middleware('throttle:20,1')->name('admin.laporan.export_pdf');
+    Route::get('/admin/laporan/export-excel', [ReportController::class, 'adminExportExcel'])->middleware('throttle:20,1')->name('admin.laporan.export_excel');
 
     // Kelola Pelanggaran & Sanksi (Admin)
     Route::get('/admin/pelanggaran', [AdminLaporanPelanggaranController::class, 'index'])->name('admin.pelanggaran.index');

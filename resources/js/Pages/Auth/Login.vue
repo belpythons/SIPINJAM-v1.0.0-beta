@@ -9,8 +9,8 @@ const selectedRole = ref('user');
 const adminWaNumber = import.meta.env.VITE_ADMIN_WA_NUMBER || '628123456789';
 
 const form = useForm({
-  email: 'user@sipinjam.test',
-  password: 'password',
+  email: '',
+  password: '',
   remember: false,
   role: 'user',
 });
@@ -18,13 +18,6 @@ const form = useForm({
 const setRole = (role) => {
   selectedRole.value = role;
   form.role = role;
-  if (role === 'admin') {
-    form.email = 'admin@sipinjam.test';
-    form.password = 'password';
-  } else {
-    form.email = 'user@sipinjam.test';
-    form.password = 'password';
-  }
 };
 
 const isAdmin = computed(() => selectedRole.value === 'admin');
