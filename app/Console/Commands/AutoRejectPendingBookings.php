@@ -10,12 +10,12 @@ class AutoRejectPendingBookings extends Command
 {
     protected $signature = 'booking:auto-reject';
 
-    protected $description = 'Tolak otomatis peminjaman berstatus "menunggu" yang sudah lewat 48 jam (SLA)';
+    protected $description = 'Tolak otomatis peminjaman berstatus "menunggu" yang sudah lewat 7 hari (SLA)';
 
     public function handle(): int
     {
         $expiredBookings = Peminjaman::where('status', Peminjaman::STATUS_PENDING)
-            ->where('created_at', '<=', now()->subHours(48))
+            ->where('created_at', '<=', now()->subDays(7))
             ->get();
 
         if ($expiredBookings->isEmpty()) {
@@ -39,7 +39,7 @@ class AutoRejectPendingBookings extends Command
                     'status' => Peminjaman::STATUS_REJECTED,
                     // B-06: alasan sistem punya kolomnya sendiri. Menimpa
                     // `keterangan` akan menghapus keperluan yang ditulis pemohon.
-                    'alasan_sistem' => 'Dibatalkan sistem: melewati batas waktu verifikasi 48 jam.',
+                    'alasan_sistem' => 'Dibatalkan sistem: melewati batas waktu verifikasi 7 hari.',
                 ]);
 
                 // ⛔ TIDAK ada increment stok — karena Delayed Deduction
@@ -50,7 +50,7 @@ class AutoRejectPendingBookings extends Command
             $count++;
         }
 
-        $this->info("Selesai. {$count} peminjaman di-auto-reject karena melewati SLA 48 jam.");
+        $this->info("Selesai. {$count} peminjaman di-auto-reject karena melewati SLA 7 hari.");
 
         return Command::SUCCESS;
     }

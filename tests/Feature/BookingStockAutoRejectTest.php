@@ -83,8 +83,8 @@ test('B-06: auto-reject SLA menulis ke alasan_sistem, bukan keterangan', functio
     $barang = barangUji(2);
 
     $lama = pengajuanBarang($barang, User::factory()->create(), '2026-10-12 08:00:00', '2026-10-12 17:00:00', 'Keperluan asli pemohon');
-    // Paksa dibuat 3 hari lalu agar melewati SLA 48 jam.
-    $lama->forceFill(['created_at' => now()->subHours(72)])->saveQuietly();
+    // Paksa dibuat 8 hari lalu agar melewati SLA 7 hari.
+    $lama->forceFill(['created_at' => now()->subDays(8)])->saveQuietly();
 
     $this->artisan('booking:auto-reject')->assertSuccessful();
 
@@ -92,5 +92,5 @@ test('B-06: auto-reject SLA menulis ke alasan_sistem, bukan keterangan', functio
 
     expect($lama->status)->toBe(Peminjaman::STATUS_REJECTED)
         ->and($lama->keterangan)->toBe('Keperluan asli pemohon')
-        ->and($lama->alasan_sistem)->toContain('48 jam');
+        ->and($lama->alasan_sistem)->toContain('7 hari');
 });
