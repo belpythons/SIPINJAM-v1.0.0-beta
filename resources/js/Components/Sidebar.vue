@@ -1,7 +1,7 @@
 <script setup>
 import { computed } from 'vue';
 import { router, usePage, Link } from '@inertiajs/vue3';
-import { Home, ClipboardList, DoorOpen, Package, ShieldCheck, CalendarDays, LogOut, User } from '@lucide/vue';
+import { Home, ClipboardList, DoorOpen, Package, ShieldCheck, CalendarDays, LogOut, User, AlertTriangle } from '@lucide/vue';
 
 import sidebarLogo from '@images/side bar user.png';
 
@@ -15,6 +15,7 @@ const navItems = [
     { label: 'Barang', icon: Package, href: '/barang' },
     { label: 'Tata Tertib', icon: ShieldCheck, href: '/tata_tertib' },
     { label: 'Kalender Akademik', icon: CalendarDays, href: '/kalender' },
+    { label: 'Lapor Pelanggaran', icon: AlertTriangle, href: '/lapor-pelanggaran' },
 ];
 
 const isActive = (href) => currentUrl.value === href || currentUrl.value.startsWith(href + '/');

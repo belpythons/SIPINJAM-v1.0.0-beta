@@ -131,7 +131,7 @@ test('B-04: memakai chunkById, bukan memuat seluruh tabel ke memori', function (
  * ruangan yang sama pada hari yang sama, yaitu kasus yang dulu salah.
  */
 
-test('generate PDF generates nomor surat and stores it physically for approved bookings only', function () {
+test('generate PDF is self-service since pending, but blocked once rejected (R2)', function () {
     Storage::fake('local');
     Storage::fake('public');
 
@@ -144,7 +144,7 @@ test('generate PDF generates nomor surat and stores it physically for approved b
         'status' => 'tersedia',
     ]);
 
-    // 1. Pending booking should NOT be able to download PDF
+    // 1. Pending booking CAN already download PDF (self-service — R2/D2).
     $bookingPending = Peminjaman::create([
         'user_id' => $user->id,
         'tipe' => 'ruangan',
@@ -161,7 +161,26 @@ test('generate PDF generates nomor surat and stores it physically for approved b
     $response = $this->actingAs($user)
         ->get(route('bookings.pdf', $bookingPending->id));
 
-    $response->assertStatus(403);
+    $response->assertStatus(200);
+    $response->assertHeader('content-type', 'application/pdf');
+
+    // 1b. Rejected booking can NOT download PDF.
+    $bookingRejected = Peminjaman::create([
+        'user_id' => $user->id,
+        'tipe' => 'ruangan',
+        'ruangan_id' => $ruangan->id,
+        'nama_item' => $ruangan->nama,
+        'tanggal_mulai' => now()->addDay(),
+        'tanggal_selesai' => now()->addDay(),
+        'jam_mulai' => '08:00',
+        'jam_selesai' => '10:00',
+        'keterangan' => 'Rapat Batal',
+        'status' => Peminjaman::STATUS_REJECTED,
+    ]);
+
+    $this->actingAs($user)
+        ->get(route('bookings.pdf', $bookingRejected->id))
+        ->assertStatus(403);
 
     // 2. Approved booking should be able to download PDF, generate auto-incrementing nomor_surat and save it to storage
     $bookingApproved = Peminjaman::create([

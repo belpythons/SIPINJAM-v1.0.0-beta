@@ -2,12 +2,14 @@
 
 use App\Http\Controllers\Admin\AdminController;
 use App\Http\Controllers\Admin\BannerController;
+use App\Http\Controllers\Admin\LaporanPelanggaranController as AdminLaporanPelanggaranController;
 use App\Http\Controllers\Auth\SocialiteController;
 use App\Http\Controllers\BarangController;
 use App\Http\Controllers\BookingController;
 use App\Http\Controllers\CalendarController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\LandingController;
+use App\Http\Controllers\LaporanPelanggaranController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\ReportController;
 use App\Http\Controllers\RuanganController;
@@ -45,6 +47,10 @@ Route::middleware(['auth', 'verified', 'blocked'])->group(function () {
     // Laporan Pribadi (User)
     Route::get('/laporan', [ReportController::class, 'userIndex'])->name('laporan.index');
     Route::get('/laporan/export-pdf', [ReportController::class, 'userExportPdf'])->name('laporan.export_pdf');
+
+    // Lapor Pelanggaran (User)
+    Route::get('/lapor-pelanggaran', [LaporanPelanggaranController::class, 'create'])->name('lapor_pelanggaran.create');
+    Route::post('/lapor-pelanggaran', [LaporanPelanggaranController::class, 'store'])->name('lapor_pelanggaran.store');
 
     // Profile Edit (User)
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
@@ -99,6 +105,11 @@ Route::middleware(['auth', 'admin'])->group(function () {
     Route::get('/admin/laporan', [ReportController::class, 'adminIndex'])->name('admin.laporan');
     Route::get('/admin/laporan/export-pdf', [ReportController::class, 'adminExportPdf'])->name('admin.laporan.export_pdf');
     Route::get('/admin/laporan/export-excel', [ReportController::class, 'adminExportExcel'])->name('admin.laporan.export_excel');
+
+    // Kelola Pelanggaran & Sanksi (Admin)
+    Route::get('/admin/pelanggaran', [AdminLaporanPelanggaranController::class, 'index'])->name('admin.pelanggaran.index');
+    Route::patch('/admin/pelanggaran/{laporan}/sanksi', [AdminLaporanPelanggaranController::class, 'putuskanSanksi'])->name('admin.pelanggaran.sanksi');
+    Route::patch('/admin/pelanggaran/{laporan}/tolak', [AdminLaporanPelanggaranController::class, 'tolak'])->name('admin.pelanggaran.tolak');
 
     // Profile Edit (Admin — renders Admin/ProfileEdit with AdminLayout)
     Route::get('/admin/profile', [AdminController::class, 'profileEdit'])->name('admin.profile.edit');
