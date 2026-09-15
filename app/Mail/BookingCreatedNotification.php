@@ -21,7 +21,7 @@ class BookingCreatedNotification extends Mailable implements ShouldQueue
     public function envelope(): Envelope
     {
         return new Envelope(
-            subject: '[SIPINJAM] Peminjaman Baru #' . $this->peminjaman->id,
+            subject: '[SIPINJAM] Peminjaman Baru #'.$this->peminjaman->id,
         );
     }
 

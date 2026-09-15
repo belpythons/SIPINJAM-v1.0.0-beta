@@ -3,7 +3,6 @@
 namespace App\Http\Controllers;
 
 use App\Models\Ruangan;
-use Illuminate\Http\Request;
 use Inertia\Inertia;
 
 class RuanganController extends Controller

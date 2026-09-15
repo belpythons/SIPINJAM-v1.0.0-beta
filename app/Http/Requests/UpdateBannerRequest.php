@@ -8,7 +8,10 @@ class UpdateBannerRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return $this->user() && $this->user()->role === 'admin';
+        // Otorisasi berbasis permission Spatie — satu-satunya sumber kebenaran.
+        // Saat P1 menambah peran staf_aset, cukup beri 'master.manage' di seeder;
+        // kedelapan FormRequest ini tidak perlu disentuh lagi.
+        return $this->user()?->can('master.konten.manage') ?? false;
     }
 
     public function rules(): array

@@ -8,19 +8,23 @@ class UpdateRuanganRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return $this->user() && $this->user()->role === 'admin';
+        // Otorisasi berbasis permission Spatie — satu-satunya sumber kebenaran.
+        // Saat P1 menambah peran staf_aset, cukup beri 'master.manage' di seeder;
+        // kedelapan FormRequest ini tidak perlu disentuh lagi.
+        return $this->user()?->can('master.aset.manage') ?? false;
     }
 
     public function rules(): array
     {
         $id = $this->route('ruangan') ?? $this->id;
+
         return [
-            'nama'       => 'required|string|max:255',
-            'kode'       => 'required|string|max:50|unique:ruangans,kode,' . $id,
-            'kapasitas'  => 'required|integer|min:1',
-            'lokasi'     => 'nullable|string|max:255',
-            'deskripsi'  => 'nullable|string',
-            'status'     => 'required|in:tersedia,tidak_tersedia',
+            'nama' => 'required|string|max:255',
+            'kode' => 'required|string|max:50|unique:ruangans,kode,'.$id,
+            'kapasitas' => 'required|integer|min:1',
+            'lokasi' => 'nullable|string|max:255',
+            'deskripsi' => 'nullable|string',
+            'status' => 'required|in:tersedia,tidak_tersedia',
             'image_path' => 'nullable|image|mimes:jpg,jpeg,png|max:5120',
         ];
     }

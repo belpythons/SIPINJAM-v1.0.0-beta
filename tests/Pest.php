@@ -1,5 +1,6 @@
 <?php
 
+use Database\Seeders\RolePermissionSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -14,9 +15,12 @@ use Tests\TestCase;
 |
 */
 
+// Unit test P1 (service domain) juga menyentuh database — AvailabilityService
+// dan PengajuanStateMachine berkueri sungguhan, bukan di-mock.
 pest()->extend(TestCase::class)
     ->use(RefreshDatabase::class)
-    ->in('Feature');
+    ->beforeEach(fn () => $this->seed(RolePermissionSeeder::class))
+    ->in('Feature', 'Unit');
 
 /*
 |--------------------------------------------------------------------------

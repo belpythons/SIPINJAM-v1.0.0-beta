@@ -18,7 +18,7 @@ class CheckUserBlocked
         $user = $request->user();
 
         if ($user && $user->isBlocked()) {
-            $blockedUntil = $user->blocked_until->format('d M Y H:i') . ' WITA';
+            $blockedUntil = $user->blocked_until->format('d M Y H:i').' WITA';
             $reason = $user->blocked_reason;
 
             Auth::guard('web')->logout();

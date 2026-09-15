@@ -1,24 +1,39 @@
 <!DOCTYPE html>
-<html>
+<html lang="id">
 <head>
-    <title>Kalender Akademik STITEK</title>
-    <script src="https://cdn.tailwindcss.com"></script>
+    <meta charset="UTF-8">
+    <title>Kalender Akademik {{ config('sipinjam.kop.institusi') }}</title>
+    {{-- B-08: Tailwind Play CDN dihapus — hanya dipakai untuk dua kelas.
+         PDF harus benar tanpa akses internet. --}}
     <style>
         @page {
             size: A4 landscape;
             margin: 0;
         }
-        body, html {
+
+        html, body {
             margin: 0;
             padding: 0;
-            width: 100vw;
-            height: 100vh;
+            width: 100%;
+            height: 100%;
             overflow: hidden;
             background-color: #ffffff;
         }
+
+        body {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+        }
     </style>
 </head>
-<body class="flex items-center justify-center w-full h-full">
-    <img src="{{ $imagePath }}" class="w-full h-full object-contain" />
+<body>
+    <img src="{{ $imagePath }}" alt="Kalender akademik {{ $calendar->year ?? '' }}">
 </body>
 </html>

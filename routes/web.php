@@ -1,17 +1,18 @@
 <?php
 
-use App\Http\Controllers\ProfileController;
-use App\Http\Controllers\DashboardController;
-use App\Http\Controllers\BookingController;
-use App\Http\Controllers\RuanganController;
-use App\Http\Controllers\BarangController;
-use App\Http\Controllers\TataTertibController;
 use App\Http\Controllers\Admin\AdminController;
-use App\Http\Controllers\CalendarController;
-use App\Http\Controllers\ReportController;
+use App\Http\Controllers\Admin\BannerController;
 use App\Http\Controllers\Auth\SocialiteController;
-use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\BarangController;
+use App\Http\Controllers\BookingController;
+use App\Http\Controllers\CalendarController;
+use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\LandingController;
+use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\ReportController;
+use App\Http\Controllers\RuanganController;
+use App\Http\Controllers\TataTertibController;
+use Illuminate\Support\Facades\Route;
 
 Route::get('/', [LandingController::class, 'index'])->name('landing');
 
@@ -31,6 +32,12 @@ Route::middleware(['auth', 'verified', 'blocked'])->group(function () {
     Route::get('/bookings', [BookingController::class, 'index'])->name('bookings.index');
     Route::post('/bookings', [BookingController::class, 'store'])->middleware('throttle:5,1')->name('bookings.store');
     Route::get('/bookings/{id}/pdf', [BookingController::class, 'generatePDF'])->name('bookings.pdf');
+
+    // Ajukan Pengajuan (5 langkah) — P3
+    Route::middleware(['auth', 'verified', 'blocked'])->group(function () {
+        Route::get('/pengajuan', [PengajuanController::class, 'create'])->name('pengajuan.create');
+        Route::post('/pengajuan', [PengajuanController::class, 'store'])->name('pengajuan.store');
+    });
 
     // Menu Lainnya
     Route::get('/ruangan', [RuanganController::class, 'index'])->name('ruangan.index');
@@ -75,7 +82,6 @@ Route::middleware(['auth', 'admin'])->group(function () {
     Route::post('/admin/kelola-ruangan', [AdminController::class, 'storeRuangan'])->name('admin.ruangan.store');
     Route::put('/admin/kelola-ruangan/{id}', [AdminController::class, 'updateRuangan'])->name('admin.ruangan.update');
     Route::delete('/admin/kelola-ruangan/{id}', [AdminController::class, 'destroyRuangan'])->name('admin.ruangan.destroy');
-    Route::post('/admin/kelola-ruangan/{id}/lapor-berantakan', [AdminController::class, 'laporBerantakan'])->name('admin.ruangan.lapor_berantakan');
 
     // Kelola Barang (CRUD)
     Route::get('/admin/kelola-barang', [AdminController::class, 'kelolaBarang'])->name('admin.kelola_barang');
@@ -84,10 +90,10 @@ Route::middleware(['auth', 'admin'])->group(function () {
     Route::delete('/admin/kelola-barang/{id}', [AdminController::class, 'destroyBarang'])->name('admin.barang.destroy');
 
     // Kelola Landing Page / Banner (CRUD)
-    Route::get('/admin/kelola-banner', [\App\Http\Controllers\Admin\BannerController::class, 'index'])->name('admin.kelola_banner');
-    Route::post('/admin/kelola-banner', [\App\Http\Controllers\Admin\BannerController::class, 'store'])->name('admin.banner.store');
-    Route::put('/admin/kelola-banner/{id}', [\App\Http\Controllers\Admin\BannerController::class, 'update'])->name('admin.banner.update');
-    Route::delete('/admin/kelola-banner/{id}', [\App\Http\Controllers\Admin\BannerController::class, 'destroy'])->name('admin.banner.destroy');
+    Route::get('/admin/kelola-banner', [BannerController::class, 'index'])->name('admin.kelola_banner');
+    Route::post('/admin/kelola-banner', [BannerController::class, 'store'])->name('admin.banner.store');
+    Route::put('/admin/kelola-banner/{id}', [BannerController::class, 'update'])->name('admin.banner.update');
+    Route::delete('/admin/kelola-banner/{id}', [BannerController::class, 'destroy'])->name('admin.banner.destroy');
 
     // Kalender Akademik (Admin)
     Route::get('/admin/kelola-kalender', [CalendarController::class, 'adminIndex'])->name('admin.kelola_kalender');

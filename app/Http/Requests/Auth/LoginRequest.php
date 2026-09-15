@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests\Auth;
 
+use Carbon\Carbon;
 use Illuminate\Auth\Events\Lockout;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
@@ -55,7 +56,7 @@ class LoginRequest extends FormRequest
             Auth::logout();
 
             $blockedUntilText = $user->blocked_until
-                ? \Carbon\Carbon::parse($user->blocked_until)->format('d-m-Y H:i')
+                ? Carbon::parse($user->blocked_until)->format('d-m-Y H:i')
                 : 'waktu yang belum ditentukan';
 
             throw ValidationException::withMessages([

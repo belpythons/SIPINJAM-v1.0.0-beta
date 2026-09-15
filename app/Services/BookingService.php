@@ -3,9 +3,11 @@
 namespace App\Services;
 
 use App\Models\Barang;
+use App\Models\Dokumen;
 use App\Models\Peminjaman;
 use App\Models\Ruangan;
 use App\Models\User;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 
 class BookingService
@@ -20,7 +22,7 @@ class BookingService
     public function createBooking(array $data, User $user): Peminjaman
     {
         if ($user->is_blocked) {
-            throw new \RuntimeException('Akun Anda diblokir: ' . $user->blocked_reason);
+            throw new \RuntimeException('Akun Anda diblokir: '.$user->blocked_reason);
         }
 
         return DB::transaction(function () use ($data, $user) {
@@ -31,29 +33,38 @@ class BookingService
                 $barang = Barang::lockForUpdate()->findOrFail($data['barang_id']);
 
                 if ($barang->stok_tersedia < $jumlah) {
-                    throw new \RuntimeException('Stok barang "' . $barang->nama . '" tidak mencukupi.');
+                    throw new \RuntimeException('Stok barang "'.$barang->nama.'" tidak mencukupi.');
                 }
 
                 // ⛔ TIDAK ada $barang->decrement() di sini.
                 // Stok hanya dikurangi saat Admin approve (lihat approveBooking).
 
                 $peminjaman = $this->buildPeminjaman($data, $user, [
-                    'tipe'       => 'barang',
-                    'barang_id'  => $barang->id,
-                    'nama_item'  => $barang->nama,
-                    'jumlah'     => $jumlah,
+                    'tipe' => 'barang',
+                    'barang_id' => $barang->id,
+                    'nama_item' => $barang->nama,
+                    'jumlah' => $jumlah,
                 ]);
             } else {
                 // Lock record ruangan lalu cek apakah jadwal bentrok
                 $ruangan = Ruangan::lockForUpdate()->findOrFail($data['ruangan_id']);
 
-                $this->assertNoScheduleConflict($ruangan, $data);
+                [$mulai, $selesai] = $this->slotFromRequest($data);
+
+                // Saat mengajukan, pengajuan yang masih MENUNGGU pun dianggap
+                // memesan slot — supaya dua orang tidak mengantre di slot sama.
+                $this->assertNoScheduleConflict(
+                    $ruangan,
+                    $mulai,
+                    $selesai,
+                    [Peminjaman::STATUS_PENDING, Peminjaman::STATUS_APPROVED]
+                );
 
                 $peminjaman = $this->buildPeminjaman($data, $user, [
-                    'tipe'       => 'ruangan',
+                    'tipe' => 'ruangan',
                     'ruangan_id' => $ruangan->id,
-                    'nama_item'  => $ruangan->nama,
-                    'jumlah'     => $jumlah,
+                    'nama_item' => $ruangan->nama,
+                    'jumlah' => $jumlah,
                 ]);
             }
 
@@ -68,10 +79,10 @@ class BookingService
      *
      * Flow:
      * 1. Lock baris peminjaman + barang (pessimistic locking).
-     * 2. Validasi stok cukup (>= 1 untuk barang).
-     * 3. Update status → APPROVED, set approved_at.
-     * 4. Deduct stok_tersedia (hanya untuk tipe barang).
-     * 5. Auto-reject semua PENDING bookings lain jika stok menjadi 0.
+     * 2. Ruangan: pastikan slot belum diambil peminjaman lain yang SUDAH disetujui.
+     * 3. Barang: validasi stok cukup, lalu deduct stok_tersedia.
+     * 4. Auto-reject pengajuan PENDING lain yang jadwalnya BERIRISAN bila stok habis.
+     * 5. Update status → APPROVED, set approved_at, terbitkan nomor surat.
      */
     public function approveBooking(Peminjaman $peminjaman): Peminjaman
     {
@@ -82,6 +93,30 @@ class BookingService
             // Guard: hanya bisa approve dari status PENDING
             if ($peminjaman->status !== Peminjaman::STATUS_PENDING) {
                 throw new \RuntimeException('Peminjaman ini sudah diproses sebelumnya.');
+            }
+
+            [$mulai, $selesai] = $this->slotOf($peminjaman);
+
+            if ($peminjaman->tipe === 'ruangan' && $peminjaman->ruangan_id) {
+                // ── B-03: bentrok ruangan WAJIB dicek ulang saat menyetujui ──
+                // Sebelumnya hanya dicek saat membuat, sehingga dua pengajuan
+                // "menunggu" pada slot yang sama bisa dua-duanya disetujui.
+                //
+                // Di sini HANYA status APPROVED yang dianggap bentrok. Bila
+                // status PENDING ikut diperiksa, menyetujui pengajuan pertama
+                // justru gagal gara-gara pengajuan kedua yang masih antre —
+                // kebalikan dari yang kita inginkan.
+                $ruangan = Ruangan::where('id', $peminjaman->ruangan_id)
+                    ->lockForUpdate()
+                    ->firstOrFail();
+
+                $this->assertNoScheduleConflict(
+                    $ruangan,
+                    $mulai,
+                    $selesai,
+                    [Peminjaman::STATUS_APPROVED],
+                    $peminjaman->id
+                );
             }
 
             if ($peminjaman->tipe === 'barang' && $peminjaman->barang_id) {
@@ -95,30 +130,37 @@ class BookingService
 
                 if ($newStock < 0) {
                     throw new \RuntimeException(
-                        'Stok barang "' . $barang->nama . '" tidak mencukupi untuk disetujui.'
+                        'Stok barang "'.$barang->nama.'" tidak mencukupi untuk disetujui.'
                     );
                 }
 
                 // Deduct stock
                 $barang->update(['stok_tersedia' => $newStock]);
 
-                // ── AUTO-REJECT: jika stok habis, reject semua PENDING lainnya ──
-                if ($newStock === 0) {
+                // ── B-02: auto-reject HANYA yang jadwalnya beririsan ──
+                // Stok habis hari ini tidak berarti habis bulan depan;
+                // pengajuan yang jadwalnya tidak beririsan dibiarkan menunggu.
+                if ($newStock === 0 && $mulai && $selesai) {
                     Peminjaman::where('barang_id', $barang->id)
                         ->where('id', '!=', $peminjaman->id)
                         ->where('status', Peminjaman::STATUS_PENDING)
+                        ->where('mulai_at', '<', $selesai)
+                        ->where('selesai_at', '>', $mulai)
                         ->update([
-                            'status'     => Peminjaman::STATUS_REJECTED,
-                            'keterangan' => 'Dibatalkan sistem: Stok habis',
+                            'status' => Peminjaman::STATUS_REJECTED,
+                            // B-06: tulis ke alasan_sistem, JANGAN timpa
+                            // `keterangan` milik pemohon.
+                            'alasan_sistem' => 'Dibatalkan sistem: stok habis pada rentang waktu yang diminta.',
                         ]);
                 }
             }
 
             // Update status to APPROVED + stamp approval time + generate nomor_surat
             $peminjaman->update([
-                'status'      => Peminjaman::STATUS_APPROVED,
+                'status' => Peminjaman::STATUS_APPROVED,
                 'approved_at' => now(),
-                'nomor_surat' => $peminjaman->nomor_surat ?: Peminjaman::generateNomorSurat(),
+                'nomor_surat' => $peminjaman->nomor_surat
+                    ?: app(NomorSuratService::class)->terbitkan(Dokumen::JENIS_SURAT_IZIN),
             ]);
 
             // ⛔ Email notification DISABLED for MVP — relying on UI only.
@@ -154,31 +196,42 @@ class BookingService
 
     /**
      * Cek apakah ruangan sudah dibooking pada rentang waktu yang sama.
+     *
+     * B-15: memakai kolom datetime tunggal `mulai_at`/`selesai_at`, sehingga
+     * kueri dapat memakai indeks komposit dan berlaku sama di semua driver
+     * database (tidak ada lagi percabangan CONCAT vs ||).
+     *
+     * @param  array  $statuses  Status yang dianggap memesan slot
+     * @param  int|null  $exceptId  Baris yang sedang diproses, dikecualikan
      */
-    private function assertNoScheduleConflict(Ruangan $ruangan, array $data): void
-    {
-        $reqStart = \Illuminate\Support\Carbon::parse($data['tanggal_mulai'] . ' ' . $data['waktu_mulai'])->format('Y-m-d H:i:s');
-        $reqEnd = \Illuminate\Support\Carbon::parse($data['tanggal_selesai'] . ' ' . $data['waktu_selesai'])->format('Y-m-d H:i:s');
+    private function assertNoScheduleConflict(
+        Ruangan $ruangan,
+        ?Carbon $mulai,
+        ?Carbon $selesai,
+        array $statuses,
+        ?int $exceptId = null
+    ): void {
+        if ($mulai === null || $selesai === null) {
+            return;
+        }
 
-        $driver = DB::connection()->getDriverName();
-
-        $conflict = Peminjaman::where('ruangan_id', $ruangan->id)
-            ->whereNotIn('status', [Peminjaman::STATUS_REJECTED, Peminjaman::STATUS_DONE])
-            ->where(function ($q) use ($reqStart, $reqEnd, $driver) {
-                if ($driver === 'sqlite') {
-                    $q->where(DB::raw("tanggal_mulai || ' ' || jam_mulai"), '<', $reqEnd)
-                      ->where(DB::raw("tanggal_selesai || ' ' || jam_selesai"), '>', $reqStart);
-                } else {
-                    $q->where(DB::raw("CONCAT(tanggal_mulai, ' ', jam_mulai)"), '<', $reqEnd)
-                      ->where(DB::raw("CONCAT(tanggal_selesai, ' ', jam_selesai)"), '>', $reqStart);
-                }
-            })
-            ->exists();
+        $conflict = Peminjaman::query()
+            ->where('ruangan_id', $ruangan->id)
+            ->whereIn('status', $statuses)
+            ->when($exceptId !== null, fn ($q) => $q->where('id', '!=', $exceptId))
+            // Dua rentang beririsan bila yang satu mulai sebelum yang lain
+            // berakhir, dan berakhir setelah yang lain mulai.
+            ->where('mulai_at', '<', $selesai)
+            ->where('selesai_at', '>', $mulai)
+            ->first();
 
         if ($conflict) {
-            throw new \RuntimeException(
-                'Ruangan "' . $ruangan->nama . '" sudah dibooking pada jadwal tersebut.'
-            );
+            throw new \RuntimeException(sprintf(
+                'Ruangan "%s" sudah dipakai pada %s s/d %s. Silakan pilih jadwal lain.',
+                $ruangan->nama,
+                optional($conflict->mulai_at)->translatedFormat('d M Y H:i'),
+                optional($conflict->selesai_at)->translatedFormat('d M Y H:i')
+            ));
         }
     }
 
@@ -188,7 +241,7 @@ class BookingService
      * Flow:
      * 1. Lock baris peminjaman (pessimistic locking).
      * 2. Validasi status harus APPROVED (sedang_dipinjam).
-     * 3. Jika tipe barang → kembalikan stok (+1).
+     * 3. Jika tipe barang → kembalikan stok.
      * 4. Update status → DONE, set completed_at.
      */
     public function completeBooking(Peminjaman $peminjaman): Peminjaman
@@ -214,7 +267,7 @@ class BookingService
             }
 
             $peminjaman->update([
-                'status'       => Peminjaman::STATUS_DONE,
+                'status' => Peminjaman::STATUS_DONE,
                 'completed_at' => now(),
             ]);
 
@@ -223,23 +276,59 @@ class BookingService
     }
 
     /**
+     * Rentang waktu dari data form.
+     *
+     * @return array{0: ?Carbon, 1: ?Carbon}
+     */
+    private function slotFromRequest(array $data): array
+    {
+        return [
+            Peminjaman::combineDateTime($data['tanggal_mulai'] ?? null, $data['waktu_mulai'] ?? null, '00:00:00'),
+            Peminjaman::combineDateTime($data['tanggal_selesai'] ?? null, $data['waktu_selesai'] ?? null, '23:59:59'),
+        ];
+    }
+
+    /**
+     * Rentang waktu dari sebuah peminjaman yang sudah tersimpan.
+     *
+     * Mengutamakan kolom baru; jatuh ke kombinasi tanggal+jam hanya bila baris
+     * lama belum ter-backfill.
+     *
+     * @return array{0: ?Carbon, 1: ?Carbon}
+     */
+    private function slotOf(Peminjaman $peminjaman): array
+    {
+        return [
+            $peminjaman->mulai_at
+                ?: Peminjaman::combineDateTime($peminjaman->tanggal_mulai, $peminjaman->jam_mulai, '00:00:00'),
+            $peminjaman->selesai_at
+                ?: Peminjaman::combineDateTime($peminjaman->tanggal_selesai, $peminjaman->jam_selesai, '23:59:59'),
+        ];
+    }
+
+    /**
      * Helper: buat record Peminjaman dari data form.
      */
     private function buildPeminjaman(array $data, User $user, array $extra): Peminjaman
     {
         $keterangan = $data['keterangan'];
-        if (!empty($data['catatan'])) {
-            $keterangan .= "\nCatatan: " . $data['catatan'];
+        if (! empty($data['catatan'])) {
+            $keterangan .= "\nCatatan: ".$data['catatan'];
         }
 
+        [$mulai, $selesai] = $this->slotFromRequest($data);
+
         return Peminjaman::create(array_merge([
-            'user_id'         => $user->id,
-            'tanggal_mulai'   => $data['tanggal_mulai'],
+            'user_id' => $user->id,
+            'tanggal_mulai' => $data['tanggal_mulai'],
             'tanggal_selesai' => $data['tanggal_selesai'],
-            'jam_mulai'       => $data['waktu_mulai'],
-            'jam_selesai'     => $data['waktu_selesai'],
-            'keterangan'      => $keterangan,
-            'status'          => Peminjaman::STATUS_PENDING,
+            'jam_mulai' => $data['waktu_mulai'],
+            'jam_selesai' => $data['waktu_selesai'],
+            // B-15: kolom inti pengecekan bentrok — wajib ikut terisi.
+            'mulai_at' => $mulai,
+            'selesai_at' => $selesai,
+            'keterangan' => $keterangan,
+            'status' => Peminjaman::STATUS_PENDING,
         ], $extra));
     }
 }

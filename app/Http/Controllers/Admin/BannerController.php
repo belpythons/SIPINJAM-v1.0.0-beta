@@ -3,10 +3,10 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
-use App\Models\Banner;
-use App\Services\ImageService;
 use App\Http\Requests\StoreBannerRequest;
 use App\Http\Requests\UpdateBannerRequest;
+use App\Models\Banner;
+use App\Services\ImageService;
 use Illuminate\Http\RedirectResponse;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -16,6 +16,7 @@ class BannerController extends Controller
     public function index(): Response
     {
         $banners = Banner::orderBy('created_at', 'desc')->get();
+
         return Inertia::render('Admin/KelolaBanner', [
             'banners' => $banners,
         ]);
@@ -34,7 +35,7 @@ class BannerController extends Controller
 
             return redirect()->back()->with('success', 'Banner berhasil ditambahkan!');
         } catch (\Throwable $e) {
-            return redirect()->back()->with('error', 'Gagal menambahkan banner: ' . $e->getMessage());
+            return redirect()->back()->with('error', 'Gagal menambahkan banner: '.$e->getMessage());
         }
     }
 
@@ -52,7 +53,7 @@ class BannerController extends Controller
 
             return redirect()->back()->with('success', 'Banner berhasil diperbarui!');
         } catch (\Throwable $e) {
-            return redirect()->back()->with('error', 'Gagal memperbarui banner: ' . $e->getMessage());
+            return redirect()->back()->with('error', 'Gagal memperbarui banner: '.$e->getMessage());
         }
     }
 
@@ -65,7 +66,7 @@ class BannerController extends Controller
 
             return redirect()->back()->with('success', 'Banner berhasil dihapus!');
         } catch (\Throwable $e) {
-            return redirect()->back()->with('error', 'Gagal menghapus banner: ' . $e->getMessage());
+            return redirect()->back()->with('error', 'Gagal menghapus banner: '.$e->getMessage());
         }
     }
 }

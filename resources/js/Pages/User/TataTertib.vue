@@ -99,8 +99,8 @@ const sections = [
     icon: AlertTriangle,
     color: '#FF3B30',
     content: [
-      'Keterlambatan pengembalian barang/ruangan yang melebihi batas waktu (overtime) akan mengakibatkan pemblokiran akun selama 30 hari.',
-      'Pelaporan ruangan dalam kondisi berantakan oleh admin akan menjatuhkan sanksi blokir otomatis 30 hari kepada peminjam terakhir.',
+      'Keterlambatan pengembalian barang/ruangan dicatat sebagai pelanggaran dan ditindaklanjuti petugas sesuai tingkat pelanggarannya.',
+      'Temuan kondisi ruangan dicatat oleh petugas berdasarkan pemeriksaan, dan selalu tertaut pada pengajuan yang bersangkutan beserta buktinya.',
       'Selama masa blokir, pengguna tidak dapat mengakses fitur peminjaman di SiPinjam.',
       'Akun akan otomatis di-unblock setelah masa 30 hari terlewati.',
       'Kerusakan atau kehilangan aset wajib diganti oleh peminjam sesuai ketentuan yang berlaku.',

@@ -20,6 +20,7 @@ class AutoRejectPendingBookings extends Command
 
         if ($expiredBookings->isEmpty()) {
             $this->info('Tidak ada peminjaman yang perlu di-reject.');
+
             return Command::SUCCESS;
         }
 
@@ -30,13 +31,15 @@ class AutoRejectPendingBookings extends Command
                 $locked = Peminjaman::lockForUpdate()->find($peminjaman->id);
 
                 // Guard: pastikan masih berstatus menunggu (bisa saja sudah diproses)
-                if (!$locked || $locked->status !== Peminjaman::STATUS_PENDING) {
+                if (! $locked || $locked->status !== Peminjaman::STATUS_PENDING) {
                     return;
                 }
 
                 $locked->update([
-                    'status'     => Peminjaman::STATUS_REJECTED,
-                    'keterangan' => 'Dibatalkan sistem: Melewati SLA 48 jam',
+                    'status' => Peminjaman::STATUS_REJECTED,
+                    // B-06: alasan sistem punya kolomnya sendiri. Menimpa
+                    // `keterangan` akan menghapus keperluan yang ditulis pemohon.
+                    'alasan_sistem' => 'Dibatalkan sistem: melewati batas waktu verifikasi 48 jam.',
                 ]);
 
                 // ⛔ TIDAK ada increment stok — karena Delayed Deduction

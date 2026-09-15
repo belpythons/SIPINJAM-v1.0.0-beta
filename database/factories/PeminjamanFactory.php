@@ -3,28 +3,28 @@
 namespace Database\Factories;
 
 use App\Models\Barang;
+use App\Models\Dokumen;
 use App\Models\Peminjaman;
 use App\Models\Ruangan;
 use App\Models\User;
-use Illuminate\Database\Eloquent\Factories\Factory;
+use App\Services\NomorSuratService;
 use Carbon\Carbon;
+use Illuminate\Database\Eloquent\Factories\Factory;
 
 class PeminjamanFactory extends Factory
 {
     protected $model = Peminjaman::class;
 
-    private static ?int $nomorCount = null;
-
     public function definition(): array
     {
-        // Get random user
-        $user = User::where('role', 'user')->inRandomOrder()->first();
-        if (!$user) {
-            $user = User::factory()->create(['role' => 'user']);
+        // Get random user (peran Spatie, bukan kolom `role` yang sudah dihapus)
+        $user = User::role(config('sipinjam.peran.peminjam'))->inRandomOrder()->first();
+        if (! $user) {
+            $user = User::factory()->peminjam()->create();
         }
 
         $tipe = $this->faker->randomElement(['ruangan', 'barang']);
-        
+
         $barangId = null;
         $ruanganId = null;
         $namaItem = '';
@@ -59,7 +59,7 @@ class PeminjamanFactory extends Factory
             'menunggu', 'menunggu',
             'sedang_dipinjam', 'sedang_dipinjam',
             'ditolak',
-            'selesai', 'selesai', 'selesai', 'selesai', 'selesai' // highest weight
+            'selesai', 'selesai', 'selesai', 'selesai', 'selesai', // highest weight
         ]);
 
         $approvedAt = null;
@@ -67,20 +67,12 @@ class PeminjamanFactory extends Factory
         $nomorSurat = null;
 
         if (in_array($status, ['sedang_dipinjam', 'selesai'])) {
-            if (self::$nomorCount === null) {
-                // Initialize counter based on existing entries in the DB
-                $suffix = "/INT/SIPINJAM/2026";
-                self::$nomorCount = Peminjaman::whereNotNull('nomor_surat')
-                    ->where('nomor_surat', 'LIKE', "%{$suffix}")
-                    ->count();
-            }
-            self::$nomorCount++;
-            $nextNumber = str_pad((string)self::$nomorCount, 3, '0', STR_PAD_LEFT);
-            $nomorSurat = "{$nextNumber}/INT/SIPINJAM/2026";
+            // Satu sumber penomoran: NomorSuratService (T-02).
+            $nomorSurat = app(NomorSuratService::class)->terbitkan(Dokumen::JENIS_SURAT_IZIN);
 
             // Approved at start date or slightly before
             $approvedAt = (clone $startDate)->subHours(rand(1, 24));
-            
+
             if ($status === 'selesai') {
                 // Completed at the end date at the end hour
                 $completedAt = (clone $endDate)->setTimeFromTimeString($jamSelesai);
@@ -96,7 +88,7 @@ class PeminjamanFactory extends Factory
             'Kegiatan Unit Kegiatan Mahasiswa (UKM)',
             'Rapat Koordinasi Prodi',
             'Kelas Pengganti Pemrograman',
-            'Kerja Kelompok Mahasiswa'
+            'Kerja Kelompok Mahasiswa',
         ];
         $keterangan = $this->faker->randomElement($keteranganOptions);
 

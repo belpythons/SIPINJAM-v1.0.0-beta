@@ -17,6 +17,7 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Validation\Rule;
 use Inertia\Inertia;
 
 class AdminController extends Controller
@@ -44,26 +45,26 @@ class AdminController extends Controller
             ->get()
             ->map(function (Peminjaman $p) {
                 return [
-                    'id'              => $p->id,
-                    'user_name'       => $p->user?->name ?? '-',
-                    'nama_item'       => $p->nama_item,
-                    'tipe'            => $p->tipe,
-                    'tanggal_mulai'   => $p->tanggal_mulai?->format('Y-m-d'),
+                    'id' => $p->id,
+                    'user_name' => $p->user?->name ?? '-',
+                    'nama_item' => $p->nama_item,
+                    'tipe' => $p->tipe,
+                    'tanggal_mulai' => $p->tanggal_mulai?->format('Y-m-d'),
                     'tanggal_selesai' => $p->tanggal_selesai?->format('Y-m-d'),
-                    'jam_mulai'       => $p->jam_mulai,
-                    'jam_selesai'     => $p->jam_selesai,
+                    'jam_mulai' => $p->jam_mulai,
+                    'jam_selesai' => $p->jam_selesai,
                     // Target datetime for countdown (ISO 8601)
-                    'target_datetime' => $p->tanggal_selesai?->format('Y-m-d') . 'T' . $p->jam_selesai . ':00',
+                    'target_datetime' => $p->tanggal_selesai?->format('Y-m-d').'T'.$p->jam_selesai.':00',
                 ];
             });
 
         return Inertia::render('Admin/Dashboard', [
             'stats' => [
-                'pending'   => $totalPending,
-                'approved'  => $totalApproved,
-                'users'     => $totalUsers,
-                'ruangan'   => $totalRuangan,
-                'barang'    => $totalBarang,
+                'pending' => $totalPending,
+                'approved' => $totalApproved,
+                'users' => $totalUsers,
+                'ruangan' => $totalRuangan,
+                'barang' => $totalBarang,
             ],
             'activePeminjamans' => $activePeminjamans,
         ]);
@@ -72,53 +73,71 @@ class AdminController extends Controller
     // ════════════════════════════════════════
     // KELOLA USER — CRUD Lengkap
     // ════════════════════════════════════════
-    public function kelolaUser()
+    public function kelolaUser(Request $request)
     {
-        $users = User::orderBy('created_at', 'desc')->get();
+        $search = trim((string) $request->input('search', ''));
+
+        // B-20: sebelumnya ->get() memuat SELURUH tabel users ke memori.
+        $users = User::query()
+            ->with('roles:id,name')
+            ->when($search !== '', function ($q) use ($search) {
+                $q->where(function ($sub) use ($search) {
+                    $sub->where('name', 'like', "%{$search}%")
+                        ->orWhere('email', 'like', "%{$search}%");
+                });
+            })
+            ->orderBy('created_at', 'desc')
+            ->paginate(20)
+            ->withQueryString();
+
         return Inertia::render('Admin/KelolaUser', [
             'users' => $users,
+            'filters' => ['search' => $search],
         ]);
     }
 
     public function storeUser(Request $request): RedirectResponse
     {
         $request->validate([
-            'name'     => 'required|string|max:255',
-            'email'    => 'required|email|unique:users,email',
+            'name' => 'required|string|max:255',
+            'email' => 'required|email|unique:users,email',
             'password' => 'required|string|min:6',
-            'role'     => 'required|in:admin,user',
+            // Divalidasi terhadap tabel roles agar peran baru di P1 langsung berlaku
+            // tanpa mengedit controller ini.
+            'role' => ['required', Rule::exists('roles', 'name')],
         ]);
 
         try {
             $user = User::create([
-                'name'     => $request->name,
-                'email'    => $request->email,
+                'name' => $request->name,
+                'email' => $request->email,
                 'password' => Hash::make($request->password),
-                'role'     => $request->role,
             ]);
+            // Peran HANYA disimpan lewat Spatie — kolom users.role sudah dihapus.
             $user->assignRole($request->role);
 
             return redirect()->back()->with('success', 'User berhasil ditambahkan!');
         } catch (\Throwable $e) {
-            return redirect()->back()->with('error', 'Gagal menambahkan user: ' . $e->getMessage());
+            return redirect()->back()->with('error', 'Gagal menambahkan user: '.$e->getMessage());
         }
     }
 
     public function updateUser(Request $request, int $id): RedirectResponse
     {
         $request->validate([
-            'name'  => 'required|string|max:255',
-            'email' => 'required|email|unique:users,email,' . $id,
-            'role'  => 'required|in:admin,user',
+            'name' => 'required|string|max:255',
+            'email' => 'required|email|unique:users,email,'.$id,
+            // Divalidasi terhadap tabel roles agar peran baru di P1 langsung berlaku
+            // tanpa mengedit controller ini.
+            'role' => ['required', Rule::exists('roles', 'name')],
         ]);
 
         try {
             $user = User::findOrFail($id);
 
             $data = [
-                'name'  => $request->name,
+                'name' => $request->name,
                 'email' => $request->email,
-                'role'  => $request->role,
             ];
 
             if ($request->filled('password')) {
@@ -130,7 +149,7 @@ class AdminController extends Controller
 
             return redirect()->back()->with('success', 'User berhasil diperbarui!');
         } catch (\Throwable $e) {
-            return redirect()->back()->with('error', 'Gagal memperbarui user: ' . $e->getMessage());
+            return redirect()->back()->with('error', 'Gagal memperbarui user: '.$e->getMessage());
         }
     }
 
@@ -147,18 +166,35 @@ class AdminController extends Controller
 
             return redirect()->back()->with('success', 'User berhasil dihapus!');
         } catch (\Throwable $e) {
-            return redirect()->back()->with('error', 'Gagal menghapus user: ' . $e->getMessage());
+            return redirect()->back()->with('error', 'Gagal menghapus user: '.$e->getMessage());
         }
     }
 
     // ════════════════════════════════════════
     // KELOLA PEMINJAMAN
     // ════════════════════════════════════════
-    public function kelolaPeminjaman()
+    public function kelolaPeminjaman(Request $request)
     {
-        $peminjamans = Peminjaman::with(['user', 'ruangan', 'barang'])->orderBy('created_at', 'desc')->get();
+        $search = trim((string) $request->input('search', ''));
+        $status = $request->input('status');
+
+        // B-20: sebelumnya ->get() memuat SELURUH tabel peminjamans ke memori.
+        $peminjamans = Peminjaman::with(['user', 'ruangan', 'barang'])
+            ->when($search !== '', function ($q) use ($search) {
+                $q->where(function ($sub) use ($search) {
+                    $sub->where('nama_item', 'like', "%{$search}%")
+                        ->orWhere('nomor_surat', 'like', "%{$search}%")
+                        ->orWhereHas('user', fn ($u) => $u->where('name', 'like', "%{$search}%"));
+                });
+            })
+            ->when(in_array($status, Peminjaman::STATUSES, true), fn ($q) => $q->where('status', $status))
+            ->orderBy('created_at', 'desc')
+            ->paginate(20)
+            ->withQueryString();
+
         return Inertia::render('Admin/KelolaPeminjaman', [
             'peminjamans' => $peminjamans,
+            'filters' => ['search' => $search, 'status' => $status],
         ]);
     }
 
@@ -167,9 +203,10 @@ class AdminController extends Controller
         try {
             $peminjaman = Peminjaman::findOrFail($id);
             $this->bookingService->approveBooking($peminjaman);
+
             return redirect()->back()->with('success', 'Peminjaman berhasil disetujui!');
         } catch (\Throwable $e) {
-            return redirect()->back()->with('error', 'Gagal menyetujui peminjaman: ' . $e->getMessage());
+            return redirect()->back()->with('error', 'Gagal menyetujui peminjaman: '.$e->getMessage());
         }
     }
 
@@ -178,9 +215,10 @@ class AdminController extends Controller
         try {
             $peminjaman = Peminjaman::findOrFail($id);
             $this->bookingService->rejectBooking($peminjaman);
+
             return redirect()->back()->with('error', 'Peminjaman ditolak!');
         } catch (\Throwable $e) {
-            return redirect()->back()->with('error', 'Gagal menolak peminjaman: ' . $e->getMessage());
+            return redirect()->back()->with('error', 'Gagal menolak peminjaman: '.$e->getMessage());
         }
     }
 
@@ -192,9 +230,10 @@ class AdminController extends Controller
         try {
             $peminjaman = Peminjaman::findOrFail($id);
             $this->bookingService->completeBooking($peminjaman);
+
             return redirect()->back()->with('success', 'Peminjaman berhasil diselesaikan dan stok dikembalikan!');
         } catch (\Throwable $e) {
-            return redirect()->back()->with('error', 'Gagal menyelesaikan peminjaman: ' . $e->getMessage());
+            return redirect()->back()->with('error', 'Gagal menyelesaikan peminjaman: '.$e->getMessage());
         }
     }
 
@@ -204,6 +243,7 @@ class AdminController extends Controller
     public function kelolaRuangan()
     {
         $ruangans = Ruangan::orderBy('created_at', 'desc')->get();
+
         return Inertia::render('Admin/KelolaRuangan', [
             'ruangans' => $ruangans,
         ]);
@@ -222,7 +262,7 @@ class AdminController extends Controller
 
             return redirect()->back()->with('success', 'Ruangan berhasil ditambahkan!');
         } catch (\Throwable $e) {
-            return redirect()->back()->with('error', 'Gagal menambahkan ruangan: ' . $e->getMessage())->withInput();
+            return redirect()->back()->with('error', 'Gagal menambahkan ruangan: '.$e->getMessage())->withInput();
         }
     }
 
@@ -241,7 +281,7 @@ class AdminController extends Controller
 
             return redirect()->back()->with('success', 'Ruangan berhasil diperbarui!');
         } catch (\Throwable $e) {
-            return redirect()->back()->with('error', 'Gagal memperbarui ruangan: ' . $e->getMessage())->withInput();
+            return redirect()->back()->with('error', 'Gagal memperbarui ruangan: '.$e->getMessage())->withInput();
         }
     }
 
@@ -256,7 +296,7 @@ class AdminController extends Controller
 
             return redirect()->back()->with('success', 'Ruangan berhasil dihapus!');
         } catch (\Throwable $e) {
-            return redirect()->back()->with('error', 'Gagal menghapus ruangan: ' . $e->getMessage());
+            return redirect()->back()->with('error', 'Gagal menghapus ruangan: '.$e->getMessage());
         }
     }
 
@@ -266,6 +306,7 @@ class AdminController extends Controller
     public function kelolaBarang()
     {
         $barangs = Barang::orderBy('created_at', 'desc')->get();
+
         return Inertia::render('Admin/KelolaBarang', [
             'barangs' => $barangs,
         ]);
@@ -284,7 +325,7 @@ class AdminController extends Controller
 
             return redirect()->back()->with('success', 'Barang berhasil ditambahkan!');
         } catch (\Throwable $e) {
-            return redirect()->back()->with('error', 'Gagal menambahkan barang: ' . $e->getMessage())->withInput();
+            return redirect()->back()->with('error', 'Gagal menambahkan barang: '.$e->getMessage())->withInput();
         }
     }
 
@@ -303,7 +344,7 @@ class AdminController extends Controller
 
             return redirect()->back()->with('success', 'Barang berhasil diperbarui!');
         } catch (\Throwable $e) {
-            return redirect()->back()->with('error', 'Gagal memperbarui barang: ' . $e->getMessage())->withInput();
+            return redirect()->back()->with('error', 'Gagal memperbarui barang: '.$e->getMessage())->withInput();
         }
     }
 
@@ -318,7 +359,7 @@ class AdminController extends Controller
 
             return redirect()->back()->with('success', 'Barang berhasil dihapus!');
         } catch (\Throwable $e) {
-            return redirect()->back()->with('error', 'Gagal menghapus barang: ' . $e->getMessage());
+            return redirect()->back()->with('error', 'Gagal menghapus barang: '.$e->getMessage());
         }
     }
 
@@ -327,73 +368,20 @@ class AdminController extends Controller
     // ════════════════════════════════════════
 
     /**
-     * Cari peminjaman terakhir yang selesai (check-out) pada ruangan di hari ini,
-     * lalu blokir user yang bersangkutan selama 30 hari.
+     * B-05 DIHAPUS — "Lapor Berantakan".
+     *
+     * Metode lama menetapkan pelaku lewat TEBAKAN: mencari "peminjaman selesai
+     * terakhir di ruangan ini hari ini", lalu memblokirnya 30 hari. Bila ada dua
+     * kegiatan berurutan di ruangan yang sama, yang dihukum bisa orang yang
+     * salah — dan tidak ada bukti apa pun yang tertaut.
+     *
+     * Penggantinya, "Catat Temuan", mewajibkan petugas memilih pengajuan/baris
+     * aset terkait sehingga pelaku diambil dari data. Itu bergantung pada alur
+     * pemeriksaan di P5 dan dibangun di sana.
+     *
+     * Sengaja tidak diganti dengan versi sementara: lebih baik tidak ada fitur
+     * daripada fitur yang memblokir orang tak bersalah.
      */
-    public function laporBerantakan(Request $request, int $id): RedirectResponse
-    {
-        $request->validate([
-            'feedback' => 'required|string|max:500',
-        ]);
-
-        try {
-            $ruangan = Ruangan::findOrFail($id);
-
-            // Cari peminjaman "selesai" paling terakhir pada ruangan ini hari ini
-            $peminjaman = Peminjaman::where('ruangan_id', $ruangan->id)
-                ->where('status', Peminjaman::STATUS_DONE)
-                ->whereDate('tanggal_selesai', today())
-                ->latest('completed_at')
-                ->with('user')
-                ->first();
-
-            // Fallback: jika tidak ada yang selesai hari ini,
-            // cari yang masih "sedang_dipinjam" pada ruangan hari ini
-            if (!$peminjaman) {
-                $peminjaman = Peminjaman::where('ruangan_id', $ruangan->id)
-                    ->where('status', Peminjaman::STATUS_APPROVED)
-                    ->whereDate('tanggal_mulai', '<=', today())
-                    ->whereDate('tanggal_selesai', '>=', today())
-                    ->latest('created_at')
-                    ->with('user')
-                    ->first();
-            }
-
-            if (!$peminjaman || !$peminjaman->user) {
-                return redirect()->back()->with(
-                    'error',
-                    "Tidak ditemukan peminjaman terkait pada ruangan \"{$ruangan->nama}\" hari ini."
-                );
-            }
-
-            $user = $peminjaman->user;
-
-            // Jangan blokir admin
-            if ($user->hasRole('admin')) {
-                return redirect()->back()->with(
-                    'error',
-                    'Tidak dapat menerapkan sanksi ke akun admin.'
-                );
-            }
-
-            // Jika user sudah diblokir, skip
-            if ($user->isBlocked()) {
-                return redirect()->back()->with(
-                    'error',
-                    "User \"{$user->name}\" sudah dalam status blokir."
-                );
-            }
-
-            $user->blockFor(30, $request->input('feedback'));
-
-            return redirect()->back()->with(
-                'success',
-                "User \"{$user->name}\" (peminjam terakhir ruangan \"{$ruangan->nama}\") telah diblokir selama 30 hari."
-            );
-        } catch (\Throwable $e) {
-            return redirect()->back()->with('error', 'Gagal melapor: ' . $e->getMessage());
-        }
-    }
 
     // ════════════════════════════════════════
     // PROFILE ADMIN
@@ -411,11 +399,11 @@ class AdminController extends Controller
         $user = $request->user();
 
         $request->validate([
-            'name'     => 'required|string|max:255',
+            'name' => 'required|string|max:255',
             'nickname' => 'nullable|string|max:100',
-            'email'    => 'required|email|unique:users,email,' . $user->id,
+            'email' => 'required|email|unique:users,email,'.$user->id,
             'password' => 'nullable|string|min:6|confirmed',
-            'avatar'   => 'nullable|image|mimes:jpg,jpeg,png,webp|max:5120',
+            'avatar' => 'nullable|image|mimes:jpg,jpeg,png,webp|max:5120',
         ]);
 
         $user->name = $request->name;
@@ -438,7 +426,7 @@ class AdminController extends Controller
                 }
             }
             $path = $request->file('avatar')->store('avatars', 'public');
-            $user->avatar = '/storage/' . $path;
+            $user->avatar = '/storage/'.$path;
         }
 
         $user->save();

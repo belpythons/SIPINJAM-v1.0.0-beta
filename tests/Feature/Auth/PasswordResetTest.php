@@ -1,7 +1,7 @@
 <?php
 
-use App\Models\User;
 use App\Mail\ResetPasswordMail;
+use App\Models\User;
 use Illuminate\Support\Facades\Mail;
 
 test('reset password link screen can be rendered', function () {

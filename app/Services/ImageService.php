@@ -12,25 +12,23 @@ class ImageService
      * Center crops an uploaded image to 4:3 ratio, resizes to 800x600,
      * preserves alpha channels (PNG/WebP), and saves to public storage disk.
      *
-     * @param UploadedFile $file
-     * @param string $folder
      * @return string Path starting with '/storage/folder_name/filename.ext'
      */
     public static function cropAndSave(UploadedFile $file, string $folder): string
     {
         $extension = strtolower($file->getClientOriginalExtension());
-        if (!in_array($extension, ['jpg', 'jpeg', 'png', 'webp'])) {
+        if (! in_array($extension, ['jpg', 'jpeg', 'png', 'webp'])) {
             $extension = 'jpg';
         }
-        
-        $filename = Str::random(40) . '.' . $extension;
-        $targetDir = storage_path('app/public/' . $folder);
-        
-        if (!file_exists($targetDir)) {
+
+        $filename = Str::random(40).'.'.$extension;
+        $targetDir = storage_path('app/public/'.$folder);
+
+        if (! file_exists($targetDir)) {
             mkdir($targetDir, 0755, true);
         }
 
-        $targetPath = $targetDir . '/' . $filename;
+        $targetPath = $targetDir.'/'.$filename;
         $tempPath = $file->getRealPath();
 
         // 1. Load image using GD
@@ -56,9 +54,10 @@ class ImageService
         }
 
         // Fallback if GD is disabled or fail
-        if (!$image) {
+        if (! $image) {
             $path = $file->store($folder, 'public');
-            return '/storage/' . $path;
+
+            return '/storage/'.$path;
         }
 
         // 2. Perform 4:3 center crop calculations
@@ -74,12 +73,12 @@ class ImageService
 
         if ($currentRatio > $targetRatio) {
             // Original is wider: crop left & right
-            $cropWidth = (int)($height * $targetRatio);
-            $xOffset = (int)(($width - $cropWidth) / 2);
+            $cropWidth = (int) ($height * $targetRatio);
+            $xOffset = (int) (($width - $cropWidth) / 2);
         } elseif ($currentRatio < $targetRatio) {
             // Original is taller: crop top & bottom
-            $cropHeight = (int)($width / $targetRatio);
-            $yOffset = (int)(($height - $cropHeight) / 2);
+            $cropHeight = (int) ($width / $targetRatio);
+            $yOffset = (int) (($height - $cropHeight) / 2);
         }
 
         // 3. Create target true-color canvas (800x600)
@@ -123,14 +122,11 @@ class ImageService
         imagedestroy($image);
         imagedestroy($newImage);
 
-        return '/storage/' . $folder . '/' . $filename;
+        return '/storage/'.$folder.'/'.$filename;
     }
 
     /**
      * Safely deletes an old image file from storage.
-     *
-     * @param string|null $path
-     * @return void
      */
     public static function deleteOldImage(?string $path): void
     {
