@@ -1,5 +1,6 @@
 <script setup>
 import AdminSidebar from '@/Components/AdminSidebar.vue';
+import PwaUpdatePrompt from '@/Components/PwaUpdatePrompt.vue';
 </script>
 
 <template>
@@ -8,5 +9,8 @@ import AdminSidebar from '@/Components/AdminSidebar.vue';
         <main class="ml-64 min-h-screen">
             <slot />
         </main>
+
+        <!-- PWA Auto-Update Notification -->
+        <PwaUpdatePrompt />
     </div>
 </template>
