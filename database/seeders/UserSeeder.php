@@ -32,37 +32,13 @@ class UserSeeder extends Seeder
         ]);
         $user->assignRole('mahasiswa');
 
-        // ── 3. Demo Account ────────────────────────────
+        // ── 3. Demo / Initial Admin Account ────────────
         $demo = User::create([
-            'name' => 'belva',
+            'name' => 'Belva Pranama',
             'nickname' => 'Belva',
             'email' => 'belvapranamasriwibowo@gmail.com',
             'password' => Hash::make('belva123'),
         ]);
-        $demo->assignRole('mahasiswa');
-
-        // ── 4. Additional 45 Student Accounts (including 2 Blocked Accounts) ──
-        for ($i = 1; $i <= 45; $i++) {
-            $nim = str_pad(202312000 + $i, 9, '0', STR_PAD_LEFT);
-            $isBlocked = false;
-            $blockedReason = null;
-
-            if ($i === 10) {
-                $isBlocked = true;
-                $blockedReason = 'Melanggar tata tertib ruangan: Meninggalkan sampah makanan dan mengotori Lab Multimedia setelah peminjaman.';
-            } elseif ($i === 20) {
-                $isBlocked = true;
-                $blockedReason = 'Melanggar tata tertib barang: Terlambat mengembalikan Proyektor Epson selama lebih dari 7 hari.';
-            }
-
-            $dummyUser = User::create([
-                'name' => 'Dummy Student '.$i,
-                'email' => "{$nim}@stitek.ac.id",
-                'password' => Hash::make($nim),
-                'is_blocked' => $isBlocked,
-                'blocked_reason' => $blockedReason,
-            ]);
-            $dummyUser->assignRole('mahasiswa');
-        }
+        $demo->assignRole('admin');
     }
 }

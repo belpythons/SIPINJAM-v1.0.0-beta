@@ -23,7 +23,7 @@ class DatabaseSeeder extends Seeder
             File::copyDirectory($asetPath, $publicStoragePath);
         }
 
-        // 3. Call all seeders in order
+        // 3. Call all production/baseline seeders in order
         $this->call([
             RolePermissionSeeder::class,
             UserSeeder::class,
@@ -31,8 +31,7 @@ class DatabaseSeeder extends Seeder
             BarangSeeder::class,
             CalendarSeeder::class,
             BannerSeeder::class,
-            PeminjamanSeeder::class,
-            PengajuanDemoSeeder::class,
+            TataTertibSeeder::class,
         ]);
     }
 }
