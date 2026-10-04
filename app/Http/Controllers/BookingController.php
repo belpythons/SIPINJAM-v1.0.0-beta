@@ -22,18 +22,21 @@ class BookingController extends Controller
 
     public function index(): Response
     {
+        $status = request('status');
+
         // Fix N+1 — eager-load relasi barang & ruangan
         // B-20: dipaginasi agar tidak memuat seluruh riwayat ke memori.
         $bookings = Peminjaman::with(['barang', 'ruangan'])
             ->where('user_id', Auth::id())
+            ->when($status, fn ($q) => $q->where('status', $status))
             ->latest()
             ->paginate(20)
             ->withQueryString();
 
         // Statistik dihitung lewat kueri agregat, bukan dari koleksi halaman
         // saat ini — kalau tidak, angkanya hanya mencerminkan 20 baris teratas.
-        $hitung = fn (?string $status) => Peminjaman::where('user_id', Auth::id())
-            ->when($status !== null, fn ($q) => $q->where('status', $status))
+        $hitung = fn (?string $s) => Peminjaman::where('user_id', Auth::id())
+            ->when($s !== null, fn ($q) => $q->where('status', $s))
             ->count();
 
         $stats = [
@@ -46,6 +49,7 @@ class BookingController extends Controller
         return Inertia::render('User/RiwayatPeminjaman', [
             'bookings' => $bookings,
             'stats' => $stats,
+            'filters' => ['status' => $status],
         ]);
     }
 

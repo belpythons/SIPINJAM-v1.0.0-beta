@@ -6,7 +6,7 @@ defineOptions({
 import { useForm, usePage } from '@inertiajs/vue3';
 import {
   CalendarDays, Clock, User, Mail, FileText, ChevronLeft, ChevronRight,
-  CheckCircle2, AlertCircle, Loader2, Building2, Package,
+  CheckCircle2, AlertCircle, Loader2, Building2, Package, ShieldCheck,
 } from '@lucide/vue';
 import {
   Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle,
@@ -357,18 +357,26 @@ const stepLabels = ['Jadwal', 'Aset', 'Detail'];
               class="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground shadow-sm transition-colors focus:border-ring focus:outline-none focus:ring-2 focus:ring-ring/20 resize-none" />
           </div>
 
-          <!-- Tata Tertib -->
-          <div class="rounded-xl bg-amber-50/60 border border-amber-100 p-4 space-y-3">
-            <p class="text-xs font-semibold text-amber-800">Tata Tertib Peminjaman</p>
-            <ul class="space-y-1 text-[11px] text-amber-700 leading-relaxed">
-              <li>• Peminjam bertanggung jawab atas kondisi aset selama peminjaman</li>
-              <li>• Pengembalian harus tepat waktu sesuai jadwal yang diajukan</li>
-              <li>• Kerusakan/kehilangan menjadi tanggung jawab peminjam</li>
-              <li>• Admin berhak menolak/membatalkan peminjaman yang tidak sesuai aturan</li>
+          <!-- Tata Tertib Agreement -->
+          <div class="rounded-xl bg-blue-50/70 border border-blue-200/80 p-4 space-y-3">
+            <div class="flex items-center justify-between">
+              <p class="text-xs font-bold text-blue-900 flex items-center gap-1.5">
+                <ShieldCheck class="h-4 w-4 text-blue-600" />
+                Persetujuan Tata Tertib Peminjaman
+              </p>
+              <a href="/tata_tertib" target="_blank" class="text-[11px] font-semibold text-blue-600 hover:text-blue-700 hover:underline">
+                Baca Lengkap ↗
+              </a>
+            </div>
+            <ul class="space-y-1 text-[11px] text-slate-700 leading-relaxed">
+              <li>• Bertanggung jawab penuh atas keutuhan dan kebersihan fasilitas kampus.</li>
+              <li>• Mengembalikan aset tepat waktu sesuai batas jam operasional (07:00 - 22:00 WITA).</li>
+              <li>• Kerusakan atau kehilangan menjadi kewajiban peminjam untuk mengganti rugi.</li>
+              <li>• Mengunduh surat permohonan dan konfirmasi langsung ke pengelola/admin.</li>
             </ul>
-            <label class="flex items-start gap-2 cursor-pointer pt-1">
-              <input v-model="agreedToRules" type="checkbox" class="mt-0.5 h-4 w-4 rounded border-amber-300 text-amber-600 focus:ring-amber-500/20" />
-              <span class="text-xs font-medium text-amber-800">Saya menyetujui tata tertib peminjaman di atas</span>
+            <label class="flex items-start gap-2 cursor-pointer pt-1 border-t border-blue-200/60">
+              <input v-model="agreedToRules" type="checkbox" class="mt-0.5 h-4 w-4 rounded border-blue-300 text-blue-600 focus:ring-blue-500/20" />
+              <span class="text-xs font-semibold text-blue-900">Saya telah membaca dan menyetujui seluruh tata tertib di atas</span>
             </label>
           </div>
         </div>

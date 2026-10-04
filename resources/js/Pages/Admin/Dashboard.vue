@@ -67,14 +67,22 @@ const validasiSelesai = (id) => {
   });
 };
 
-// ── Localized Date ────────────────────────────────
-const currentDateString = computed(() => {
-  return new Intl.DateTimeFormat('id-ID', {
+// ── Live Real-time Clock ──────────────────────────
+const currentLiveDateTimeString = computed(() => {
+  const d = new Date(now.value);
+  const datePart = new Intl.DateTimeFormat('id-ID', {
     weekday: 'long',
     day: 'numeric',
     month: 'long',
     year: 'numeric'
-  }).format(new Date());
+  }).format(d);
+  const timePart = d.toLocaleTimeString('id-ID', {
+    hour: '2-digit',
+    minute: '2-digit',
+    second: '2-digit',
+    hour12: false
+  });
+  return `${datePart} • ${timePart} WITA`;
 });
 
 // ── Greeting ───────────────────────────────────────
@@ -96,7 +104,10 @@ const greetingMessage = computed(() => {
       <div class="absolute inset-0 bg-gradient-to-r from-black/90 via-black/60 to-transparent" />
       
       <div class="relative z-10 max-w-xl text-white drop-shadow-md">
-        <p class="text-xs font-bold text-orange-400 uppercase tracking-widest mb-2">{{ currentDateString }}</p>
+        <div class="inline-flex items-center gap-2 bg-orange-500/20 border border-orange-400/30 rounded-full px-3 py-1 text-xs font-semibold uppercase tracking-wider text-orange-300 mb-3 backdrop-blur-xs font-mono">
+          <Clock class="h-3.5 w-3.5 animate-pulse text-orange-400" />
+          <span>{{ currentLiveDateTimeString }}</span>
+        </div>
         <h2 class="text-3xl font-extrabold tracking-tight mb-2 drop-shadow-md">
           Selamat Datang, {{ $page.props.auth.user?.name }}!
         </h2>

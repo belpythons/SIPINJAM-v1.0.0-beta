@@ -46,6 +46,8 @@ class HandleInertiaRequests extends Middleware
                     'isAdmin' => $request->user()->hasRole('admin'),
                     'roles' => $request->user()->getRoleNames(),
                 ] : null,
+                'sessionLifetime' => config('session.lifetime') * 60,
+                'sessionExpiresAt' => $request->user() ? (time() + (config('session.lifetime') * 60)) : null,
             ],
             'flash' => [
                 'success' => fn () => $request->session()->get('success'),

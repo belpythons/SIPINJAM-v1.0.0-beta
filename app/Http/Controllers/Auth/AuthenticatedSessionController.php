@@ -15,8 +15,14 @@ class AuthenticatedSessionController extends Controller
     /**
      * Display the login view via Inertia.
      */
-    public function create(): Response
+    public function create(): Response|\Illuminate\Http\RedirectResponse
     {
+        if (Auth::check()) {
+            return Auth::user()->hasRole('admin')
+                ? redirect()->route('admin.dashboard')
+                : redirect()->route('dashboard');
+        }
+
         return Inertia::render('Auth/Login');
     }
 
