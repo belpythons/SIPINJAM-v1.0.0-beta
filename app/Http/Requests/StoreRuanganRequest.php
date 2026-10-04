@@ -1,0 +1,26 @@
+<?php
+
+namespace App\Http\Requests;
+
+use Illuminate\Foundation\Http\FormRequest;
+
+class StoreRuanganRequest extends FormRequest
+{
+    public function authorize(): bool
+    {
+        return $this->user() && $this->user()->role === 'admin';
+    }
+
+    public function rules(): array
+    {
+        return [
+            'nama'       => 'required|string|max:255',
+            'kode'       => 'required|string|max:50|unique:ruangans,kode',
+            'kapasitas'  => 'required|integer|min:1',
+            'lokasi'     => 'nullable|string|max:255',
+            'deskripsi'  => 'nullable|string',
+            'status'     => 'required|in:tersedia,tidak_tersedia',
+            'image_path' => 'nullable|image|mimes:jpg,jpeg,png|max:5120',
+        ];
+    }
+}
