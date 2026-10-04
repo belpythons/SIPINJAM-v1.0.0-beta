@@ -1,5 +1,6 @@
 <script setup>
 import Sidebar from '@/Components/Sidebar.vue';
+import PwaUpdatePrompt from '@/Components/PwaUpdatePrompt.vue';
 </script>
 
 <template>
@@ -11,5 +12,8 @@ import Sidebar from '@/Components/Sidebar.vue';
     <main class="ml-64 min-h-screen">
       <slot />
     </main>
+
+    <!-- PWA Auto-Update Notification -->
+    <PwaUpdatePrompt />
   </div>
 </template>

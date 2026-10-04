@@ -11,6 +11,10 @@ import '@fontsource/inter/700.css';
 
 import { createApp, h } from 'vue';
 import { createInertiaApp } from '@inertiajs/vue3';
+import { registerPwaServiceWorker } from './pwa';
+
+// Register PWA Service Worker
+registerPwaServiceWorker();
 
 createInertiaApp({
     title: (title) => title ? `${title} - SiPinjam` : 'SiPinjam',
