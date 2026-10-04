@@ -14,6 +14,11 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware) {
+        $middleware->redirectTo(
+            guests: '/login',
+            users: fn (\Illuminate\Http\Request $request) => $request->user()?->hasRole('admin') ? route('admin.dashboard') : route('dashboard')
+        );
+
         $middleware->web(append: [
             HandleInertiaRequests::class,
         ]);

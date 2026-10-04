@@ -26,7 +26,12 @@ import {
   CalendarDays,
   FileText,
   MessageCircle,
+  ShieldCheck,
+  BookOpen,
+  Smartphone,
+  Download,
 } from '@lucide/vue';
+import { isPwaInstallable, promptPwaInstall } from '@/pwa';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -138,8 +143,51 @@ const openQuickBooking = () => {
   showBookingModal.value = true;
 };
 
+// ── Tata Tertib Awareness Modal State ────────────────
+const showTataTertibModal = ref(false);
+const dontShowAgain = ref(false);
+
+const ackTataTertib = () => {
+  if (dontShowAgain.value) {
+    localStorage.setItem('sipinjam_tatatertib_ack', 'true');
+  }
+  showTataTertibModal.value = false;
+};
+
+const openTataTertibModal = () => {
+  showTataTertibModal.value = true;
+};
+
+// ── PWA Install Banner State ────────────────────────
+const isPwaBannerDismissed = ref(false);
+
+const handlePwaInstall = async () => {
+  const installed = await promptPwaInstall();
+  if (installed) {
+    isPwaBannerDismissed.value = true;
+  }
+};
+
+const dismissPwaBanner = () => {
+  isPwaBannerDismissed.value = true;
+  try {
+    sessionStorage.setItem('sipinjam_pwa_dismissed', 'true');
+  } catch (e) {}
+};
+
 // ── Guest Cookie Detection (from Landing page drag) ─
 onMounted(() => {
+  try {
+    if (sessionStorage.getItem('sipinjam_pwa_dismissed') === 'true') {
+      isPwaBannerDismissed.value = true;
+    }
+  } catch (e) {}
+
+  const tatatertibAck = localStorage.getItem('sipinjam_tatatertib_ack');
+  if (!tatatertibAck) {
+    showTataTertibModal.value = true;
+  }
+
   const cookies = document.cookie.split(';').map(c => c.trim());
   const guestCookie = cookies.find(c => c.startsWith('sipinjam_guest_dates='));
   if (guestCookie) {
@@ -160,15 +208,50 @@ onMounted(() => {
   }
 });
 
-// ── Localized Date ────────────────────────────────
-const currentDateString = computed(() => {
-  return new Intl.DateTimeFormat('id-ID', {
+// ── Live Real-time Clock ──────────────────────────
+const currentLiveTime = ref(new Date());
+let liveTimeTimer = null;
+
+onMounted(() => {
+  liveTimeTimer = setInterval(() => {
+    currentLiveTime.value = new Date();
+  }, 1000);
+});
+
+onUnmounted(() => {
+  if (liveTimeTimer) clearInterval(liveTimeTimer);
+});
+
+const currentLiveDateTimeString = computed(() => {
+  const d = currentLiveTime.value;
+  const datePart = new Intl.DateTimeFormat('id-ID', {
     weekday: 'long',
     day: 'numeric',
     month: 'long',
     year: 'numeric'
-  }).format(new Date());
+  }).format(d);
+  const timePart = d.toLocaleTimeString('id-ID', {
+    hour: '2-digit',
+    minute: '2-digit',
+    second: '2-digit',
+    hour12: false
+  });
+  return `${datePart} • ${timePart} WITA`;
 });
+
+// ── Interactive Calendar Event Click Modal ────────
+const selectedCalendarEvent = ref(null);
+const showEventDetailsModal = ref(false);
+
+const handleEventClick = (info) => {
+  selectedCalendarEvent.value = {
+    title: info.event.title,
+    start: info.event.startStr,
+    end: info.event.endStr,
+    ...info.event.extendedProps,
+  };
+  showEventDetailsModal.value = true;
+};
 
 // ── FullCalendar Config ────────────────────────────
 const calendarOptions = computed(() => ({
@@ -181,6 +264,7 @@ const calendarOptions = computed(() => ({
     prefillDates.value = { start: info.startStr, end: info.endStr };
     showBookingModal.value = true;
   },
+  eventClick: handleEventClick,
   headerToolbar: {
     left: 'prev,next today',
     center: 'title',
@@ -261,7 +345,10 @@ const getImageUrl = (path) => {
       <div class="absolute inset-0 bg-gradient-to-r from-black/90 via-black/60 to-transparent" />
       
       <div class="relative z-10 max-w-xl text-white drop-shadow-md">
-        <p class="text-xs font-bold text-blue-400 uppercase tracking-widest mb-2">{{ currentDateString }}</p>
+        <div class="inline-flex items-center gap-2 bg-blue-500/20 border border-blue-400/30 rounded-full px-3 py-1 text-xs font-semibold uppercase tracking-wider text-blue-300 mb-3 backdrop-blur-xs font-mono">
+          <Clock class="h-3.5 w-3.5 animate-pulse text-blue-400" />
+          <span>{{ currentLiveDateTimeString }}</span>
+        </div>
         <h2 class="text-3xl font-extrabold tracking-tight mb-2 drop-shadow-md">
           Selamat Datang, {{ $page.props.auth.user?.name }}!
         </h2>
@@ -309,6 +396,73 @@ const getImageUrl = (path) => {
           <p class="text-xs text-muted-foreground mt-0.5">Lihat status dan histori peminjaman Anda</p>
         </div>
       </Link>
+    </div>
+
+    <!-- ── PWA Install Suggestion Banner ─────────────── -->
+    <div
+      v-if="isPwaInstallable && !isPwaBannerDismissed"
+      class="mb-8 overflow-hidden rounded-2xl border border-indigo-200/80 bg-gradient-to-r from-indigo-50/90 via-blue-50/60 to-white p-5 sm:p-6 shadow-xs flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4"
+    >
+      <div class="flex items-start gap-3.5">
+        <div class="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-indigo-600 text-white shadow-sm">
+          <Smartphone class="h-6 w-6" />
+        </div>
+        <div>
+          <div class="flex items-center gap-2 mb-1">
+            <h3 class="text-sm sm:text-base font-bold text-slate-900">Pasang Aplikasi SIPINJAM</h3>
+            <Badge class="bg-indigo-100 text-indigo-800 border-indigo-200 text-[10px]">Akses Cepat PWA</Badge>
+          </div>
+          <p class="text-xs text-slate-600 max-w-2xl leading-relaxed">
+            Pasang SIPINJAM langsung di layar beranda perangkat Anda untuk pengalaman native app tanpa perlu membuka browser.
+          </p>
+        </div>
+      </div>
+      <div class="flex items-center gap-2 w-full sm:w-auto shrink-0">
+        <button
+          @click="dismissPwaBanner"
+          class="flex-1 sm:flex-none inline-flex items-center justify-center gap-1.5 rounded-xl border border-slate-200 bg-white px-3.5 py-2 text-xs font-semibold text-slate-600 hover:bg-slate-50 transition-colors shadow-2xs cursor-pointer"
+        >
+          Nanti Saja
+        </button>
+        <button
+          @click="handlePwaInstall"
+          class="flex-1 sm:flex-none inline-flex items-center justify-center gap-1.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 px-4 py-2 text-xs font-semibold text-white transition-colors shadow-xs cursor-pointer"
+        >
+          <Download class="h-3.5 w-3.5" /> Pasang Sekarang
+        </button>
+      </div>
+    </div>
+
+    <!-- ── Tata Tertib Awareness Suggestion Banner ───── -->
+    <div class="mb-8 overflow-hidden rounded-2xl border border-blue-200/80 bg-gradient-to-r from-blue-50/90 via-indigo-50/60 to-white p-5 sm:p-6 shadow-xs flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+      <div class="flex items-start gap-3.5">
+        <div class="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-blue-600 text-white shadow-sm">
+          <ShieldCheck class="h-6 w-6" />
+        </div>
+        <div>
+          <div class="flex items-center gap-2 mb-1">
+            <h3 class="text-sm sm:text-base font-bold text-slate-900">Patuhi Tata Tertib Peminjaman Kampus</h3>
+            <Badge class="bg-blue-100 text-blue-800 border-blue-200 text-[10px] hidden sm:inline-flex">Wajib Dipahami</Badge>
+          </div>
+          <p class="text-xs text-slate-600 max-w-2xl leading-relaxed">
+            Seluruh peminjam wajib menjaga keutuhan aset, mengembalikan tepat waktu, dan mematuhi batas operasional (07:00 - 22:00 WITA) demi kenyamanan bersama.
+          </p>
+        </div>
+      </div>
+      <div class="flex items-center gap-2 w-full sm:w-auto shrink-0">
+        <button
+          @click="openTataTertibModal"
+          class="flex-1 sm:flex-none inline-flex items-center justify-center gap-1.5 rounded-xl border border-blue-200 bg-white px-3.5 py-2 text-xs font-semibold text-blue-700 hover:bg-blue-50 transition-colors shadow-2xs cursor-pointer"
+        >
+          <BookOpen class="h-3.5 w-3.5 text-blue-600" /> Ringkasan
+        </button>
+        <Link
+          href="/tata_tertib"
+          class="flex-1 sm:flex-none inline-flex items-center justify-center gap-1.5 rounded-xl bg-blue-600 hover:bg-blue-700 px-4 py-2 text-xs font-semibold text-white transition-colors shadow-xs"
+        >
+          Lihat Tata Tertib Lengkap →
+        </Link>
+      </div>
     </div>
 
     <!-- ── Page Header ──────────────────────────────── -->
@@ -397,22 +551,25 @@ const getImageUrl = (path) => {
 
     <!-- ── Interactive Calendar ──────────────────────── -->
     <div class="mb-10">
-      <div class="flex items-center gap-2 mb-4">
-        <CalendarDays class="h-5 w-5 text-blue-500" />
-        <h2 class="text-lg font-bold text-slate-900">Jadwal Peminjaman</h2>
+      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-4">
+        <div class="flex items-center gap-2">
+          <CalendarDays class="h-5 w-5 text-blue-500" />
+          <h2 class="text-lg font-bold text-slate-900">Jadwal Peminjaman Aktif</h2>
+        </div>
+        <!-- Legend with shadcn / Lucide Icons -->
+        <div class="flex items-center gap-3">
+          <div class="inline-flex items-center gap-1.5 bg-blue-50 text-blue-700 border border-blue-200 px-2.5 py-1 rounded-md text-xs font-semibold">
+            <Building2 class="h-3.5 w-3.5 text-blue-600" />
+            <span>Peminjaman Ruangan</span>
+          </div>
+          <div class="inline-flex items-center gap-1.5 bg-amber-50 text-amber-700 border border-amber-200 px-2.5 py-1 rounded-md text-xs font-semibold">
+            <Package class="h-3.5 w-3.5 text-amber-600" />
+            <span>Peminjaman Barang</span>
+          </div>
+        </div>
       </div>
-      <div class="rounded-xl border border-border bg-card p-4 shadow-sm">
+      <div class="rounded-xl border border-border bg-card p-4 sm:p-6 shadow-xs clean-calendar">
         <FullCalendar :options="calendarOptions" />
-      </div>
-      <div class="mt-3 flex items-center gap-5">
-        <div class="flex items-center gap-2">
-          <span class="inline-block h-3 w-3 rounded-sm" style="background-color:#2563eb" />
-          <span class="text-xs text-muted-foreground">Ruangan</span>
-        </div>
-        <div class="flex items-center gap-2">
-          <span class="inline-block h-3 w-3 rounded-sm" style="background-color:#64748b" />
-          <span class="text-xs text-muted-foreground">Barang</span>
-        </div>
       </div>
     </div>
 
@@ -662,4 +819,179 @@ const getImageUrl = (path) => {
       </DialogFooter>
     </DialogContent>
   </Dialog>
+
+  <!-- ── Interactive Calendar Event Details Modal ─────── -->
+  <Dialog :open="showEventDetailsModal" @update:open="showEventDetailsModal = $event">
+    <DialogContent class="sm:max-w-md">
+      <DialogHeader>
+        <div class="flex items-center gap-3 mb-1">
+          <div
+            :class="[
+              'flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border',
+              selectedCalendarEvent?.tipe === 'ruangan'
+                ? 'bg-blue-50 text-blue-600 border-blue-200'
+                : 'bg-amber-50 text-amber-600 border-amber-200',
+            ]"
+          >
+            <component
+              :is="selectedCalendarEvent?.tipe === 'ruangan' ? Building2 : Package"
+              class="h-5 w-5"
+            />
+          </div>
+          <div>
+            <DialogTitle class="text-base font-bold text-slate-900">
+              {{ selectedCalendarEvent?.nama || selectedCalendarEvent?.title || 'Detail Peminjaman' }}
+            </DialogTitle>
+            <Badge
+              variant="outline"
+              class="mt-1 text-[10px] uppercase font-bold tracking-wider"
+              :class="selectedCalendarEvent?.tipe === 'ruangan' ? 'text-blue-600' : 'text-amber-600'"
+            >
+              Peminjaman {{ selectedCalendarEvent?.tipe === 'ruangan' ? 'Ruangan' : 'Barang' }} Aktif
+            </Badge>
+          </div>
+        </div>
+        <DialogDescription class="text-xs text-slate-500 pt-2 space-y-3">
+          <div class="rounded-xl border border-slate-200 bg-slate-50 p-3.5 space-y-2 text-xs">
+            <div class="flex items-center justify-between">
+              <span class="font-medium text-slate-500">Rentang Tanggal:</span>
+              <span class="font-semibold text-slate-800">{{ selectedCalendarEvent?.start }} — {{ selectedCalendarEvent?.end }}</span>
+            </div>
+            <div v-if="selectedCalendarEvent?.jam_mulai" class="flex items-center justify-between">
+              <span class="font-medium text-slate-500">Jam Operasional:</span>
+              <span class="font-semibold text-slate-800">{{ selectedCalendarEvent?.jam_mulai }} - {{ selectedCalendarEvent?.jam_selesai }} WITA</span>
+            </div>
+            <div v-if="selectedCalendarEvent?.keterangan" class="pt-1 border-t border-slate-200">
+              <span class="font-medium text-slate-500 block mb-0.5">Keperluan:</span>
+              <p class="text-slate-700 italic">{{ selectedCalendarEvent?.keterangan }}</p>
+            </div>
+          </div>
+        </DialogDescription>
+      </DialogHeader>
+      <DialogFooter class="mt-2">
+        <Button size="sm" class="w-full bg-primary text-primary-foreground hover:opacity-90" @click="showEventDetailsModal = false">
+          Tutup Detail
+        </Button>
+      </DialogFooter>
+    </DialogContent>
+  </Dialog>
+
+  <!-- ── Tata Tertib Pop-Up Awareness Modal ───────────── -->
+  <Dialog :open="showTataTertibModal" @update:open="showTataTertibModal = $event">
+    <DialogContent class="sm:max-w-lg max-h-[90vh] overflow-y-auto">
+      <DialogHeader>
+        <div class="flex items-center gap-3 mb-1">
+          <div class="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-blue-50 text-blue-600 border border-blue-100">
+            <ShieldCheck class="h-6 w-6" />
+          </div>
+          <div>
+            <DialogTitle class="text-base font-bold text-slate-900">
+              Tata Tertib Peminjaman Sarpras
+            </DialogTitle>
+            <DialogDescription class="text-xs text-slate-500">
+              Pedoman peminjaman ruangan dan barang STITEK Bontang
+            </DialogDescription>
+          </div>
+        </div>
+      </DialogHeader>
+
+      <div class="space-y-3.5 text-xs text-slate-600 pt-2">
+        <p class="text-slate-700 font-medium">
+          Demi kelancaran kegiatan bersama dan pemeliharaan fasilitas kampus, mohon perhatikan poin penting berikut:
+        </p>
+
+        <div class="space-y-2.5">
+          <div class="rounded-xl border border-slate-100 bg-slate-50 p-3 flex items-start gap-2.5">
+            <div class="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-blue-100 text-blue-700 font-bold text-[10px]">1</div>
+            <div>
+              <p class="font-bold text-slate-800">Pengajuan & Persetujuan</p>
+              <p class="text-[11px] text-slate-500 mt-0.5">Pengajuan wajib diajukan minimal H-1 sebelum kegiatan dan menunggu persetujuan admin sebelum sarpras digunakan.</p>
+            </div>
+          </div>
+
+          <div class="rounded-xl border border-slate-100 bg-slate-50 p-3 flex items-start gap-2.5">
+            <div class="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-blue-100 text-blue-700 font-bold text-[10px]">2</div>
+            <div>
+              <p class="font-bold text-slate-800">Jam Operasional & Pengembalian</p>
+              <p class="text-[11px] text-slate-500 mt-0.5">Penggunaan fasilitas berlaku pukul 07:00 - 22:00 WITA. Pengembalian wajib tepat waktu sesuai permohonan.</p>
+            </div>
+          </div>
+
+          <div class="rounded-xl border border-slate-100 bg-slate-50 p-3 flex items-start gap-2.5">
+            <div class="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-blue-100 text-blue-700 font-bold text-[10px]">3</div>
+            <div>
+              <p class="font-bold text-slate-800">Kebersihan & Keutuhan Aset</p>
+              <p class="text-[11px] text-slate-500 mt-0.5">Peminjam wajib menjaga kebersihan ruangan, mematikan AC/lampu setelah selesai, dan menjaga kondisi barang.</p>
+            </div>
+          </div>
+
+          <div class="rounded-xl border border-slate-100 bg-slate-50 p-3 flex items-start gap-2.5">
+            <div class="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-blue-100 text-blue-700 font-bold text-[10px]">4</div>
+            <div>
+              <p class="font-bold text-slate-800">Sanksi Pelanggaran</p>
+              <p class="text-[11px] text-slate-500 mt-0.5">Keterlambatan, kerusakan, atau kehilangan dikenakan sanksi ganti rugi hingga pembatasan izin peminjaman akun.</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="pt-2 flex items-center justify-between border-t border-slate-100">
+          <label class="flex items-center gap-2 cursor-pointer select-none">
+            <input v-model="dontShowAgain" type="checkbox" class="h-4 w-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500/20" />
+            <span class="text-xs text-slate-600 font-medium">Jangan tampilkan popup ini otomatis lagi</span>
+          </label>
+        </div>
+      </div>
+
+      <DialogFooter class="flex flex-col-reverse sm:flex-row sm:items-center sm:justify-between gap-2 mt-4 pt-3 border-t border-slate-100">
+        <Link
+          href="/tata_tertib"
+          class="inline-flex items-center justify-center gap-1.5 text-xs font-semibold text-blue-600 hover:text-blue-700 py-2"
+          @click="showTataTertibModal = false"
+        >
+          <BookOpen class="h-3.5 w-3.5" /> Baca Tata Tertib Lengkap
+        </Link>
+        <Button
+          class="bg-blue-600 hover:bg-blue-700 text-white font-semibold text-xs px-5 py-2.5 rounded-xl shadow-xs"
+          @click="ackTataTertib"
+        >
+          Saya Telah Memahami
+        </Button>
+      </DialogFooter>
+    </DialogContent>
+  </Dialog>
 </template>
+
+<style scoped>
+/* ── Clean FullCalendar Button & Layout Overrides ──────────────────── */
+.clean-calendar :deep(.fc) { font-family: 'Inter', sans-serif; }
+.clean-calendar :deep(.fc-toolbar-title) { font-size: 1.1rem !important; font-weight: 700 !important; color: #0f172a !important; }
+.clean-calendar :deep(.fc-button) {
+  background: hsl(var(--primary)) !important;
+  border: 1px solid transparent !important;
+  border-radius: 0.5rem !important;
+  color: hsl(var(--primary-foreground)) !important;
+  font-weight: 600 !important;
+  box-shadow: 0 1px 2px rgba(0,0,0,.05) !important;
+  padding: 6px 14px !important;
+  transition: all 0.2s !important;
+  font-size: 0.85rem !important;
+  text-transform: capitalize !important;
+}
+.clean-calendar :deep(.fc-button:hover) { opacity: 0.9 !important; }
+.clean-calendar :deep(.fc-button-active) { background: hsl(var(--primary)) !important; opacity: 0.85 !important; }
+.clean-calendar :deep(.fc-daygrid-day) { border: 1px solid hsl(var(--border)) !important; }
+.clean-calendar :deep(.fc-col-header-cell) {
+  background: hsl(var(--muted)) !important;
+  color: hsl(var(--muted-foreground)) !important;
+  font-weight: 600 !important;
+  font-size: 0.8rem !important;
+  border: 1px solid hsl(var(--border)) !important;
+  padding: 8px 0 !important;
+}
+.clean-calendar :deep(.fc-day-today) { background: hsl(var(--primary) / 0.06) !important; }
+.clean-calendar :deep(.fc-highlight) { background: hsl(var(--primary) / 0.12) !important; }
+.clean-calendar :deep(.fc-daygrid-day-number) { font-weight: 600 !important; font-size: 0.85rem; padding: 6px 8px !important; color: #334155 !important; }
+.clean-calendar :deep(.fc-scrollgrid) { border: 1px solid hsl(var(--border)) !important; border-radius: 0.5rem !important; overflow: hidden; }
+.clean-calendar :deep(th), .clean-calendar :deep(td) { border-color: hsl(var(--border)) !important; }
+.clean-calendar :deep(.fc-event) { border-radius: 4px !important; padding: 1px 4px !important; font-size: 0.75rem !important; font-weight: 600 !important; }
+</style>

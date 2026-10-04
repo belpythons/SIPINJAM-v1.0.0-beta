@@ -45,9 +45,15 @@ Route::middleware(['auth', 'verified', 'blocked'])->group(function () {
     Route::get('/kalender', [CalendarController::class, 'index'])->name('kalender.index');
     Route::get('/kalender/export-pdf', [CalendarController::class, 'exportPdf'])->middleware('throttle:20,1')->name('kalender.export_pdf');
 
-    // Laporan Pribadi (User)
-    Route::get('/laporan', [ReportController::class, 'userIndex'])->name('laporan.index');
+    // Laporan Pribadi (dialihkan terintegrasi di dalam Riwayat Peminjaman)
+    Route::get('/laporan', fn () => redirect()->route('bookings.index'))->name('laporan.index');
     Route::get('/laporan/export-pdf', [ReportController::class, 'userExportPdf'])->middleware('throttle:20,1')->name('laporan.export_pdf');
+
+    // Session Keep-Alive
+    Route::post('/session/keep-alive', fn (Request $request) => response()->json([
+        'status' => 'ok',
+        'expiresAt' => time() + (config('session.lifetime') * 60),
+    ]))->name('session.keep_alive');
 
     // Lapor Pelanggaran (User)
     Route::get('/lapor-pelanggaran', [LaporanPelanggaranController::class, 'create'])->name('lapor_pelanggaran.create');
@@ -111,10 +117,6 @@ Route::middleware(['auth', 'admin'])->group(function () {
     Route::get('/admin/pelanggaran', [AdminLaporanPelanggaranController::class, 'index'])->name('admin.pelanggaran.index');
     Route::patch('/admin/pelanggaran/{laporan}/sanksi', [AdminLaporanPelanggaranController::class, 'putuskanSanksi'])->name('admin.pelanggaran.sanksi');
     Route::patch('/admin/pelanggaran/{laporan}/tolak', [AdminLaporanPelanggaranController::class, 'tolak'])->name('admin.pelanggaran.tolak');
-
-    // Kelola Tata Tertib (Admin)
-    Route::get('/admin/kelola-tata-tertib', [AdminTataTertibController::class, 'index'])->name('admin.tata_tertib.index');
-    Route::post('/admin/kelola-tata-tertib', [AdminTataTertibController::class, 'store'])->name('admin.tata_tertib.store');
 
     // Profile Edit (Admin — renders Admin/ProfileEdit with AdminLayout)
     Route::get('/admin/profile', [AdminController::class, 'profileEdit'])->name('admin.profile.edit');

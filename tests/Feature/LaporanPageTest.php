@@ -11,17 +11,12 @@ uses(RefreshDatabase::class);
  * ada, sehingga rute di sidebar user selalu 500. /admin/laporan me-render Blade
  * penuh di luar Inertia.
  */
-test('rute /laporan membuka halaman Inertia, bukan error 500', function () {
+test('rute /laporan dialihkan ke riwayat peminjaman /bookings', function () {
     $user = User::factory()->create();
 
     $this->actingAs($user)
         ->get('/laporan')
-        ->assertOk()
-        ->assertInertia(fn ($page) => $page
-            ->component('User/Laporan')
-            ->has('peminjamans.data')
-            ->has('stats')
-        );
+        ->assertRedirect(route('bookings.index'));
 });
 
 test('rute /admin/laporan membuka halaman Inertia', function () {
@@ -39,7 +34,7 @@ test('rute /admin/laporan membuka halaman Inertia', function () {
         );
 });
 
-test('daftar laporan user ter-paginasi dan menyaring status', function () {
+test('daftar riwayat peminjaman user ter-paginasi dan menyaring status', function () {
     $user = User::factory()->create();
 
     Peminjaman::factory()->count(3)->create([
@@ -52,10 +47,10 @@ test('daftar laporan user ter-paginasi dan menyaring status', function () {
     ]);
 
     $this->actingAs($user)
-        ->get('/laporan?status=selesai')
+        ->get('/bookings?status=selesai')
         ->assertOk()
         ->assertInertia(fn ($page) => $page
-            ->where('peminjamans.total', 3)
-            ->has('peminjamans.links')
+            ->where('bookings.total', 3)
+            ->has('bookings.links')
         );
 });

@@ -30,17 +30,19 @@ class LandingController extends Controller
             ->get()
             ->map(function (Peminjaman $p) {
                 $isRuangan = $p->tipe === 'ruangan';
+                $nama = $p->nama_item ?? ($isRuangan ? $p->ruangan?->nama : $p->barang?->nama) ?? 'Peminjaman';
 
                 return [
                     'id' => $p->id,
-                    'title' => ($isRuangan ? '🏠 ' : '📦 ').($p->nama_item ?? 'Peminjaman'),
+                    'title' => ($isRuangan ? '🏢 ' : '📦 ').$nama,
                     'start' => $p->tanggal_mulai?->format('Y-m-d'),
                     'end' => $p->tanggal_selesai?->addDay()->format('Y-m-d'), // FullCalendar end is exclusive
-                    'backgroundColor' => $isRuangan ? '#2563eb' : '#64748b', // blue vs slate
-                    'borderColor' => $isRuangan ? '#1d4ed8' : '#475569',
+                    'backgroundColor' => $isRuangan ? '#2563eb' : '#d97706', // blue (Ruangan) vs amber (Barang)
+                    'borderColor' => $isRuangan ? '#1d4ed8' : '#b45309',
                     'textColor' => '#ffffff',
                     'extendedProps' => [
                         'tipe' => $p->tipe,
+                        'nama' => $nama,
                         'jam_mulai' => $p->jam_mulai,
                         'jam_selesai' => $p->jam_selesai,
                         'keterangan' => $p->keterangan,

@@ -28,7 +28,8 @@ dataset('rute pengguna', [
     'ruangan' => '/ruangan',
     'barang' => '/barang',
     'riwayat' => '/bookings',
-    'laporan saya' => '/laporan',
+    'tata tertib' => '/tata_tertib',
+    'kalender' => '/kalender',
     'profil' => '/profile',
 ]);
 
@@ -40,10 +41,15 @@ test('admin: rute admin -> 200', function (string $uri) {
         ->assertOk();
 })->with('rute admin');
 
-test('admin: rute pengguna -> 200', function (string $uri) {
-    $this->actingAs(User::factory()->admin()->create())
-        ->get($uri)
-        ->assertOk();
+test('admin: rute pengguna -> 200 (atau diarahkan ke admin dashboard jika rute dashboard)', function (string $uri) {
+    $response = $this->actingAs(User::factory()->admin()->create())
+        ->get($uri);
+
+    if ($uri === '/dashboard') {
+        $response->assertRedirect(route('admin.dashboard'));
+    } else {
+        $response->assertOk();
+    }
 })->with('rute pengguna');
 
 // ── peminjam ──────────────────────────────────────────────────────────
