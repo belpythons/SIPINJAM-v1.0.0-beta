@@ -12,8 +12,13 @@
 Homestead.json
 Homestead.yaml
 auth.json
-npm-debug.log
-yarn-error.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+.DS_Store
+Thumbs.db
 /.fleet
 /.idea
 /.vscode
+/.zed
